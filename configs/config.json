@@ -1,0 +1,5 @@
+{
+	"run_vkbot": true,
+	"run_telegrambot": true,
+	"eljur_update_sleeptime": 600
+}
