@@ -19,8 +19,8 @@ for i in classes:
         day = day_list.contents[0]
         lessons_this_day = schedule_html.find_all(class_='schedule__day__content__lesson__data')
         lessons = []
-        for l in range(len(lessons_this_day)):
-            lessons.append(lessons_this_day[l].find_all('span')[0].contents[0])
+        for k in range(len(lessons_this_day)):
+            lessons.append(lessons_this_day[k].find_all('span')[0].contents[0])
         schedule_for_class.append({day: lessons})
         schedule_html.decompose()
     schedule.append({i: schedule_for_class})
