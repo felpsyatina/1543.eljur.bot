@@ -25,3 +25,4 @@ def get_current_schedule():
             schedule_for_class.append({day: lessons})
             schedule_html.decompose()
         schedule.append({i: schedule_for_class})
+    return schedule
