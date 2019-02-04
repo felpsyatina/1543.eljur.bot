@@ -8,7 +8,6 @@ schedule = []
 
 def get_current_schedule():
     for i in classes:
-        print(i)
         page = requests.get('https://1543.eljur.ru/class.' + i + '/startdate.2019-01-14/journal-schedule-action')
         soup = BeautifulSoup(page.text, 'html.parser')
 
