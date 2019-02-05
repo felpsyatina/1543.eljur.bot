@@ -3,10 +3,11 @@ from bs4 import BeautifulSoup
 
 classes = ['5А', '5Б', '5В', '5Г', '6А', '6Б', '6В', '6Г', '7А', '7Б', '7В', '7Г', '8А', '8Б', '8В', '8Г', '9А', '9Б',
            '9В', '9Г', '10А', '10Б', '10В', '10Г', '11А', '11Б', '11В', '11Г']
-schedule = []
 
 
 def get_current_schedule():
+    schedule = []
+
     for i in classes:
         page = requests.get('https://1543.eljur.ru/class.' + i + '/startdate.2019-01-14/journal-schedule-action')
         soup = BeautifulSoup(page.text, 'html.parser')
@@ -25,3 +26,5 @@ def get_current_schedule():
             schedule_html.decompose()
         schedule.append({i: schedule_for_class})
     return schedule
+
+
