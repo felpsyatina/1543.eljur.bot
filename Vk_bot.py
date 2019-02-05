@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import bs4
-import requests
 import json
 import vk_api
 import threading
@@ -50,14 +48,11 @@ def _clean_all_tag_from_str(string_line):
     return result
 
 
-def _get_user_name_from_vk_id(user_id):
-    try:
-        request = requests.get("https://vk.com/id"+str(user_id))
-        bs = bs4.BeautifulSoup(request.text, "html.parser")
-        user_name = _clean_all_tag_from_str(bs.findAll("title")[0])
-        return user_name.split()[0]
-    except Exception:
-        return "untitled"
+def _get_users_info_from_vk_ids(user_ids):
+    string = ", ".join([str(i) for i in user_ids])
+    # print(string)
+    return vk.method('users.get', {'user_ids' : string})
+
 
 def make_key(a):
     try:
@@ -122,3 +117,11 @@ def get_info():
         return None
     return queue.popleft()
 
+
+if __name__ == '__main__':
+    chels = [263235631]
+
+    users = _get_users_info_from_vk_ids(chels)
+    print(users)
+    [print(user['first_name']) for user in users]
+    # print(user['last_name'])
