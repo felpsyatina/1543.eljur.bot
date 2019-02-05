@@ -7,47 +7,10 @@ import vk_api
 import threading
 from collections import deque
 from vk_api.longpoll import VkLongPoll, VkEventType
+import config
 
 
-keyb = {
-    "one_time": None,
-    "buttons": [
-      [{
-        "action": {
-          "type": "text",
-          "payload": "{\"button\": \"1\"}",
-          "label": "Red"
-        },
-        "color": "negative"
-      },
-     {
-        "action": {
-          "type": "text",
-          "payload": "{\"button\": \"2\"}",
-          "label": "Green"
-        },
-        "color": "positive"
-      }],
-      [{
-        "action": {
-          "type": "text",
-          "payload": "{\"button\": \"3\"}",
-          "label": "White"
-        },
-        "color": "default"
-      },
-     {
-        "action": {
-          "type": "text",
-          "payload": "{\"button\": \"4\"}",
-          "label": "Blue"
-        },
-        "color": "primary"
-      }]
-    ]
-  }
-
-token = "7914d7f3ec78a6fff6669822b5d22676dbfd874046a67a9778808fd67348a690d49ded8411482201d223f"
+token = config.secret["vk"]["token"]
 vk = vk_api.VkApi(token=token)
 longpoll = VkLongPoll(vk)
 fail = "Простите, в нашем коде кто-то набагал. Мы скоро это исправим."
@@ -61,7 +24,7 @@ def write_msg(u_id, mess):
         vk.method('messages.send', {'user_id': u_id, 'message': fail, 'v': "5.53"})
 
 
-def write_key(u_id, keybor=keyb, mess="kek"):
+def write_key(u_id, keybor, mess="kek"):
     try:
         vk.method('messages.send', {
             'user_id': u_id,
@@ -96,7 +59,7 @@ def _get_user_name_from_vk_id(user_id):
     except Exception:
         return "untitled"
 
-def make_key(a = [[{'text': "privet"}]]):
+def make_key(a):
     try:
         buttons = []
         for raw in a:
@@ -159,5 +122,3 @@ def get_info():
         return None
     return queue.popleft()
 
-
-#7914d7f3ec78a6fff6669822b5d22676dbfd874046a67a9778808fd67348a690d49ded8411482201d223f
