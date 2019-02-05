@@ -6,7 +6,7 @@ from time import sleep
 Vk_bot.run()
 
 while True:
-    d = Vk_bot.get_info()
+    d = Vk_bot.get_next()
     if d == None:
         sleep(0.05)
         continue

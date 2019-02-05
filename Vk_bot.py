@@ -33,24 +33,8 @@ def write_key(u_id, keybor, mess="kek"):
         vk.method('messages.send', {'user_id': u_id, 'message': fail, 'v': "5.53"})
 
 
-def _clean_all_tag_from_str(string_line):
-    result = ""
-    not_skip = True
-    for i in list(string_line):
-        if not_skip:
-            if i == "<":
-                not_skip = False
-            else:
-                result += i
-        else:
-            if i == ">":
-                not_skip = True
-    return result
-
-
 def _get_users_info_from_vk_ids(user_ids):
     string = ", ".join([str(i) for i in user_ids])
-    # print(string)
     return vk.method('users.get', {'user_ids' : string})
 
 
@@ -111,11 +95,21 @@ def run():
     return
 
 
-def get_info():
+def get_next():
     global queue
     if len(queue) == 0:
         return None
     return queue.popleft()
+
+
+def get_all():
+    global queue
+    if len(queue) == 0:
+        return []
+    cur = []
+    while len(queue) != 0:
+        cur.append(queue.popleft())
+    return cur
 
 
 if __name__ == '__main__':
