@@ -12,7 +12,7 @@ while True:
         continue
     message = d['message']
     user_id = d['user_id']
-    user_name = Vk_bot._get_user_name_from_vk_id(user_id)
+    user_name = Vk_bot._get_users_info_from_vk_ids([user_id])[0]["first_name"]
     message = message.lower()
     if message == 'привет' or message == 'privet':
         if user_name == 'untitled':
