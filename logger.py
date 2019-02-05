@@ -1,10 +1,12 @@
 import sys
 from datetime import datetime
 
+
 def telegram_alert(module, log_line):
 	# Special bot will sent special alert to specified technical chat or resposible person
 	# in telegram abot "all crashed!" and log_line 
 	pass
+
 
 def log(module, log_line, add_time=True):
 	if add_time:
