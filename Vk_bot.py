@@ -111,11 +111,3 @@ def get_all():
         cur.append(queue.popleft())
     return cur
 
-
-if __name__ == '__main__':
-    chels = [263235631]
-
-    users = _get_users_info_from_vk_ids(chels)
-    print(users)
-    [print(user['first_name']) for user in users]
-    # print(user['last_name'])
