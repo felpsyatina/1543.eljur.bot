@@ -6,6 +6,7 @@ classes = ['5А', '5Б', '5В', '5Г', '6А', '6Б', '6В', '6Г', '7А', '7Б',
 DAYS = 6
 CNT_LESSONS = 7
 
+
 def get_current_schedule():
     schedule = {}
 
@@ -29,13 +30,13 @@ def get_current_schedule():
         schedule[i] = schedule_for_class
     return schedule
 
+
 if __name__ == '__main__':
     schedule = get_current_schedule()
-
+    print(schedule)
     # Пример:
     while 1:
         cl = input()
         day = input()
         for k in range(CNT_LESSONS):
             print(schedule[cl][day][k])
-
