@@ -5,14 +5,13 @@ import requests
 file_name = "eljur_api.py"
 
 
-def json_converter(json_ans):  # превращает json строку в словарь и возращает его
+def _json_converter(json_ans):  # превращает json строку в словарь и возращает его
     json_data = json.loads(json_ans)
     return json_data
 
 
 def _strip(params, more=[]):
     striped_params = {key: value for key, value in params.items() if key not in ['self'] + more}
-    striped_params["out_format"] = "json"
     return striped_params
 
 
@@ -35,25 +34,26 @@ class LoggerTemplates(object):
     def successful_login(self, login):
         self.make_log(f"Пользователь под логином '{login}' успешно получил токен сессии")
 
+    def failed_login(self, login):
+        self.make_log(f"Пользователю под логином '{login}' не ролучилось получить токен сессии")
 
-class UserBase(object):
-    session_token = ""
+
+class _UserBase(object):
+    auth_token = ""
     '''
     Необходимый токен, который имеет срок годности. Можно получить, вызвав функции:
     1)login_user() - логинит юзера и получает токен сессии
-    2)refresh_session_token() - обновляет токен сессии под логином и паролем из GlobalVariables, если не получилось, 
+    2)refresh_auth_token() - обновляет токен сессии под логином и паролем из GlobalVariables, если не получилось, 
         то остается тем же и оставляет сообщение в логгере
     '''
-    date_of_session_token_expiration = ""
-
+    date_of_auth_token_expiration = ""
     '''
     Дата истечения срока годности сессионного токена, котырый можно получить, вызвав функции:
     1)login_user() - логинит юзера и получает токен сессии
-    2)refresh_session_token() - обновляет токен сессии под логином и паролем из GlobalVariables, если не получилось, 
+    2)refresh_auth_token() - обновляет токен сессии под логином и паролем из GlobalVariables, если не получилось, 
         то остается тем же и оставляет сообщение в логгере
     '''
     vendor = ""
-
     '''
     Тип: строка
 
@@ -61,7 +61,7 @@ class UserBase(object):
     Например, если журнал школы №999 расположен по адресу https://999.eljur.ru, то необходимо передать 999.
     Поддомен может содержать цифры, буквы, дефисы, знак нижнего подчеркивания (sch1, school1399, school_46, mou-gymn1).
     '''
-    #devkey - что это?
+    devkey = ""
     '''
     Это токен разработчика, наделяющего пользователя правами пользования API. Необходимо просить его у разрабов eljur
     напрямую или через Картавенко.
@@ -69,42 +69,74 @@ class UserBase(object):
     Токен лишь наделяет правами какого-то пользователя, а не является админкой. С помощью токена от сервера получется
     сессионный токен для введенного пользователя.
     '''
+    rules = {}
+    '''
+    Информация о пользователе, запрошенную методом /getrules (функция update_rules и get_rules)
+    '''
 
-    @staticmethod
-    def make_request(method, params):
-        request_adress = f"https://api.eljur.ru/api/{method}?"
+    def _make_request(self, method, params={}):
+        request_adress = f"https://api.eljur.ru/api/{method}"
+        params = self.default_params(params)
         answer = requests.get(request_adress, params)
         if answer.status_code != requests.codes.ok:
-            Logger.failed_request("make_request", answer.url, answer.status_code, answer)
-        return [answer.status_code == requests.codes.ok, json_converter(answer.text)]
+            Logger.failed_request("make_request", answer.url, answer.status_code, answer.text)
+        return [answer.status_code == requests.codes.ok, _json_converter(answer.text)]
+
+    def default_params(self, params):
+        params.update({"devkey": self.devkey, "out_format": "json", "vendor": self.vendor, "auth_token": self.auth_token})
+        return params
 
     def __init__(self, devkey=None, login=None, password=None, vendor=None):
-        pass
         for param_name, param_value in _strip(locals()).items():
             if not isinstance(param_value, str):
                 Logger.false_type_of_var("UserBase.__init__", param_name, type(param_value), str)
                 return
-        if self.login(devkey, login, password, vendor):
-            print(self.session_token)
-        else:
-            print("Failure")
-
-    def login(self, devkey, login, password, vendor):
-        params = _strip(locals())
-        answer = self.make_request("auth", params)
-        if answer[0]:
+        self.devkey = devkey
+        self.vendor = vendor
+        if self.login(login, password, vendor, devkey):
             Logger.successful_login(login)
-            self.session_token = answer[1]["response"]["result"]["token"]
+            self.update_rules()
+        else:
+            Logger.failed_login(login)
+
+    def login(self, login, password, vendor, devkey):
+        params = _strip(locals())
+        params["out_format"] = "json"
+        answer = requests.get("https://api.eljur.ru/api/auth", params)
+        if answer.status_code == requests.codes.ok:
+            answer_json = _json_converter(answer.text)
+            self.auth_token = answer_json["response"]["result"]["token"]
             return True
 
-# class User():
-#     System_Variables:
-#
-#     def login_user(ad="1231321", same_shit="13232"):
-#         print(locals())
+    def get_rules(self):
+        answer = self._make_request("getrules")
+        return answer
+
+    def update_rules(self):
+        self.rules = self.get_rules()
+
+
+class Student(_UserBase):
+    # student_id = -1
+
+    def __init__(self, devkey=None, login=None, password=None, vendor=None):
+        super(Student, self).__init__(devkey, login, password, vendor)
+        # self.update_student_id()
+
+    # def get_student_id(self):
+    #     return self.rules["response"]["result"]["relations"]["name"]
+    #
+    # def update_student_id(self):
+    #     self.student_id = self.get_student_id()
+
+    def get_schedule(self, class_=None, days=None, ring=None):
+        params = _strip(locals())
+        answer = self._make_request("getschedule", params)
+        return answer[1]
+
 
 Logger = LoggerTemplates()
 
-preset = {"devkey": "518b84cf226921cc75442cab3eb5e225", "vendor": "1543", "password": "***", "login": "***"}
+# preset = {"devkey": "518b84cf226921cc75442cab3eb5e225", "vendor": "1543", "password": "***", "login": "***"}
 
-UserBase(**preset)
+# student = Student(**preset)
