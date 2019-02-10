@@ -118,4 +118,3 @@ if __name__ == '__main__':
     users = _get_users_info_from_vk_ids(chels)
     print(users)
     [print(user['first_name']) for user in users]
-    # print(user['last_name'])
