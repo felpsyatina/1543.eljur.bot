@@ -2,7 +2,7 @@ import requests
 import json
 import time
 
-TOKEN = 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+TOKEN = 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
 URL = 'https://api.telegram.org/bot' + TOKEN + '/'
 raw_msgs = []
 last_msg_id = -1
@@ -26,10 +26,10 @@ def send_msg(URL, user_id, text, msg_to_answer_id=None):
     requests.get(url_send_msg, data={'chat_id': user_id, 'text': text, 'reply_to_message_id': msg_to_answer_id})
 
 
-def send_but_help(URL, user_id, text, msg_to_answer_id=None):
+def send_but_help(URL, user_id, text, keyb_but, msg_to_answer_id=None):
     url_send_msg = URL + 'sendmessage'
     reply_markup = json.dumps(
-        {"keyboard": [['/help', '/help', '/help'], ['/help', '/help', '/help'], ['/help', '/help', '/help']],
+        {"keyboard": keyb_but,
          "one_time_keyboard": True})
     (requests.get(url_send_msg,
                   data={'chat_id': user_id, 'parse_mode': 'HTML', 'text': text, 'reply_markup': reply_markup,
@@ -53,11 +53,13 @@ def answer_msg(URL, user_id, msg, msg_id):
     if msg.startswith('/help'):
         send_msg(URL, user_id, "We can't help you :(", msg_id)
     else:
-        send_but_help(URL, user_id, "Try to print /help", msg_id)
+        keyb_but = [['/help', '/help', '/help'], ['/help', '/help', '/help'], ['/help', '/help', '/help']]
+        send_but_help(URL, user_id, "Try to print /help", keyb_but, msg_id)
 
 
 def answer_to_new_user(URL, user_id):
-    send_but_help(URL, user_id, 'Hi, you are a new user. You can try to type /help')
+    keyb_but = [['/help', '/help', '/help'], ['/help', '/help', '/help'], ['/help', '/help', '/help']]
+    send_but_help(URL, user_id, 'Hi, you are a new user. You can try to type /help', keyb_but)
 
 
 def tg_bot_main(URL, last_msg_id, raw_msgs):
@@ -72,9 +74,10 @@ def tg_bot_main(URL, last_msg_id, raw_msgs):
             else:
                 old_users.add(msg_to_answer['tg_user_id'])
                 answer_to_new_user(URL, msg_to_answer['tg_user_id'])
+            # добавление сообщения в базу данных
+            # add_to_base(msg_to_answer['tg_user_id'], msg_to_answer['raw_msg'])
             del raw_msgs[0]
-
+            
 
 if __name__ == '__main__':
     tg_bot_main(URL, last_msg_id, raw_msgs)
-
