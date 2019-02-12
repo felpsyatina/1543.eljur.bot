@@ -4,6 +4,7 @@ import json
 import vk_api
 import threading
 from collections import deque
+from time import sleep
 from vk_api.longpoll import VkLongPoll, VkEventType
 import config
 
@@ -85,9 +86,13 @@ def make_key_fast(s1, s2="", s3="", s4="", s5="", s6=""):
 
 def go():
     global queue
-    for event in longpoll.listen():
-        if event.type == VkEventType.MESSAGE_NEW and event.to_me:
-            queue.append({'user_id': event.user_id, 'message': event.text})
+    while True:
+        try:
+            for event in longpoll.listen():
+                if event.type == VkEventType.MESSAGE_NEW and event.to_me:
+                    queue.append({'user_id': event.user_id, 'message': event.text})
+        except Exception:
+            sleep(0.5)
 
 
 def run():
