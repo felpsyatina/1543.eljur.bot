@@ -1,8 +1,9 @@
 import requests
 import json
 import time
+from user_req import parse_msg_from_user
 
-TOKEN = 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+TOKEN = 'xxxxxxxxx'
 URL = 'https://api.telegram.org/bot' + TOKEN + '/'
 raw_msgs = []
 last_msg_id = -1
@@ -50,11 +51,16 @@ def new_msgs(URL, last_msg_id, raw_msgs):
 
 
 def answer_msg(URL, user_id, msg, msg_id):
+    result=user_req.parse_msg_from_user("tg", user_id, msg)
+    msg_to_send=result['text']
+    send_msg(URL, user_id, msg_to_send, msg_id)
+    '''
     if msg.startswith('/help'):
         send_msg(URL, user_id, "We can't help you :(", msg_id)
     else:
         keyb_but = [['/help', '/help', '/help'], ['/help', '/help', '/help'], ['/help', '/help', '/help']]
-        send_but_help(URL, user_id, "Try to print /help", keyb_but, msg_id)
+        send_but_help(URL, user_id, "Try to print /help", keyb_but,    msg_id)
+    '''
 
 
 def answer_to_new_user(URL, user_id):
@@ -72,10 +78,8 @@ def tg_bot_main(URL, last_msg_id, raw_msgs):
             if msg_to_answer['tg_user_id'] in old_users:
                 answer_msg(URL, msg_to_answer['tg_user_id'], msg_to_answer['raw_msg'], msg_to_answer['msg_id'])
             else:
-                old_users.add(msg_to_answer['tg_user_id'])
+                old_users.add(msg_to_answer['tg_user_id'])  
                 answer_to_new_user(URL, msg_to_answer['tg_user_id'])
-            # добавление сообщения в базу данных
-            # add_to_base(msg_to_answer['tg_user_id'], msg_to_answer['raw_msg'])
             del raw_msgs[0]
             
 
