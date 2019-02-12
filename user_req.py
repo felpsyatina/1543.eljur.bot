@@ -2,6 +2,8 @@ import logger
 import lessons_db_manip as ldm
 import schedule_parser as sp
 import answers_dict as ad
+import users_db_parser as ud
+from random import randint
 
 
 def update_schedule():
@@ -28,6 +30,12 @@ def get_class_name_from_text(text):
 def generate_return(text):
     return {"text": text, "buttons": None}
 
+def send_acc_information(src, user_id, text):
+    ans_mes = ud.get_user_by_id(src, user_id)
+    answer_message = f"Логин:{ans_mes[1]}\nИмя:{ans_mes[3]}\nФамилия:{ans_mes[4]}\nПараллель:{ans_mes[1]}"
+    return answer_message
+
+
 
 def parse_message_from_user(scr, user_id, text):
     logger.log("user_req", "process request")
@@ -47,7 +55,14 @@ def parse_message_from_user(scr, user_id, text):
         return {"text": "Видно, не судьба :( ", "buttons": None}
 
 
-key_words_to_function = {"schedule": get_schedule}
+key_words_to_function = {"schedule": get_schedule,
+                         "registration": register_new_user,
+                         "account": send_acc_information,
+                         "cancel": cancel_lesson,
+                         "replacement": replace_lesson,
+                         "comment": comment_lesson,
+                         "support": support_message,
+                         "commands": send_commands}
 # update_schedule()
 # parse_message_from_user("tg", "1", "УМРИ")
 
