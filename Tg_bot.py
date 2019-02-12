@@ -1,7 +1,7 @@
 import requests
 import json
 import time
-from user_req import parse_message_from_user
+import user_req
 import config
 
 TOKEN = config.secret["tg"]["token"]
