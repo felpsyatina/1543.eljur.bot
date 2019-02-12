@@ -139,9 +139,12 @@ if __name__ == '__main__':
     while True:
         if len(queue) != 0:
             r = get_next()
+            logger.log("vkbot", "new message from " +str(r["user_id"]) + " message: " + str(r["message"]))
             ans = user_req.parse_message_from_user("vk", r['user_id'], r['message'])
-            if ans['buttons'] == None:
+            logger.log("vkbot", "Received answer " + str(ans))
+            if not ans.get('buttons'):
                 write_msg(r['user_id'], ans['text'])
             else:
                 new_key = make_key_arr(ans['buttons'])
                 write_key(r['user_id'], new_key, ans['text'])
+            logger.log("vkbot", "answer sent")
