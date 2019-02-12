@@ -8,7 +8,6 @@ TOKEN = config.secret["tg"]["token"]
 URL = 'https://api.telegram.org/bot' + TOKEN + '/'
 raw_msgs = []
 last_msg_id = -1
-old_users = set()
 
 
 def bot_info(URL):
@@ -52,21 +51,9 @@ def new_msgs(URL, last_msg_id, raw_msgs):
 
 
 def answer_msg(URL, user_id, msg, msg_id):
-    result=user_req.parse_message_from_user("tg", user_id, msg)
-    msg_to_send=result['text']
+    result = user_req.parse_message_from_user("tg", user_id, msg)
+    msg_to_send = result['text']
     send_msg(URL, user_id, msg_to_send, msg_id)
-    '''
-    if msg.startswith('/help'):
-        send_msg(URL, user_id, "We can't help you :(", msg_id)
-    else:
-        keyb_but = [['/help', '/help', '/help'], ['/help', '/help', '/help'], ['/help', '/help', '/help']]
-        send_but_help(URL, user_id, "Try to print /help", keyb_but,    msg_id)
-    '''
-
-
-def answer_to_new_user(URL, user_id):
-    keyb_but = [['/help', '/help', '/help'], ['/help', '/help', '/help'], ['/help', '/help', '/help']]
-    send_but_help(URL, user_id, 'Hi, you are a new user. You can try to type /help', keyb_but)
 
 
 def tg_bot_main(URL, last_msg_id, raw_msgs):
@@ -76,13 +63,9 @@ def tg_bot_main(URL, last_msg_id, raw_msgs):
         last_msg_id, raw_msgs = new_msgs(URL, last_msg_id, raw_msgs)
         if len(raw_msgs) > 0:
             msg_to_answer = raw_msgs[0]
-            if msg_to_answer['tg_user_id'] in old_users:
-                answer_msg(URL, msg_to_answer['tg_user_id'], msg_to_answer['raw_msg'], msg_to_answer['msg_id'])
-            else:
-                old_users.add(msg_to_answer['tg_user_id'])  
-                answer_to_new_user(URL, msg_to_answer['tg_user_id'])
+            answer_msg(URL, msg_to_answer['tg_user_id'], msg_to_answer['raw_msg'], msg_to_answer['msg_id'])
             del raw_msgs[0]
-            
+
 
 if __name__ == '__main__':
     tg_bot_main(URL, last_msg_id, raw_msgs)
