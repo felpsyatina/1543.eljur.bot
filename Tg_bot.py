@@ -1,7 +1,7 @@
 import requests
 import json
 import time
-from user_req import parse_msg_from_user
+from user_req import parse_message_from_user
 import config
 
 TOKEN = config.secret["tg"]["token"]
@@ -52,7 +52,7 @@ def new_msgs(URL, last_msg_id, raw_msgs):
 
 
 def answer_msg(URL, user_id, msg, msg_id):
-    result=user_req.parse_msg_from_user("tg", user_id, msg)
+    result=user_req.parse_messsage_from_user("tg", user_id, msg)
     msg_to_send=result['text']
     send_msg(URL, user_id, msg_to_send, msg_id)
     '''
