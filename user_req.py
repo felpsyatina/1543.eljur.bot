@@ -39,6 +39,9 @@ def parse_message_from_user(scr, user_id, text):
                 answer_from_function = needed_function(text)
                 return generate_return(answer_from_function)
                 # generate_return(ldm.get_schedule())
+        logger.log("user_req", f"Запрос не найден. Запрос: {text}")
+        return {"text": "Запроса не найдено :( ", "buttons": None}
+
     except Exception as err:
         logger.log("user_req", f"Processing error: {err}\n Запрос: {text}")
         return {"text": "Видно, не судьба :( ", "buttons": None}
@@ -46,6 +49,6 @@ def parse_message_from_user(scr, user_id, text):
 
 key_words_to_function = {"schedule": get_schedule}
 # update_schedule()
-parse_message_from_user("tg", "1", "расписание 9В понедельник")
+parse_message_from_user("tg", "1", "УМРИ")
 
 # ya LOH_KABAKOV
