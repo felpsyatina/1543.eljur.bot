@@ -47,7 +47,7 @@ def add_schedules(schedules=None):
             for lesson_num in all_lessons_in_cur_day.keys():
                 lesson_name = all_lessons_in_cur_day[lesson_num]
                 c.execute(
-                    f"INSERT INTO lessons VALUES (NULL, '{lesson_name}', {lesson_num}, {id_of_schedule}, '{day_of_week}', NULL, NULL, NULL)")
+                    f"INSERT INTO lessons VALUES (NULL, '{lesson_name}', {lesson_num}, {id_of_schedule}, '{day_of_week}', NULL, NULL, NULL, NULL)")
 
     conn.commit()
 
@@ -82,3 +82,15 @@ def get_schedules(classes=None):
     for class_name in classes:
         ans[class_name] = get_schedule(class_name)
     return ans
+
+
+def get_cancel(class_name=None, day_of_week=None, lesson=None):
+    if class_name is None:
+        logger.log("lessons_db_manip", "Не указан class_name в get_comment")
+    if day_of_week is None:
+        logger.log("lessons_db_manip", "Не указан day в get_comment")
+    if lesson is None:
+        logger.log("lessons_db_manip", "Не указан lesson в get_comment")
+    c.execute(f"UPDATE lessons SET comment = 'Урок отменен' WHERE schedule_id = {get_id_of_schedule(class_name)}"
+              f"AND day_of_week = {day_of_week} AND name = {lesson})")
+    conn.commit()
