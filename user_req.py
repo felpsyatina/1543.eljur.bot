@@ -42,3 +42,6 @@ def parse_message_from_user(scr, user_id, text):
 key_words_to_function = {"schedule": get_schedule}
 # update_schedule()
 parse_message_from_user("tg", "1", "расписание 9В понедельник")
+
+
+# ya LOH_KABAKOV
