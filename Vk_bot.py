@@ -139,7 +139,7 @@ if __name__ == '__main__':
     while True:
         if len(queue) != 0:
             r = get_next()
-            ans = user_req.parse_msg_from_user("vk", r['user_id'], r['message'])
+            ans = user_req.parse_message_from_user("vk", r['user_id'], r['message'])
             if ans['buttons'] == None:
                 write_msg(r['user_id'], ans['text'])
             else:
