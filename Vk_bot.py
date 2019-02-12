@@ -7,6 +7,7 @@ from collections import deque
 from time import sleep
 from vk_api.longpoll import VkLongPoll, VkEventType
 import config
+import user_req
 
 
 token = config.secret["vk"]["token"]
@@ -84,13 +85,26 @@ def make_key_fast(s1, s2="", s3="", s4="", s5="", s6=""):
         return {}
 
 
+def make_key_arr(a):
+    try:
+        b = []
+        for i in a:
+            row = []
+            for j in i:
+                row.append({"text": j})
+            b.append(row)
+        return make_key(b)
+    except Exception:
+        return {}
+
+
 def go():
     global queue
     while True:
         try:
             for event in longpoll.listen():
                 if event.type == VkEventType.MESSAGE_NEW and event.to_me:
-                    queue.append({'user_id': event.user_id, 'message': event.text})
+                    queue.append({'user_id': event.user_id, 'message': event.text, 'message_id': event.message_id, 'from_user': event.from_user})
         except Exception:
             sleep(0.5)
 
@@ -118,8 +132,12 @@ def get_all():
 
 
 if __name__ == '__main__':
-    chels = [263235631]
-
-    users = _get_users_info_from_vk_ids(chels)
-    print(users)
-    [print(user['first_name']) for user in users]
+    while True:
+        if len(queue) != 0:
+            r = get_next()
+            ans = user_req.parse_msg_from_user("vk", r['user_id'], r['message'])
+            if ans['buttons'] == None:
+                write_msg(r['user_id'], ans['text'])
+            else:
+                new_key = make_key_arr(ans['buttons'])
+                write_key(r['user_id'], new_key, ans['text'])
