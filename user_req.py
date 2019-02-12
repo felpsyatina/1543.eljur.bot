@@ -26,7 +26,7 @@ def get_class_name_from_text(text):
 
 
 def generate_return(text):
-    pass
+    return {"text": text, "buttons": None}
 
 
 def parse_message_from_user(scr, user_id, text):
@@ -35,7 +35,7 @@ def parse_message_from_user(scr, user_id, text):
         if key in text:
             needed_function = key_words_to_function[value]
             answer_from_function = needed_function(text)
-            return answer_from_function
+            generate_return(answer_from_function)
             # generate_return(ldm.get_schedule())
 
 
