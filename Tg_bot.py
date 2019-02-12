@@ -2,8 +2,9 @@ import requests
 import json
 import time
 from user_req import parse_msg_from_user
+import config
 
-TOKEN = 'xxxxxxxxx'
+TOKEN = config.secret["tg"]["token"]
 URL = 'https://api.telegram.org/bot' + TOKEN + '/'
 raw_msgs = []
 last_msg_id = -1
