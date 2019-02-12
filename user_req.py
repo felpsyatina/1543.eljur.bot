@@ -30,12 +30,13 @@ def generate_return(text):
 
 
 def parse_message_from_user(scr, user_id, text):
+    logger.log("user_req", "process request")
     text = text.strip().lower()
     for key, value in ad.quest.items():
         if key in text:
             needed_function = key_words_to_function[value]
             answer_from_function = needed_function(text)
-            generate_return(answer_from_function)
+            return generate_return(answer_from_function)
             # generate_return(ldm.get_schedule())
 
 
