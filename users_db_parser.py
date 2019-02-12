@@ -1,40 +1,20 @@
 import sqlite3
 
-class EljUser:
-    def __init__(self, _id, login, password_hash, parallel, name, surname, access_level, ban, vk_login, vk_id,
-                 tele_login, tele_id):
-        self._id = _id
-        self.login = login
-        self.password_hash = password_hash
-        self.parallel = parallel
-        self.name = name
-        self.surname = surname
-        self.access_level = access_level
-        self.ban = ban
-        self. vk_login = vk_login
-        self.vk_id = vk_id
-        self.tele_login = tele_login
-        self.tele_id = tele_id
-
-    def update_user(self, _id, login, password_hash, parallel, name, surname, access_level, ban, vk_login, vk_id,
-                 tele_login, tele_id):
-        self._id = _id
-        self.login = login
-        self.password_hash = password_hash
-        self.parallel = parallel
-        self.name = name
-        self.surname = surname
-        self.access_level = access_level
-        self.ban = ban
-        self. vk_login = vk_login
-        self.vk_id = vk_id
-        self.tele_login = tele_login
-        self.tele_id = tele_id
-
-
-
-
-conn = sqlite3.connect("users.db")
+conn = sqlite3.connect("1543.eljur.bot.db")
 cursor = conn.cursor()
 
-cursor.execute()
+
+
+def get_user_by_id(_id):
+    cursor.execute('SELECT * FROM users WHERE _id=:_id', {'_id': _id})
+    return cursor.fetchone()
+
+
+def make_new_user(login, parallel, name, surname):
+    cursor.execute("INSERT INTO users (login, parallel, name, surname) VALUES (?, ?, ?, ?)", (login, parallel, name, surname))
+
+def update_user(_id, dict_of_changes):
+
+    for key, value in dict_of_changes.items():
+        cursor.execute(f"UPDATE users SET {key}={value} WHERE _id={_id})")
+
