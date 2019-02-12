@@ -8,6 +8,7 @@ from time import sleep
 from vk_api.longpoll import VkLongPoll, VkEventType
 import config
 import user_req
+import logger
 
 
 token = config.secret["vk"]["token"]
@@ -118,6 +119,7 @@ def get_next():
     global queue
     if len(queue) == 0:
         return None
+    logger.log("vkbot", "New message")
     return queue.popleft()
 
 
@@ -132,6 +134,8 @@ def get_all():
 
 
 if __name__ == '__main__':
+    run()
+    logger.log("vkbot", "VkBot start")
     while True:
         if len(queue) != 0:
             r = get_next()
