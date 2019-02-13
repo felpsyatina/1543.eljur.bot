@@ -3,6 +3,7 @@ import json
 import time
 import user_req
 import config
+import logger
 
 TOKEN = config.secret["tg"]["token"]
 URL = 'https://api.telegram.org/bot' + TOKEN + '/'
@@ -41,6 +42,7 @@ def new_msgs(URL, last_msg_id, raw_msgs):
     url_new_msgs = URL + 'getupdates'
     msg_base = requests.get(url_new_msgs, data={"offset": last_msg_id}).json()
     if msg_base['ok'] == True and len(msg_base['result']) > 0:
+        logger.log("tg", "getting new messages")
         msg_base = msg_base['result']
         last_msg_id = (int(msg_base[-1]['update_id']) + 1)
         for i in range(len(msg_base)):
@@ -51,20 +53,22 @@ def new_msgs(URL, last_msg_id, raw_msgs):
 
 
 def answer_msg(URL, user_id, msg, msg_id):
+    logger.log("tg", "sending message to "+str(user_id))
     result = user_req.parse_message_from_user("tg", user_id, msg)
     msg_to_send = result['text']
     send_msg(URL, user_id, msg_to_send, msg_id)
 
-
 def tg_bot_main(URL, last_msg_id, raw_msgs):
     print(bot_info(URL))
+    logger.log("tg", "starting tg_bot")
     while True:
-        time.sleep(0.01)
+        time.sleep(1)
         last_msg_id, raw_msgs = new_msgs(URL, last_msg_id, raw_msgs)
         if len(raw_msgs) > 0:
-            msg_to_answer = raw_msgs[0]
-            answer_msg(URL, msg_to_answer['tg_user_id'], msg_to_answer['raw_msg'], msg_to_answer['msg_id'])
-            del raw_msgs[0]
+            for i in range(len(raw_msgs)):
+                msg_to_answer = raw_msgs[i]
+                answer_msg(URL, msg_to_answer['tg_user_id'], msg_to_answer['raw_msg'], msg_to_answer['msg_id'])
+            raw_msgs=[]
 
 
 if __name__ == '__main__':
