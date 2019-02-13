@@ -146,8 +146,8 @@ class Student(_UserBase):
 
 Logger = LoggerTemplates()
 
-preset = {"devkey": "518b84cf226921cc75442cab3eb5e225", "vendor": "1543", "password": "itgpye52",
-          "login": "kabakov_ivan"}
+preset = {"devkey": "***", "vendor": "1543", "password": "***",
+          "login": "***"}
 
 student = Student(**preset)
 
