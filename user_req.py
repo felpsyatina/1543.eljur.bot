@@ -18,7 +18,7 @@ def get_schedule(scr, user_id, text):
     for day_name, day_schedule in schedule.items():
         answer_string += str(day_name.title()) + ':\n'
         for lesson_num in day_schedule.keys():
-            answer_string += str(lesson_num) + '. ' + str(day_schedule[lesson_num][1]) + str(day_schedule[lesson_num][1])[8] + '\n'
+            answer_string += str(lesson_num) + '. ' + str(day_schedule[lesson_num][1]) + str(day_schedule[lesson_num][8]) + '\n'
     return answer_string
 
 
@@ -30,7 +30,7 @@ def get_class_name_from_text(text):
 def get_day_and_lesson_and_class_name_from_text(text):    # отмена lesson в day у class_name
     day = text.split()[3]
     lesson = text.split()[1]
-    class_name = text.split[5]
+    class_name = text.split()[5]
     return day, lesson, class_name
 
 
@@ -46,7 +46,7 @@ def send_acc_information(src, user_id, text):
 
 
 def cancel_lesson(src, user_id, text):
-    logger.log("user_req", "canceling a lesson")
+    logger.log("user_req", "cancelling a lesson")
     day, lesson, class_name = get_day_and_lesson_and_class_name_from_text(text)
     ldm.get_cancel(class_name, day, lesson)
     return "Урок отменен"
