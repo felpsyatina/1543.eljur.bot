@@ -106,8 +106,10 @@ def go():
             for event in longpoll.listen():
                 if event.type == VkEventType.MESSAGE_NEW and event.to_me:
                     queue.append({'user_id': event.user_id, 'message': event.text, 'message_id': event.message_id, 'from_user': event.from_user})
+                sleep(0.2)
         except Exception:
-            sleep(0.5)
+            logger.log("vkbot", "Error while listening")
+            sleep(1)
 
 
 def run():
@@ -147,4 +149,6 @@ if __name__ == '__main__':
             else:
                 new_key = make_key_arr(ans['buttons'])
                 write_key(r['user_id'], new_key, ans['text'])
-            logger.log("vkbot", "answer sent")
+            logger.log("vkbot", "answer sent: " + ans['text'])
+        else:
+            sleep(1)
