@@ -83,7 +83,7 @@ def tg_bot_main(last_msg_id, raw_msgs):
                 if msg_to_answer['is_super_admin']=='0':
                     answer_msg(msg_to_answer['tg_user_id'], msg_to_answer['raw_msg'], msg_to_answer['msg_id'])
                 else:
-                    send_msg(msg_to_answer['tg_user_id'], 'you are super admin', msg_to_answer['msg_id'])
+                    send_msg(msg_to_answer['tg_user_id'], 'you are super admin')
                     answer_msg(msg_to_answer['tg_user_id'], msg_to_answer['raw_msg'], msg_to_answer['msg_id'])
             raw_msgs=[] 
 
