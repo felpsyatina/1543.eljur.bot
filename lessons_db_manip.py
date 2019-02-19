@@ -21,7 +21,8 @@ def get_id_of_class(class_name):  # формат чилсло и одна бук
     class_num = int(class_name[:-1])
     class_letter = class_name[-1]
     c.execute(f"SELECT * FROM classes WHERE class_num = {class_num} AND class_letter = '{class_letter}'")
-    id_of_class = c.fetchone()[0]
+    fetch = c.fetchone()
+    id_of_class = fetch[0]
     return id_of_class
 
 
