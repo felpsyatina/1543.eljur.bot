@@ -44,6 +44,3 @@ def update_user(src=None, user_id=None, dict_of_changes=None):
         for key, value in dict_of_changes.items():
             cursor.execute(f"UPDATE users SET {key}={value} WHERE tele_id={user_id})")
     conn.commit()
-
-
-print(get_user_by_id("vk", 127845402))
