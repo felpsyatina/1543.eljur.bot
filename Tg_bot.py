@@ -9,6 +9,7 @@ TOKEN = config.secret["tg"]["token"]
 URL = 'https://api.telegram.org/bot' + TOKEN + '/'
 raw_msgs = []
 last_msg_id = -1
+super_admins={183534296}
 
 
 def bot_info():
@@ -18,10 +19,11 @@ def bot_info():
     return bot_info
 
 def alerts(alerts_ids, msg):
-    for i in range(len(allerts_ids)):
-        user_id=allerts_ids[i]
+    for i in range(len(alerts_ids)):
+        user_id=alerts_ids[i]
         send_msg(user_id, msg)
-        logger.log("tg", "sending alert to"+ str(user_id))
+        logger.log("tg", "sending alert to"+ user_id)
+        
         
 
 def bot_upd():
@@ -54,8 +56,12 @@ def new_msgs(last_msg_id, raw_msgs):
         last_msg_id = (int(msg_base[-1]['update_id']) + 1)
         for i in range(len(msg_base)):
             tg_user_id = msg_base[i]['message']['from']['id']
+            if tg_user_id in super_admins:
+                super_admin='1'
+            else:
+                super_admin='0'
             msg = msg_base[i]['message']['text']
-            raw_msgs.append({'tg_user_id': tg_user_id, 'raw_msg': msg, 'msg_id': msg_base[i]['message']['message_id']})
+            raw_msgs.append({'tg_user_id': tg_user_id, 'raw_msg': msg, 'msg_id': msg_base[i]['message']['message_id'], 'is_super_admin': super_admin})
     return last_msg_id, raw_msgs
 
 
@@ -74,11 +80,13 @@ def tg_bot_main(last_msg_id, raw_msgs):
         if len(raw_msgs) > 0:
             for i in range(len(raw_msgs)):
                 msg_to_answer = raw_msgs[i]
-                answer_msg(msg_to_answer['tg_user_id'], msg_to_answer['raw_msg'], msg_to_answer['msg_id'])
-            raw_msgs=[]
+                if msg_to_answer['is_super_admin']=='0':
+                    answer_msg(msg_to_answer['tg_user_id'], msg_to_answer['raw_msg'], msg_to_answer['msg_id'])
+                else:
+                    send_msg(msg_to_answer['tg_user_id'], 'you are super admin', msg_to_answer['msg_id'])
+                    answer_msg(msg_to_answer['tg_user_id'], msg_to_answer['raw_msg'], msg_to_answer['msg_id'])
+            raw_msgs=[] 
 
 
 if __name__ == '__main__':
     tg_bot_main(last_msg_id, raw_msgs)
-
-
