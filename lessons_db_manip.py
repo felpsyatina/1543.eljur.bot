@@ -12,7 +12,8 @@ def get_id_of_schedule(class_name):
     class_num = int(class_name[:-1])
     class_letter = class_name[-1]
     c.execute(f"SELECT * FROM classes WHERE class_num = {class_num} AND class_letter = '{class_letter}'")
-    id_of_schedule = c.fetchone()[3]
+    fetch = c.fetchone()
+    id_of_schedule = fetch[3]
     return id_of_schedule
 
 
