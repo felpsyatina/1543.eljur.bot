@@ -25,6 +25,12 @@ def write_msg(u_id, mess):
         vk.method('messages.send', {'user_id': u_id, 'message': fail, 'v': "5.53"})
 
 
+def allerts(a, mess, wait=1):
+    for u_id in a:
+        write_msg(u_id, mess)
+        sleep(wait)
+
+
 def write_key(u_id, keybor, mess="kek"):
     try:
         vk.method('messages.send', {
