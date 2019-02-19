@@ -18,7 +18,10 @@ def get_schedule(scr, user_id, text):
     for day_name, day_schedule in schedule.items():
         answer_string += str(day_name.title()) + ':\n'
         for lesson_num in day_schedule.keys():
-            answer_string += str(lesson_num) + '. ' + str(day_schedule[lesson_num][1]) + str(day_schedule[lesson_num][8]) + '\n'
+            if day_schedule[lesson_num][8] is not None:
+                answer_string += str(lesson_num) + '. ' + str(day_schedule[lesson_num][1]) + ' ' + str(day_schedule[lesson_num][8]) + '\n'
+            else:
+                answer_string += str(lesson_num) + '. ' + str(day_schedule[lesson_num][1]) + '\n'
     return answer_string
 
 
