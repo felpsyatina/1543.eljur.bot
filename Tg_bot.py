@@ -9,7 +9,7 @@ TOKEN = config.secret["tg"]["token"]
 URL = 'https://api.telegram.org/bot' + TOKEN + '/'
 raw_msgs = []
 last_msg_id = -1
-super_admins={183534296}
+super_admins={183534296, 392694288}
 
 
 def bot_info():
