@@ -39,11 +39,8 @@ def update_user(src=None, user_id=None, dict_of_changes=None):
         return
     if src == "vk":
         for key, value in dict_of_changes.items():
-            cursor.execute(f"UPDATE users SET {key}={value} WHERE vk_id={user_id})")
+            cursor.execute(f"UPDATE users SET {key}={value} WHERE vk_id={user_id}")
     else:
         for key, value in dict_of_changes.items():
-            cursor.execute(f"UPDATE users SET {key}={value} WHERE tele_id={user_id})")
+            cursor.execute(f"UPDATE users SET {key}={value} WHERE tele_id={user_id}")
     conn.commit()
-
-
-print(get_user_by_id("vk", 127845402))
