@@ -147,7 +147,7 @@ if __name__ == '__main__':
     while True:
         if len(queue) != 0:
             r = get_next()
-            logger.log("vkbot", "new message from " +str(r["user_id"]) + " message: " + str(r["message"]))
+            logger.log("vkbot", "new message from " + str(r["user_id"]) + " message: " + str(r["message"]))
             ans = user_req.parse_message_from_user("vk", r['user_id'], r['message'])
             logger.log("vkbot", "Received answer " + str(ans))
             if not ans.get('buttons'):

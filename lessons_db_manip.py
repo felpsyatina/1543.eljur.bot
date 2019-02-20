@@ -2,16 +2,14 @@
 import sqlite3
 import time
 import logger
-from datetime import datetime
+from datetime import datetime, date
 
 conn = sqlite3.connect('1543.eljur.bot.db')
 c = conn.cursor()
 
 
-def cur_date(time=None):
-    if time is None:
-        time = str(datetime.now())
-    return time[:10]
+def cur_date():
+    return datetime.today().strftime('%Y%m%d')
 
 
 def create_lessons_date_db():
@@ -146,27 +144,41 @@ def get_schedule(class_name=None):
 
 
 def get_schedule_by_date(class_name=None, date=None):
+    logger.log("lessons_db_manip", f"getting schedule class: {class_name}, date: {date}")
+
     if class_name is None:
         logger.log("lessons_db_manip", "Пустой ввод класса в функцию get_schedule")
         return
 
     if date is None:
-        logger.log("lessons_db_manip", "Пустой ввод даты в функцию get_schedule")
-        return
+        date = cur_date()
 
     schedule_id = get_id_of_schedule(class_name)
-    schedule = {}
-    for day_fo_week in ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"]:
-        lessons = {}
-        for lesson_num in range(0, 10):  # максимально 10 уроков
-            c.execute(
-                f"SELECT * FROM lessons WHERE schedule_id = {schedule_id} AND day_of_week = '{day_fo_week}' AND number = {lesson_num}")
-            lesson = c.fetchone()
-            if lesson is not None:
-                lessons[lesson_num] = lesson
-        if len(lessons) != 0:
-            schedule[day_fo_week] = lessons
-    return schedule
+
+    #
+    # for day_of_week in ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"]:
+    #
+
+    lessons = {}
+    for lesson_num in range(0, 10):  # максимально 10 уроков
+        c.execute(
+            f"SELECT * FROM lessons_2 WHERE schedule_id = {schedule_id} AND date = '{date}' AND number = {lesson_num}")
+        lesson = c.fetchall()
+
+        if not lesson:
+            continue
+
+        for it in range(len(lesson)):
+
+            if lesson[it][9] is not None:
+                lesson[it] = f"{lesson[it][1]} ({lesson[it][9]})"   # 2-ой элемент массива lesson[it] - название урока
+            else:
+                lesson[it] = lesson[it][1]   # 2-ой элемент массива lesson[it] - название урока
+
+        lessons[lesson_num] = "/".join(lesson)
+
+    logger.log("lessons_db_manip", f"lessons: {lessons}")
+    return lessons
 
 
 def get_schedules(classes=None):
@@ -182,18 +194,20 @@ def get_schedules(classes=None):
     return ans
 
 
-def get_cancel(class_name=None, day_of_week=None, lesson=None):
+def get_cancel(class_name=None, day_date=None, lesson=None):
     if class_name is None:
         logger.log("lessons_db_manip", "Не указан class_name в get_comment")
-    if day_of_week is None:
+    if day_date is None:
         logger.log("lessons_db_manip", "Не указан day в get_comment")
     if lesson is None:
         logger.log("lessons_db_manip", "Не указан lesson в get_comment")
-    query = f"UPDATE lessons SET comment = 'Урок_отменен' WHERE schedule_id = '{get_id_of_schedule(class_name)}' AND day_of_week = '{day_of_week}' AND name = '{lesson}'"
+    query = f"UPDATE lessons_2 SET comment = 'Урок_отменен' WHERE schedule_id = '{get_id_of_schedule(class_name)}' AND date = '{day_date}' AND name = '{lesson}'"
     c.execute(query)
     conn.commit()
 
 
 if __name__ == '__main__':
-    del_table("lessons_2")
-    create_lessons_date_db()
+    get_cancel("10В", 20190221, "Химия")
+    print(get_schedule_by_date("10В"))
+    # del_table("lessons_2")
+    # create_lessons_date_db()

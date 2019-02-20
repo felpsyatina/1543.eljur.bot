@@ -3,6 +3,7 @@ import lessons_db_manip as ldm
 import schedule_parser as sp
 import answers_dict as ad
 import users_db_parser as ud
+from datetime import datetime, timedelta
 from random import randint
 
 
@@ -12,16 +13,22 @@ def update_schedule():
     return
 
 
+def cur_date(add=0):
+    return (datetime.today() + timedelta(days=add)).strftime('%Y%m%d')
+
+
 def get_schedule(scr, user_id, text):
-    schedule = ldm.get_schedule(get_class_name_from_text(text.upper()))
+    schedule = {"Сегодня": ldm.get_schedule_by_date(get_class_name_from_text(text.upper()), cur_date()),
+                "Затвра": ldm.get_schedule_by_date(get_class_name_from_text(text.upper()), cur_date(1))}
+
+    logger.log("user_req", f"current_user_schedule {schedule}")
+
     answer_string = ""
-    for day_name, day_schedule in schedule.items():
-        answer_string += str(day_name.title()) + ':\n'
+    for day_date, day_schedule in schedule.items():
+        answer_string += str(day_date.title()) + ':\n'
         for lesson_num in day_schedule.keys():
-            if day_schedule[lesson_num][8] is not None:
-                answer_string += str(lesson_num) + '. ' + str(day_schedule[lesson_num][1]) + ' ' + str(day_schedule[lesson_num][8]) + '\n'
-            else:
-                answer_string += str(lesson_num) + '. ' + str(day_schedule[lesson_num][1]) + '\n'
+
+            answer_string += f"{lesson_num}. {day_schedule[lesson_num]}\n"
     return answer_string
 
 
@@ -55,8 +62,6 @@ def cancel_lesson(src, user_id, text):
     return "Урок отменен"
 
 
-
-
 def parse_message_from_user(scr, user_id, text):
     logger.log("user_req", "process request")
     text = text.strip().lower()
@@ -65,8 +70,8 @@ def parse_message_from_user(scr, user_id, text):
             if key in text:
                 needed_function = key_words_to_function[value]
                 answer_from_function = needed_function(scr, user_id, text)
+
                 return generate_return(answer_from_function)
-                # generate_return(ldm.get_schedule())
         logger.log("user_req", f"Запрос не найден. Запрос: {text}")
         return {"text": "Запроса не найдено :( ", "buttons": None}
 
@@ -88,3 +93,7 @@ key_words_to_function = {"schedule": get_schedule,
 # parse_message_from_user("tg", "1", "УМРИ")
 
 # ya LOH_KABAKOV
+
+
+if __name__ == '__main__':
+    print(parse_message_from_user("lolka2", "kekka2", "расписание 10в")['text'])
