@@ -16,6 +16,6 @@ def send_alerts(a, mess):
         if tg_id:
             tg.append(tg_id)
     logger.log("alerts", "alerts formed: vk_users: " + str(len(vk)) + " tg_users: " + str(len(tg)))
-    logger.log("alerts", "alerts formed: vk_ids: " + str(vk) + " tg_ids: " + str(vk))
+    logger.log("alerts", "alerts formed: vk_ids: " + str(vk) + " tg_ids: " + str(tg))
     Vk_bot.alerts(vk, mess)
     Tg_bot.alerts(tg, mess)
