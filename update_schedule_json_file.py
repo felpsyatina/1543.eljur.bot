@@ -1,9 +1,10 @@
 import sys
-from json import loads, dumps
+from json import loads
 from datetime import datetime
 sys.path.append("..")
 
 import config
+import logger
 import requests
 import lessons_db_manip as ldb
 
@@ -28,15 +29,15 @@ def update(class_="10В", date=None):
     req = requests.get(address).text
 
     schedule_dict = loads(req)["response"]["result"]["days"]
-    print(schedule_dict)
+    # print(schedule_dict)
 
     ldb.add_schedule_from_json(schedule_dict, class_)
 
+    logger.log("update_schedule_by_json", f"database added {class_}")
     # with open(f"{cur_date()}schedule{class_}.json", "w", encoding="UTF-8") as file_out:
     #     print(r.text, file=file_out)
 
 
 if __name__ == '__main__':
     for cur_class in classes:
-        print(cur_class)
         update(cur_class)

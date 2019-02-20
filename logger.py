@@ -3,6 +3,7 @@ from datetime import datetime
 import config
 import requests
 
+
 def telegram_alert(module, log_line, tg_parse_mode = None):
 	# Special bot will sent special alert to specified technical chat or resposible person
 	# in telegram about "all crashed!"  

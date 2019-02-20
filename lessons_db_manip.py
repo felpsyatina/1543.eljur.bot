@@ -119,7 +119,7 @@ def add_schedule_from_json(schedule=None, class_name=None, main_db="lessons_2"):
                 lesson_grp = "NULL"
 
             query = f"INSERT INTO {main_db} VALUES ({get_id_of_class(class_name)}, '{lesson_name}', {lesson_num}, {id_of_schedule}, '{day_name}', {lesson_room}, {lesson_teacher}, {cur_date}, {lesson_grp}, NULL)"
-            print(query)
+            # print(query)
 
             c.execute(query)
 
