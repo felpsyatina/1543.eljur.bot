@@ -19,6 +19,11 @@ def get_user_by_id(src=None, user_id=None):
     return cursor.fetchone()
 
 
+def get_user_by_global_id(id):
+    cursor.execute('SELECT * FROM users WHERE _id=:id', {'id': id})
+    return cursor.fetchone()
+
+
 def make_new_user(login=None, parallel=None, name=None, surname=None):
     if login is None:
         logger.log("users_db_parser", "Не указан login в функции make_new_user")

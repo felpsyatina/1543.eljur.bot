@@ -31,8 +31,8 @@ def get_class_name_from_text(text):
 
 
 def get_day_and_lesson_and_class_name_from_text(text):    # отмена lesson в day у class_name
-    day = text.split()[3]
-    lesson = text.split()[1]
+    day = text.split()[3].capitalize()
+    lesson = text.split()[1].capitalize()
     class_name = text.split()[5]
     return day, lesson, class_name
 

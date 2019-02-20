@@ -42,7 +42,7 @@ def del_table(table):
 
 def get_id_of_schedule(class_name):
     class_num = int(class_name[:-1])
-    class_letter = class_name[-1]
+    class_letter = class_name[-1].upper()
     c.execute(f"SELECT * FROM classes WHERE class_num = {class_num} AND class_letter = '{class_letter}'")
     fetch = c.fetchone()
     id_of_schedule = fetch[3]
@@ -189,8 +189,8 @@ def get_cancel(class_name=None, day_of_week=None, lesson=None):
         logger.log("lessons_db_manip", "Не указан day в get_comment")
     if lesson is None:
         logger.log("lessons_db_manip", "Не указан lesson в get_comment")
-    c.execute(f"UPDATE lessons SET comment = 'Урок отменен' WHERE schedule_id = {get_id_of_schedule(class_name)}"
-              f"AND day_of_week = {day_of_week} AND name = {lesson})")
+    query = f"UPDATE lessons SET comment = 'Урок_отменен' WHERE schedule_id = '{get_id_of_schedule(class_name)}' AND day_of_week = '{day_of_week}' AND name = '{lesson}'"
+    c.execute(query)
     conn.commit()
 
 
