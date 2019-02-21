@@ -66,6 +66,12 @@ def cancel_lesson(src, user_id, text):
     return "Урок отменен"
 
 
+def send_commands(src, user_id, text):
+    logger.log("user_req", "commands request")
+    s = "Из доступных команд у меня пока есть: распиание <класс вида: число буква>, мой аккаунт, отмена"
+    return s
+
+
 def parse_message_from_user(scr, user_id, text):
     logger.log("user_req", "process request")
     text = text.strip().lower()
@@ -91,7 +97,7 @@ key_words_to_function = {"schedule": get_schedule,
                          # "replacement": replace_lesson,
                          # "comment": comment_lesson,
                          # "support": support_message,
-                         # "commands": send_commands
+                         "commands": send_commands
                          }
 # update_schedule()
 # parse_message_from_user("tg", "1", "УМРИ")
