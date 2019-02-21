@@ -204,6 +204,7 @@ def get_cancel(class_name=None, day_date=None, lesson=None):
     query = f"UPDATE lessons_2 SET comment = 'Урок_отменен' WHERE schedule_id = '{get_id_of_schedule(class_name)}' AND date = '{day_date}' AND name = '{lesson}'"
     c.execute(query)
     conn.commit()
+    return
 
 
 if __name__ == '__main__':

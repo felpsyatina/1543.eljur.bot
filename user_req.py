@@ -32,6 +32,15 @@ def get_schedule(scr, user_id, text):
     return answer_string
 
 
+def register_new_user(scr, user_id, text):    # регистрация login name surname parallel
+    text = text.split()
+    login = text[1]
+    name = text[2]
+    surname = text[3]
+    parallel = text[4]
+    return ud.make_new_user(login, parallel, name, surname, scr, user_id)
+
+
 def get_class_name_from_text(text):
     class_name = text.split()[1]
     return class_name
@@ -91,7 +100,7 @@ def parse_message_from_user(scr, user_id, text):
 
 
 key_words_to_function = {"schedule": get_schedule,
-                         # "registration": register_new_user,
+                         "registration": register_new_user,
                          "account": send_acc_information,
                          "cancel": cancel_lesson,
                          # "replacement": replace_lesson,

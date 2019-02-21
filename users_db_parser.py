@@ -18,12 +18,14 @@ def get_user_by_id(src=None, user_id=None):
     else:
         cursor.execute('SELECT * FROM users WHERE tele_id=:_id', {'_id': user_id})
     fetch = cursor.fetchone()
-    answer = dict.fromkeys(ad.users_table_fields)
-    i = 0
-    for key in answer.keys():
-        answer[key] = fetch[i]
-        i += 1
-    return answer
+    if fetch is not None:
+        answer = dict.fromkeys(ad.users_table_fields)
+        i = 0
+        for key in answer.keys():
+            answer[key] = fetch[i]
+            i += 1
+        return answer
+    return
 
 
 def get_user_by_global_id(id):
@@ -31,12 +33,25 @@ def get_user_by_global_id(id):
     return cursor.fetchone()
 
 
-def make_new_user(login=None, parallel=None, name=None, surname=None):
+def make_new_user(login=None, parallel=None, name=None, surname=None, src=None, user_id=None):
     if login is None:
         logger.log("users_db_parser", "Не указан login в функции make_new_user")
         return
-    cursor.execute("INSERT INTO users (login, parallel, name, surname) VALUES (?, ?, ?, ?)", (login, parallel, name, surname))
-    conn.commit()
+    if src is None:
+        logger.log("users_db_parser", "Не указан src в функции make_new_user")
+    if user_id is None:
+        logger.log("users_db_parser", "Не указан id в функции make_new_user")
+    if get_user_by_id(src, user_id) is None:
+        if src == 'vk':
+            query = f"INSERT INTO users (login, parallel, name, surname, vk_id) VALUES ('{login}', '{parallel}', '{name}', '{surname}', '{user_id}')"
+        else:
+            query = f"INSERT INTO users (login, parallel, name, surname, tele_id) VALUES ('{login}', '{parallel}', '{name}', '{surname}', '{user_id}')"
+        cursor.execute(query)
+        conn.commit()
+        answer = "Пользователь зарегистрирован"
+    else:
+        answer = "Похоже, у вас уже есть аккаунт"
+    return answer
 
 
 def update_user(src=None, user_id=None, dict_of_changes=None):
