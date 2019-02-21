@@ -1,5 +1,6 @@
 import sqlite3
 import logger
+import answers_dict as ad
 
 conn = sqlite3.connect("1543.eljur.bot.db")
 cursor = conn.cursor()
@@ -16,7 +17,13 @@ def get_user_by_id(src=None, user_id=None):
         cursor.execute('SELECT * FROM users WHERE vk_id=:_id', {'_id': user_id})
     else:
         cursor.execute('SELECT * FROM users WHERE tele_id=:_id', {'_id': user_id})
-    return cursor.fetchone()
+    fetch = cursor.fetchone()
+    answer = dict.fromkeys(ad.users_table_fields)
+    i = 0
+    for key in answer.keys():
+        answer[key] = fetch[i]
+        i += 1
+    return answer
 
 
 def get_user_by_global_id(id):
