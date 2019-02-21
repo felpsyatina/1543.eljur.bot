@@ -51,7 +51,11 @@ def generate_return(text):
 def send_acc_information(src, user_id, text):
     logger.log("user_req", "request for acc data")
     ans_mes = ud.get_user_by_id(src, user_id)
-    answer_message = f"Логин:{ans_mes[1]}\nИмя:{ans_mes[3]}\nФамилия:{ans_mes[4]}\nПараллель:{ans_mes[1]}"
+    if ans_mes == None:
+        logger.log("user_req", "user " + user_id + " is not in the database")
+        answer_message = "К сожалению вас пока нет в нашей базе данных"
+    else:
+        answer_message = f"Логин:{ans_mes[1]}\nИмя:{ans_mes[3]}\nФамилия:{ans_mes[4]}\nПараллель:{ans_mes[1]}"
     return answer_message
 
 
