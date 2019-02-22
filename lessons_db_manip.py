@@ -207,6 +207,38 @@ def get_cancel(class_name=None, day_date=None, lesson=None):
     return
 
 
+def get_comment(class_name=None, day_date=None, lesson=None, comment=None):
+    if class_name is None:
+        logger.log("lessons_db_manip", "Не указан class_name в get_comment")
+    if day_date is None:
+        logger.log("lessons_db_manip", "Не указан day в get_comment")
+    if lesson is None:
+        logger.log("lessons_db_manip", "Не указан lesson в get_comment")
+    if comment is None:
+        return "Пустой комментарий"
+    else:
+        query = f"UPDATE lessons_2 SET comment = '{comment}' WHERE schedule_id = '{get_id_of_schedule(class_name)}' AND date = '{day_date}' AND name = '{lesson}'"
+        c.execute(query)
+        conn.commit()
+        return "Комментарий добавлен"
+
+
+def get_replacement(class_name=None, day_date=None, lesson=None, another_lesson=None):
+    if class_name is None:
+        logger.log("lessons_db_manip", "Не указан class_name в get_comment")
+    if day_date is None:
+        logger.log("lessons_db_manip", "Не указан day в get_comment")
+    if lesson is None:
+        logger.log("lessons_db_manip", "Не указан lesson в get_comment")
+    if another_lesson is None:
+        return "Нет урока-замены"
+    else:
+        query = f"UPDATE lessons_2 SET comment = '{another_lesson}' WHERE schedule_id = '{get_id_of_schedule(class_name)}' AND date = '{day_date}' AND name = '{lesson}'"
+        c.execute(query)
+        conn.commit()
+        return "Урок заменен"
+
+
 if __name__ == '__main__':
     get_cancel("10В", 20190221, "Химия")
     print(get_schedule_by_date("10В"))

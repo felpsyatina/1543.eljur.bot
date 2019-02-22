@@ -75,6 +75,20 @@ def cancel_lesson(src, user_id, text):
     return "Урок отменен"
 
 
+def comment_lesson(src, user_id, text):      # комментарий lesson в day у class_name comment
+    logger.log("user_req", "commenting a lesson")
+    day, lesson, class_name = get_day_and_lesson_and_class_name_from_text(text)
+    comment = text.split()[6]
+    return ldm.get_comment(class_name, day, lesson, comment)
+
+
+def replace_lesson(src, user_id, text):      # замена lesson в day у class_name another_lesson
+    logger.log("user_req", "replacing a lesson")
+    day, lesson, class_name = get_day_and_lesson_and_class_name_from_text(text)
+    another_lesson = text.split()[6]
+    return ldm.get_replacement(class_name, day, lesson, another_lesson)
+
+
 def send_commands(src, user_id, text):
     logger.log("user_req", "commands request")
     s = "Из доступных команд у меня пока есть: распиание <класс вида: число буква>, мой аккаунт, отмена"
@@ -103,8 +117,8 @@ key_words_to_function = {"schedule": get_schedule,
                          "registration": register_new_user,
                          "account": send_acc_information,
                          "cancel": cancel_lesson,
-                         # "replacement": replace_lesson,
-                         # "comment": comment_lesson,
+                         "replacement": replace_lesson,
+                         "comment": comment_lesson,
                          # "support": support_message,
                          "commands": send_commands
                          }
