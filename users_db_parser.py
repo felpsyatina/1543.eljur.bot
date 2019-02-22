@@ -30,7 +30,15 @@ def get_user_by_id(src=None, user_id=None):
 
 def get_user_by_global_id(id):
     cursor.execute('SELECT * FROM users WHERE _id=:id', {'id': id})
-    return cursor.fetchone()
+    fetch = cursor.fetchone()
+    if fetch is not None:
+        answer = dict.fromkeys(ad.users_table_fields)
+        i = 0
+        for key in answer.keys():
+            answer[key] = fetch[i]
+            i += 1
+        return answer
+    return
 
 
 def make_new_user(login=None, parallel=None, name=None, surname=None, src=None, user_id=None):
