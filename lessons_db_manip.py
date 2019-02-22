@@ -168,14 +168,7 @@ def get_schedule_by_date(class_name=None, date=None):
         if not lesson:
             continue
 
-        for it in range(len(lesson)):
-
-            if lesson[it][9] is not None:
-                lesson[it] = f"{lesson[it][1]} ({lesson[it][9]})"   # 2-ой элемент массива lesson[it] - название урока
-            else:
-                lesson[it] = lesson[it][1]   # 2-ой элемент массива lesson[it] - название урока
-
-        lessons[lesson_num] = "/".join(lesson)
+        lessons[lesson_num] = lesson
 
     logger.log("lessons_db_manip", f"lessons: {lessons}")
     return lessons

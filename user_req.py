@@ -4,7 +4,6 @@ import schedule_parser as sp
 import answers_dict as ad
 import users_db_parser as ud
 from datetime import datetime, timedelta
-from random import randint
 
 
 def update_schedule():
@@ -25,10 +24,18 @@ def get_schedule(scr, user_id, text):
 
     answer_string = ""
     for day_date, day_schedule in schedule.items():
-        answer_string += str(day_date.title()) + ':\n'
-        for lesson_num in day_schedule.keys():
+        answer_string += f"{day_date.title()}\n"
+        for lesson_num, lesson in day_schedule.items():
 
-            answer_string += f"{lesson_num}. {day_schedule[lesson_num]}\n"
+            for it in range(len(lesson)):
+                if lesson[it][9] is not None:
+                    lesson[it] = f"{lesson[it][1]} ({lesson[it][9]})"
+                    # 2-ой элемент массива lesson[it] - название урока
+                    # 9-ый - коммент к уроку
+                else:
+                    lesson[it] = lesson[it][1]  # 2-ой элемент массива lesson[it] - название урока
+
+            answer_string += f"{lesson_num}. {'/'.join(lesson)}\n"
     return answer_string
 
 
