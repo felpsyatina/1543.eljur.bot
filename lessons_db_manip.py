@@ -210,7 +210,7 @@ def get_comment(class_name=None, day_date=None, lesson=None, comment=None):
     if comment is None:
         return "Пустой комментарий"
     else:
-        query = f"UPDATE lessons_2 SET comment = '{comment}' WHERE schedule_id = '{get_id_of_schedule(class_name)}' AND date = '{day_date}' AND name = '{lesson}'"
+        query = f"UPDATE lessons_2 SET comment = '{comment}' WHERE schedule_id = '{get_id_of_schedule(class_name)}' AND day_of_week = '{day_date}' AND name = '{lesson}'"
         c.execute(query)
         conn.commit()
         return "Комментарий добавлен"
