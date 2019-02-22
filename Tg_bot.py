@@ -66,7 +66,7 @@ def new_msgs(last_msg_id, raw_msgs):
 
 
 def answer_msg(user_id, msg, msg_id):
-    logger.log("tg", "sending message to "+str(user_id))
+    logger.log("tg", "answering msg - " + msg + "to " +str(user_id))
     result = user_req.parse_message_from_user("tg", user_id, msg)
     msg_to_send = result['text']
     send_msg(user_id, msg_to_send, msg_id)
