@@ -117,7 +117,7 @@ def parse_message_from_user(scr, user_id, text):
 
     except Exception as err:
         logger.log("user_req", f"Processing error: {err}\n Запрос: {text}")
-        return {"text": "Видно, не судьба :( ", "buttons": None}
+        return {"text": "Видно не судьба :( ", "buttons": None}
 
 
 key_words_to_function = {"schedule": get_schedule,
