@@ -98,8 +98,8 @@ def replace_lesson(src, user_id, text):      # замена lesson в day у cla
 
 def send_commands(src, user_id, text):
     logger.log("user_req", "commands request")
-    s = "Из доступных команд у меня пока есть: распиание <класс вида: число буква>, мой аккаунт, отмена"
-    return s
+    ans = "Из доступных команд у меня пока есть: распиание <класс вида: число буква>, мой аккаунт, отмена"
+    return ans
 
 
 def parse_message_from_user(scr, user_id, text):
