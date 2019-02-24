@@ -78,7 +78,7 @@ def send_acc_information(src, user_id, text):
 def cancel_lesson(src, user_id, text):
     logger.log("user_req", "cancelling a lesson")
     day, lesson, class_name = get_day_and_lesson_and_class_name_from_text(text)
-    ldm.get_cancel(class_name, day, lesson)
+    ldm.make_cancel(class_name, day, lesson)
     return "Урок отменен"
 
 

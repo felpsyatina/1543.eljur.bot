@@ -187,7 +187,7 @@ def get_schedules(classes=None):
     return ans
 
 
-def get_cancel(class_name=None, day_date=None, lesson=None):
+def make_cancel(class_name=None, day_date=None, lesson=None):
     if class_name is None:
         logger.log("lessons_db_manip", "Не указан class_name в get_comment")
     if day_date is None:
@@ -233,7 +233,7 @@ def get_replacement(class_name=None, day_date=None, lesson=None, another_lesson=
 
 
 if __name__ == '__main__':
-    get_cancel("10В", 20190221, "Химия")
+    make_cancel("10В", 20190221, "Химия")
     print(get_schedule_by_date("10В"))
     # del_table("lessons_2")
     # create_lessons_date_db()
