@@ -18,7 +18,7 @@ def cur_date(add=0):
 
 def get_schedule(scr, user_id, text):
     schedule = {"Сегодня": ldm.get_schedule_by_date(get_class_name_from_text(text.upper()), cur_date()),
-                "Завтра": ldm.get_schedule_by_date(get_class_name_from_text(text.upper()), cur_date(1))}
+                "Затвра": ldm.get_schedule_by_date(get_class_name_from_text(text.upper()), cur_date(1))}
 
     logger.log("user_req", f"current_user_schedule {schedule}")
 
@@ -78,7 +78,7 @@ def send_acc_information(src, user_id, text):
 def cancel_lesson(src, user_id, text):
     logger.log("user_req", "cancelling a lesson")
     day, lesson, class_name = get_day_and_lesson_and_class_name_from_text(text)
-    ldm.get_cancel(class_name, day, lesson)
+    ldm.make_cancel(class_name, day, lesson)
     return "Урок отменен"
 
 
@@ -98,8 +98,8 @@ def replace_lesson(src, user_id, text):      # замена lesson в day у cla
 
 def send_commands(src, user_id, text):
     logger.log("user_req", "commands request")
-    s = "Из доступных команд у меня пока есть: расписание <класс вида: число буква>, мой аккаунт"
-    return s
+    ans = "Из доступных команд у меня пока есть: распиание <класс вида: число буква>, мой аккаунт, отмена"
+    return ans
 
 
 def parse_message_from_user(scr, user_id, text):
@@ -117,7 +117,7 @@ def parse_message_from_user(scr, user_id, text):
 
     except Exception as err:
         logger.log("user_req", f"Processing error: {err}\n Запрос: {text}")
-        return {"text": "Видно, не судьба :( ", "buttons": None}
+        return {"text": "Видно не судьба :( ", "buttons": None}
 
 
 key_words_to_function = {"schedule": get_schedule,
