@@ -9,8 +9,8 @@ def send_alerts(a, mess):
     tg = []
     for id in a:
         info = users_db_parser.get_user_by_global_id(id)
-        vk_id = info[8]
-        tg_id = info[10]
+        vk_id = info['vk_id']
+        tg_id = info['tele_id']
         if vk_id:
             vk.append(vk_id)
         if tg_id:
