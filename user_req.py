@@ -18,7 +18,7 @@ def cur_date(add=0):
 
 def get_schedule(scr, user_id, text):
     schedule = {"Сегодня": ldm.get_schedule_by_date(get_class_name_from_text(text.upper()), cur_date()),
-                "Затвра": ldm.get_schedule_by_date(get_class_name_from_text(text.upper()), cur_date(1))}
+                "Завтра": ldm.get_schedule_by_date(get_class_name_from_text(text.upper()), cur_date(1))}
 
     logger.log("user_req", f"current_user_schedule {schedule}")
 
@@ -98,7 +98,7 @@ def replace_lesson(src, user_id, text):      # замена lesson в day у cla
 
 def send_commands(src, user_id, text):
     logger.log("user_req", "commands request")
-    ans = "Из доступных команд у меня пока есть: распиание <класс вида: число буква>, мой аккаунт, отмена"
+    ans = "Из доступных команд у меня пока есть: расписание <класс вида: число буква>, мой аккаунт"
     return ans
 
 
