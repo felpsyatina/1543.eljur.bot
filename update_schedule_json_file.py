@@ -6,7 +6,6 @@ sys.path.append("..")
 import config
 import logger
 import requests
-import lessons_db_manip as ldb
 
 classes = ['5А', '5Б', '5В', '5Г', '6А', '6Б', '6В', '6Г', '7А', '7Б', '7В', '7Г', '8А', '8Б', '8В', '8Г', '9А', '9Б',
            '9В', '9Г', '10А', '10Б', '10В', '10Г', '11А', '11Б', '11В', '11Г']
@@ -31,13 +30,8 @@ def update(class_="10В", date=None):
     schedule_dict = loads(req)["response"]["result"]["days"]
     # print(schedule_dict)
 
-    ldb.add_schedule_from_json(schedule_dict, class_)
-
-    logger.log("update_schedule_by_json", f"database added {class_}")
-    # with open(f"{cur_date()}schedule{class_}.json", "w", encoding="UTF-8") as file_out:
-    #     print(r.text, file=file_out)
-
+    return schedule_dict
 
 if __name__ == '__main__':
-    for cur_class in classes:
-        update(cur_class)
+    pass
+
