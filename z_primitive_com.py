@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 
-import Vk_bot
 from time import sleep
 from primitive_commands import update_schedule, schedule_xml_to_array
+import Vk_bot
+
 
 Vk_bot.run()
 users_pos = {}
@@ -29,7 +30,7 @@ UPPER_LET = {
 
 
 while True:
-    d = Vk_bot.get_info()
+    d = Vk_bot.get_next()
     if d == None:
         sleep(0.05)
         continue
@@ -64,7 +65,7 @@ while True:
         continue
 
     if users_pos[user_id] == 1 and message in ["узнать_расписание"]:
-        key = Vk_bot.make_key_fast("5 6 7 8", f"9 10 11", BACK_MSG_OUT)
+        key = Vk_bot.make_key_fast("5 6 7 8", "9 10 11", BACK_MSG_OUT)
         users_pos[user_id] = 2
         users_req[user_id] = []
         

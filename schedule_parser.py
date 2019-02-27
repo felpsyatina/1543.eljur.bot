@@ -1,4 +1,5 @@
 import requests
+import logger
 from bs4 import BeautifulSoup
 
 classes = ['5А', '5Б', '5В', '5Г', '6А', '6Б', '6В', '6Г', '7А', '7Б', '7В', '7Г', '8А', '8Б', '8В', '8Г', '9А', '9Б',
@@ -24,7 +25,7 @@ def get_current_schedule():
             lessons_this_day = schedule_html.find_all(class_='schedule__day__content__lesson__data')
             lessons = {}
             for k in range(len(lessons_this_day)):
-                lessons[k] = lessons_this_day[k].find_all('span')[0].contents[0].strip()
+                lessons[k + 1] = lessons_this_day[k].find_all('span')[0].contents[0].strip()
             schedule_for_class[day] = lessons
             schedule_html.decompose()
         schedule[i] = schedule_for_class
