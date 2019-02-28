@@ -2,7 +2,6 @@
 import sqlite3
 import time
 import logger
-import update_schedule_json_file as get_sch
 from datetime import datetime
 
 conn = sqlite3.connect('1543.eljur.bot.db')
@@ -114,8 +113,10 @@ class LessonDbReq:
             conn.commit()
 
         def add_schedules(self):
+            import update_schedule_json_file as get_sch
+
             for cur_class in classes:
-                Req.add_schedule_from_json(get_sch.update(cur_class), cur_class)
+                self.add_schedule_from_json(get_sch.update(cur_class), cur_class)
 
                 logger.log("update_schedule_by_json", f"database added {cur_class}")
 
@@ -159,6 +160,7 @@ def add_schedules(schedules=None):
     if schedules is None:
         logger.log("lessons_db_manip", "Пустой ввод в функцию add_schedule")
         return
+
     for class_name in schedules.keys():
         id_of_class = get_id_of_class(class_name)
         id_of_schedule = create_key()
@@ -331,6 +333,7 @@ if __name__ == '__main__':
     # del_table("lessons_2")
 
     Req = LessonDbReq()
+    Req.setup_db(True)
+
     # Req.create_classes_db()
     # Req.create_lessons_date_db()
-    Req.setup_db(True)
