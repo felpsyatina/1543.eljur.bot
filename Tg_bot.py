@@ -76,7 +76,7 @@ def tg_bot_main(last_msg_id, raw_msgs):
     print(bot_info())
     logger.log("tg", "starting tg_bot")
     while True:
-        time.sleep(1)
+        time.sleep(3)
         last_msg_id, raw_msgs = new_msgs(last_msg_id, raw_msgs)
         if len(raw_msgs) > 0:
             for i in range(len(raw_msgs)):
