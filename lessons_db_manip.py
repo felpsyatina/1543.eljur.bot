@@ -11,122 +11,212 @@ current_min_par = 44
 classes = ['5А', '5Б', '5В', '5Г', '6А', '6Б', '6В', '6Г', '7А', '7Б', '7В', '7Г', '8А', '8Б', '8В', '8Г', '9А',
                        '9Б', '9В', '9Г', '10А', '10Б', '10В', '10Г', '11А', '11Б', '11В', '11Г']
 
+
 def cur_date():
     return datetime.today().strftime('%Y%m%d')
 
 
+class MyCursor(sqlite3.Cursor):
+    def __init__(self, connection):
+        sqlite3.Cursor.__init__(self, connection)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, ex_type, ex_value, ex_traceback):
+        self.close()
+
+
 class LessonDbReq:
-    with sqlite3.connect('1543.eljur.bot.db') as conn:
-        c = conn.cursor()
+    def __init__(self, database_name="1543.eljur.bot.db"):
+        self.database_name = database_name
+        self.curr = None
 
-        def __init__(self):
-            pass
+    def run(self, function=None, *args):
+        with sqlite3.connect(self.database_name, isolation_level=None) as connection, MyCursor(connection) as cursor:
+            if function is not None:
+                ans = function(*args, cursor=cursor)
+                connection.commit()
+                if ans is not None:
+                    return ans
 
-        def create_classes_db(self):
-            query = "CREATE TABLE IF NOT EXISTS classes (" \
-                    "id INTEGER PRIMARY KEY AUTOINCREMENT, " \
-                    "paral INTEGER, " \
-                    "letter TEXT)"
-            c.execute(query)
-            conn.commit()
+    def gen_query_class_table(self):
+        name = f"classes"
 
-            for paral_num in range(current_min_par, current_min_par + 7):
-                for letter in ["А", "Б", "В", "Г"]:
-                    query = f"INSERT INTO classes (paral, letter) VALUES({paral_num}, '{letter}')"
-                    c.execute(query)
-            conn.commit()
+        query = f"""
+                create table {name}
+                (
+                    id integer not null
+                        primary key autoincrement,
+                    paral int not null,
+                    letter text not null
+                );
+                """
 
-        def create_lessons_date_db(self):
-            name = f"lessons"
+        return query
 
-            query = f"CREATE TABLE IF NOT EXISTS {name} (" \
-                    "id INTEGER, " \
-                    "name TEXT," \
-                    "number INTEGER," \
-                    "schedule_id INTEGER," \
-                    "day_of_week TEXT," \
-                    "cabinet TEXT, " \
-                    "teacher TEXT, " \
-                    "date TEXT," \
-                    "grp TEXT," \
-                    "comment TEXT)"
+    def gen_query_add_class(self, paral_num, letter):
+        query = f"INSERT INTO classes (paral, letter) VALUES({paral_num}, '{letter}')"
+        return query
 
-            c.execute(query)
+    def gen_query_lesson_table(self):
+        name = f"lessons"
 
-            conn.commit()
+        query = f"""
+                create table {name}
+                (
+                    id integer not null
+                            primary key autoincrement,
+                    name text,
+                    number int not null,
+                    class_id int,
+                    day_of_week text not null,
+                    room text,
+                    teacher text,
+                    date text,
+                    grp text,
+                    comment text
+                );
+                """
+        return query
 
-        def del_table(self, table):
-            query = f'DROP TABLE IF EXISTS {table}'
-            logger.log("lesson_db_manip", f"таблица '{table}' удалена!")
-            c.execute(query)
-            conn.commit()
+    def gen_query_del_table(self, table_name):
+        query = f'DROP TABLE IF EXISTS {table_name}'
+        return query
 
-        def get_id_of_class(self, class_name):
-            class_num = int(class_name[:-1])
-            class_letter = class_name[-1]
+    def gen_query_get_cls_id(self, class_num, class_letter):
+        query = f"""
+                SELECT * FROM classes WHERE
+                paral = {class_num + current_min_par - 5} AND
+                letter = '{class_letter}';
+                """
 
-            query = f"SELECT * FROM classes WHERE " \
-                f"paral = {class_num + current_min_par - 5} AND " \
-                f"letter = '{class_letter}'"
+        return query
 
-            c.execute(query)
-            fetch = c.fetchone()
-            id_of_class = fetch[0]
-            return id_of_class
+    def create_classes_db(self, cursor):
+        cursor.execute(self.gen_query_class_table())
+        logger.log("lesson_db_manip", "created table: 'classes'")
 
-        def add_schedule_from_json(self, schedule=None, class_name=None, main_db="lessons"):
-            if schedule is None:
-                logger.log("lessons_db_manip", "Пустой ввод в функцию add_schedule_from_json")
-                return
+        for paral_num in range(current_min_par, current_min_par + 7):
+            for letter in ["А", "Б", "В", "Г"]:
+                cursor.execute(self.gen_query_add_class(paral_num=paral_num, letter=letter))
+        logger.log("lesson_db_manip", "added classes in 'classes'")
 
-            id_of_schedule = self.get_id_of_class(class_name)
+    def create_lessons_date_db(self, cursor):
+        cursor.execute(self.gen_query_lesson_table())
+        logger.log("lesson_db_manip", "created table: 'lessons'")
 
-            for cur_date in schedule.keys():
-                dict_of_this_date = schedule[cur_date]
-                day_name = dict_of_this_date["title"]
+    def del_table(self, table, cursor):
+        cursor.execute(self.gen_query_del_table(table_name=table))
+        logger.log("lesson_db_manip", f"table '{table}' deleted!")
 
-                for lesson in dict_of_this_date.get("items", []):
-                    lesson_name = lesson["name"]
-                    lesson_num = lesson["num"]
+    def get_id_of_class(self, class_name, cursor):
+        class_num = int(class_name[:-1])
+        class_letter = class_name[-1]
+        q = self.gen_query_get_cls_id(class_num=class_num, class_letter=class_letter)
 
-                    if lesson["room"]:
-                        lesson_room = f"'{lesson['room']}'"
-                    else:
-                        lesson_room = "NULL"
+        cursor.execute(q)
+        fetch = cursor.fetchone()
 
-                    if lesson["teacher"]:
-                        lesson_teacher = f"'{lesson['teacher']}'"
-                    else:
-                        lesson_teacher = "NULL"
+        id_of_class = fetch[0]
+        return id_of_class
 
-                    if lesson.get("grp", 0):
-                        lesson_grp = f"'{lesson['grp']}'"
-                    else:
-                        lesson_grp = "NULL"
+    def add_schedule_from_json(self, schedule=None, class_name=None, cursor=None):
+        if schedule is None:
+            logger.log("lessons_db_manip", "Пустой ввод в функцию add_schedule_from_json")
+            return
 
-                    query = f"INSERT INTO {main_db} VALUES ({self.get_id_of_class(class_name)}, '{lesson_name}'," \
-                        f" {lesson_num}, {id_of_schedule}, '{day_name}', {lesson_room}, {lesson_teacher}," \
-                        f" {cur_date}, {lesson_grp}, NULL)"
+        class_id = self.get_id_of_class(class_name, cursor)
 
-                    c.execute(query)
+        for cur_date in schedule.keys():
+            dict_of_this_date = schedule[cur_date]
+            day_name = dict_of_this_date["title"]
 
-            conn.commit()
+            for lesson in dict_of_this_date.get("items", []):
+                lesson_name = lesson["name"]
+                lesson_num = lesson["num"]
 
-        def add_schedules(self):
-            import update_schedule_json_file as get_sch
+                if lesson["room"]:
+                    lesson_room = f"'{lesson['room']}'"
+                else:
+                    lesson_room = "NULL"
 
-            for cur_class in classes:
-                self.add_schedule_from_json(get_sch.update(cur_class), cur_class)
+                if lesson["teacher"]:
+                    lesson_teacher = f"'{lesson['teacher']}'"
+                else:
+                    lesson_teacher = "NULL"
 
-                logger.log("update_schedule_by_json", f"database added {cur_class}")
+                if lesson.get("grp", 0):
+                    lesson_grp = f"'{lesson['grp']}'"
+                else:
+                    lesson_grp = "NULL"
 
-        def setup_db(self, adding_schedule=False):
-            self.del_table("lessons")
-            self.del_table("classes")
-            self.create_classes_db()
-            self.create_lessons_date_db()
-            if adding_schedule:
-                self.add_schedules()
+                query = f"""
+                        INSERT INTO lessons (name, number, class_id, day_of_week, room, teacher, date, grp, comment)
+                        VALUES (
+                        '{lesson_name}', {lesson_num}, {class_id}, '{day_name}', {lesson_room},
+                        {lesson_teacher}, {cur_date}, {lesson_grp}, NULL)
+                        """
+
+                cursor.execute(query)
+
+    def add_schedules(self, cursor):
+        import update_schedule_json_file as get_sch
+        for c in classes:
+            self.add_schedule_from_json(get_sch.update(c), c, cursor)
+
+            logger.log("update_schedule_by_json", f"database added {c}")
+
+    def get_schedule_by_date(self, class_name=None, date=None, cursor=None):
+        logger.log("lessons_db_manip", f"getting schedule class: {class_name}, date: {date}")
+
+        if class_name is None:
+            logger.log("lessons_db_manip", "Пустой ввод класса в функцию get_schedule")
+            return
+
+        if date is None:
+            date = cur_date()
+
+        class_id = self.get_id_of_class(class_name, cursor=cursor)
+
+        lessons = {}
+        for lesson_num in range(0, 10):  # максимально 10 уроков
+            query = f"SELECT * FROM lessons WHERE class_id = {class_id} AND date = '{date}' AND number = {lesson_num}"
+            cursor.execute(query)
+            lesson = cursor.fetchall()
+
+            if not lesson:
+                continue
+
+            lessons[lesson_num] = lesson
+
+        logger.log("lessons_db_manip", f"lessons: {lessons}")
+        return lessons
+
+    def make_cancel(self, class_name=None, day_date=None, lesson=None, cursor=None):
+        if class_name is None:
+            logger.log("lessons_db_manip", "Не указан class_name в get_comment")
+        if day_date is None:
+            logger.log("lessons_db_manip", "Не указан day в get_comment")
+        if lesson is None:
+            logger.log("lessons_db_manip", "Не указан lesson в get_comment")
+
+        class_id = self.get_id_of_class(class_name, cursor)
+        query = f"""
+                UPDATE lessons SET comment = 'Урок_отменен' WHERE 
+                class_id = '{class_id}'
+                AND date = '{day_date}' AND name = '{lesson}'
+                """
+        cursor.execute(query)
+        logger.log("lesson_db_manip", f"canceled lesson: class_id - {class_id}, date - {day_date}, lesson - {lesson}")
+
+    def setup_db(self, adding_schedule=False):
+        self.run(self.del_table, "lessons")
+        self.run(self.del_table, "classes")
+        self.run(self.create_classes_db)
+        self.run(self.create_lessons_date_db)
+        if adding_schedule:
+            self.run(self.add_schedules)
 
 
 def get_id_of_schedule(class_name):
@@ -209,7 +299,7 @@ def add_schedule_from_json(schedule=None, class_name=None, main_db="lessons_2"):
                 lesson_grp = "NULL"
 
             query = f"INSERT INTO {main_db} VALUES ({get_id_of_class(class_name)}, '{lesson_name}', {lesson_num}, {id_of_schedule}, '{day_name}', {lesson_room}, {lesson_teacher}, {cur_date}, {lesson_grp}, NULL)"
-            # print(query)
+
 
             c.execute(query)
 
@@ -279,19 +369,6 @@ def get_schedules(classes=None):
     return ans
 
 
-def make_cancel(class_name=None, day_date=None, lesson=None):
-    if class_name is None:
-        logger.log("lessons_db_manip", "Не указан class_name в get_comment")
-    if day_date is None:
-        logger.log("lessons_db_manip", "Не указан day в get_comment")
-    if lesson is None:
-        logger.log("lessons_db_manip", "Не указан lesson в get_comment")
-    query = f"UPDATE lessons_2 SET comment = 'Урок_отменен' WHERE schedule_id = '{get_id_of_schedule(class_name)}' AND date = '{day_date}' AND name = '{lesson}'"
-    c.execute(query)
-    conn.commit()
-    return
-
-
 def get_comment(class_name=None, day_date=None, lesson=None, comment=None):
     if class_name is None:
         logger.log("lessons_db_manip", "Не указан class_name в get_comment")
@@ -302,7 +379,7 @@ def get_comment(class_name=None, day_date=None, lesson=None, comment=None):
     if comment is None:
         return "Пустой комментарий"
     else:
-        query = f"UPDATE lessons_2 SET comment = '{comment}' WHERE schedule_id = '{get_id_of_schedule(class_name)}' AND day_of_week = '{day_date}' AND name = '{lesson}'"
+        query = f"UPDATE lessons SET comment = '{comment}' WHERE schedule_id = '{get_id_of_schedule(class_name)}' AND day_of_week = '{day_date}' AND name = '{lesson}'"
         c.execute(query)
         conn.commit()
         return "Комментарий добавлен"
@@ -318,22 +395,12 @@ def get_replacement(class_name=None, day_date=None, lesson=None, another_lesson=
     if another_lesson is None:
         return "Нет урока-замены"
     else:
-        query = f"UPDATE lessons_2 SET comment = '{another_lesson}' WHERE schedule_id = '{get_id_of_schedule(class_name)}' AND date = '{day_date}' AND name = '{lesson}'"
+        query = f"UPDATE lessons SET comment = '{another_lesson}' WHERE schedule_id = '{get_id_of_schedule(class_name)}' AND date = '{day_date}' AND name = '{lesson}'"
         c.execute(query)
         conn.commit()
         return "Урок заменен"
 
 
 if __name__ == '__main__':
-    # make_cancel("10В", 20190221, "Химия")
-    # print(get_schedule_by_date("10В"))
-    # del_table("lessons_2")
-    # create_lessons_date_db()
-    # del_table("classes")
-    # del_table("lessons_2")
-
     Req = LessonDbReq()
     Req.setup_db(True)
-
-    # Req.create_classes_db()
-    # Req.create_lessons_date_db()

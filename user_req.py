@@ -1,14 +1,16 @@
 import logger
-import lessons_db_manip as ldm
+from lessons_db_manip import LessonDbReq
 import schedule_parser as sp
 import answers_dict as ad
 import users_db_parser as ud
 from datetime import datetime, timedelta
 
 
+req = LessonDbReq()
+
+
 def update_schedule():
-    schedule = sp.get_current_schedule()
-    ldm.add_schedules(schedule)
+    req.run(req.add_schedules)
     return
 
 
@@ -17,8 +19,8 @@ def cur_date(add=0):
 
 
 def get_schedule(scr, user_id, text):
-    schedule = {"Сегодня": ldm.get_schedule_by_date(get_class_name_from_text(text.upper()), cur_date()),
-                "Завтра": ldm.get_schedule_by_date(get_class_name_from_text(text.upper()), cur_date(1))}
+    schedule = {"Сегодня": req.run(req.get_schedule_by_date, get_class_name_from_text(text.upper()), cur_date()),
+                "Завтра": req.run(req.get_schedule_by_date, get_class_name_from_text(text.upper()), cur_date(1))}
 
     logger.log("user_req", f"current_user_schedule {schedule}")
 
@@ -78,22 +80,22 @@ def send_acc_information(src, user_id, text):
 def cancel_lesson(src, user_id, text):
     logger.log("user_req", "cancelling a lesson")
     day, lesson, class_name = get_day_and_lesson_and_class_name_from_text(text)
-    ldm.make_cancel(class_name, day, lesson)
+    req.make_cancel(class_name, day, lesson)
     return "Урок отменен"
 
 
 def comment_lesson(src, user_id, text):      # комментарий lesson в day у class_name comment
     logger.log("user_req", "commenting a lesson")
     day, lesson, class_name = get_day_and_lesson_and_class_name_from_text(text)
-    comment = text.split()[6]
-    return ldm.get_comment(class_name, day, lesson, comment)
+    comment = " ".join(text.split()[6:])
+    return req.get_comment(class_name, day, lesson, comment)
 
 
 def replace_lesson(src, user_id, text):      # замена lesson в day у class_name another_lesson
     logger.log("user_req", "replacing a lesson")
     day, lesson, class_name = get_day_and_lesson_and_class_name_from_text(text)
     another_lesson = text.split()[6]
-    return ldm.get_replacement(class_name, day, lesson, another_lesson)
+    return req.get_replacement(class_name, day, lesson, another_lesson)
 
 
 def send_commands(src, user_id, text):
