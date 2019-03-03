@@ -4,6 +4,8 @@ import schedule_parser as sp
 import answers_dict as ad
 import users_db_parser as ud
 from datetime import datetime, timedelta
+import eljur_api as ea
+import config
 
 
 req = LessonDbReq()
@@ -60,11 +62,31 @@ def get_class_name_from_text(text):
     return class_name
 
 
-def get_day_and_lesson_and_class_name_from_text(text):    # отмена lesson в day у class_name
+def get_day_and_lesson_and_class_name_from_text(text):
     day = text.split()[3].capitalize()
     lesson = text.split()[1].capitalize()
     class_name = text.split()[5]
     return day, lesson, class_name
+
+
+def get_day_and_class_name_from_text(text):
+    t = text.split()
+    for i in range(len(t)):
+        if i in ['дз', 'домашнее', 'задание', 'домашка']:
+            continue
+        else:
+            try:
+                class_name = t[i]
+                day = t[i + 1]
+            except Exception:
+                class_name = ''
+                day = ''
+            break
+    else:
+        class_name = ''
+        day = ''
+    return [day, class_name]
+
 
 
 def generate_return(text):
@@ -103,6 +125,31 @@ def replace_lesson(src, user_id, text):      # замена lesson в day у cla
     return req.get_replacement(class_name, day, lesson, another_lesson)
 
 
+def get_hometask(scr, user_id, text):
+    logger.log("user_req", "getting hometask")
+    day, class_name = get_day_and_class_name_from_text(text)
+    preset = {"devkey": config.secret['eljurapi']['devkey'], "vendor": "1543",
+              "password": config.secret['eljurapi']['password'],
+              "login": config.secret['eljurapi']['login']}
+    student = ea.Student(**preset)
+    r = student.get_hometask(class_name, day)
+    logger.log("user_req", "response get: " + str(r['response']))
+    r = r['response']
+    if r['error'] is  None:
+        logger.log("user_req", "error while getting the hometask")
+        return "Возникла какая-то ошибка. Возможно скоро мы ее исправим."
+    d = r['result']['days']
+    ans = ""
+    for day, info in d.items():
+        ans += (info['title'] + ':' + '\n')
+        for lesson in info['items']:
+            ans += lesson['name'] + " группа " + lesson['grp'] + '\n'
+            ans += lesson['homework']['1']['value'] + '\n'
+            ans += lesson['files']['file'][0]['link'] + '\n'
+    return ans
+
+
+
 def send_commands(src, user_id, text):
     logger.log("user_req", "commands request")
     ans = "Из доступных команд у меня пока есть: расписание <класс вида: число буква>, мой аккаунт"
@@ -134,8 +181,8 @@ key_words_to_function = {"schedule": get_schedule,
                          "replacement": replace_lesson,
                          "comment": comment_lesson,
                          # "support": support_message,
-                         "commands": send_commands
-                         #"hometask": get_hometask
+                         "commands": send_commands,
+                         "hometask": get_hometask
                          }
 
 
