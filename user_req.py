@@ -100,6 +100,12 @@ def get_day_and_class_name_from_text(text):
     today = makedate(now)
     tomorrow = makedate(datetime.datetime.fromordinal(datetime.datetime.toordinal(now) + 1))
     yesterday = makedate(datetime.datetime.fromordinal(datetime.datetime.toordinal(now) - 1))
+    w = now.weekday()
+    mon = datetime.datetime.fromordinal(datetime.datetime.toordinal(now) - w)
+    sun = datetime.datetime.fromordinal(datetime.datetime.toordinal(now) - w + 5)
+    monday = makedate(mon)
+    sunday = makedate(sun)
+    week = monday + '-' + sunday
     try:
         class_name = t[ind]
         day = t[ind + 1]
@@ -112,6 +118,8 @@ def get_day_and_class_name_from_text(text):
         day = tomorrow
     elif day == 'вчера':
         day = yesterday
+    elif day == 'неделя'
+        day = week
     return [day, class_name]
 
 
