@@ -6,6 +6,8 @@ sys.path.append("..")
 import config
 import logger
 import requests
+from eljur_api import _UserBase
+
 
 classes = ['5А', '5Б', '5В', '5Г', '6А', '6Б', '6В', '6Г', '7А', '7Б', '7В', '7Г', '8А', '8Б', '8В', '8Г', '9А', '9Б',
            '9В', '9Г', '10А', '10Б', '10В', '10Г', '11А', '11Б', '11В', '11Г']

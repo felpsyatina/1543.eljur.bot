@@ -43,11 +43,16 @@ def get_schedule(scr, user_id, text):
 
 def register_new_user(scr, user_id, text):    # регистрация login name surname parallel
     text = text.split()
-    login = text[1]
-    name = text[2]
-    surname = text[3]
-    parallel = text[4]
-    return ud.make_new_user(login, parallel, name, surname, scr, user_id)
+    try:
+        login = text[1]
+        name = text[2]
+        surname = text[3]
+        parallel = text[4]
+        return ud.make_new_user(login, parallel, name, surname, scr, user_id)
+
+    except Exception:
+        return "Чтобы зарегистрироваться вводите (без кавычек):\n регистрация \"твой логин\" " \
+               "\"твое имя\" \"твоя фамилия\" \"твой класс\""
 
 
 def get_class_name_from_text(text):
