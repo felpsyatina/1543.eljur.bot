@@ -96,16 +96,16 @@ def get_day_and_class_name_from_text(text):
             break
     else:
         return ['', '']
-    class_name = class_name.upper()
     now = datetime.datetime.now()
     today = makedate(now)
     tomorrow = makedate(datetime.datetime.fromordinal(datetime.datetime.toordinal(now) + 1))
     yesterday = makedate(datetime.datetime.fromordinal(datetime.datetime.toordinal(now) - 1))
     try:
-        class_name = t[i]
-        day = t[i + 1]
+        class_name = t[ind]
+        day = t[ind + 1]
     except Exception:
-        return [today, t[i]]
+        return [today, t[ind]]
+    class_name = class_name.upper()
     if day == 'сегодня':
         day = today
     elif day == 'завтра':
