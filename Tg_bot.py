@@ -51,7 +51,7 @@ def send_but_help(user_id, text, keyb_but, msg_to_answer_id=None):
 def new_msgs(last_msg_id, raw_msgs):
     url_new_msgs = URL + 'getupdates'
     msg_base = requests.get(url_new_msgs, data={"offset": last_msg_id}).json()
-    if msg_base['ok'] == True and len(msg_base['result']) > 0:
+    if msg_base['ok'] == True and msg_base['result'] != []:
         logger.log("tg", "getting new messages")
         msg_base = msg_base['result']
         last_msg_id = (int(msg_base[-1]['update_id']) + 1)
@@ -73,12 +73,11 @@ def answer_msg(user_id, msg, msg_id):
     send_msg(user_id, msg_to_send, msg_id)
 
 def tg_bot_main(last_msg_id, raw_msgs):
-    print(bot_info())
     logger.log("tg", "starting tg_bot")
     while True:
-        time.sleep(3)
+        time.sleep(1)
         last_msg_id, raw_msgs = new_msgs(last_msg_id, raw_msgs)
-        if len(raw_msgs) > 0:
+        if raw_msgs != []:
             for i in range(len(raw_msgs)):
                 msg_to_answer = raw_msgs[i]
                 if msg_to_answer['is_super_admin']=='0':
