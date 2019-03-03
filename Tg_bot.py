@@ -52,6 +52,7 @@ def new_msgs(last_msg_id, raw_msgs):
     url_new_msgs = URL + 'getupdates'
     msg_base = requests.get(url_new_msgs, data={"offset": last_msg_id}).json()
     if msg_base['ok'] == True and msg_base['result'] != []:
+        is_new_msgs = True
         logger.log("tg", "getting new messages")
         msg_base = msg_base['result']
         last_msg_id = (int(msg_base[-1]['update_id']) + 1)
@@ -63,7 +64,9 @@ def new_msgs(last_msg_id, raw_msgs):
                 super_admin='0'
             msg = msg_base[i]['message']['text']
             raw_msgs.append({'tg_user_id': tg_user_id, 'raw_msg': msg, 'msg_id': msg_base[i]['message']['message_id'], 'is_super_admin': super_admin})
-    return last_msg_id, raw_msgs
+    else:
+        is_new_msgs = False
+    return is_new_msgs, last_msg_id, raw_msgs
 
 
 def answer_msg(user_id, msg, msg_id):
@@ -76,8 +79,8 @@ def tg_bot_main(last_msg_id, raw_msgs):
     logger.log("tg", "starting tg_bot")
     while True:
         time.sleep(2)
-        last_msg_id, raw_msgs = new_msgs(last_msg_id, raw_msgs)
-        if raw_msgs != []:
+        is_new_msgs, last_msg_id, raw_msgs = new_msgs(last_msg_id, raw_msgs)
+        if is_new_msgs:
             for i in range(len(raw_msgs)):
                 msg_to_answer = raw_msgs[i]
                 if msg_to_answer['is_super_admin']=='0':
