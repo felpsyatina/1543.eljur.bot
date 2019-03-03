@@ -39,7 +39,11 @@ quest = {'что': 'commands',
          'коментарий': 'comment',
          'коммент': 'comment',
          'комент': 'comment',
-         'поддержка': 'support'
+         'поддержка': 'support',
+         'дз': 'hometask',
+         'домашнее': 'hometask',
+         'задание': 'hometask',
+         'домашка': 'hometask'
          }
 
 

@@ -135,11 +135,8 @@ key_words_to_function = {"schedule": get_schedule,
                          "comment": comment_lesson,
                          # "support": support_message,
                          "commands": send_commands
+                         #"hometask": get_hometask
                          }
-# update_schedule()
-# parse_message_from_user("tg", "1", "УМРИ")
-
-# ya LOH_KABAKOV
 
 
 if __name__ == '__main__':
