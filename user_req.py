@@ -118,7 +118,7 @@ def get_day_and_class_name_from_text(text):
         day = tomorrow
     elif day == 'вчера':
         day = yesterday
-    elif day == 'неделя'
+    elif day == 'неделя':
         day = week
     return [day, class_name]
 
