@@ -6,9 +6,14 @@ import users_db_parser as ud
 from datetime import datetime, timedelta
 import eljur_api as ea
 import config
+import datetime
 
 
 req = LessonDbReq()
+preset = {"devkey": config.secret['eljurapi']['devkey'], "vendor": "1543",
+              "password": config.secret['eljurapi']['password'],
+              "login": config.secret['eljurapi']['login']}
+student = ea.Student(**preset)
 
 
 def update_schedule():
@@ -69,23 +74,44 @@ def get_day_and_lesson_and_class_name_from_text(text):
     return day, lesson, class_name
 
 
+def makedate(n):
+    s = datetime.datetime.isoformat(n)
+    s = s.split(sep='T')
+    s = s[0]
+    s = s.split(sep='-')
+    s = s[0] + s[1] + s[2]
+    return s
+
+
 def get_day_and_class_name_from_text(text):
     t = text.split()
+    ind = 0
+    class_name = ''
+    day = ''
     for i in range(len(t)):
         if t[i] in ['дз', 'домашнее', 'задание', 'домашка']:
             continue
         else:
-            try:
-                class_name = t[i]
-                day = t[i + 1]
-            except Exception:
-                class_name = ''
-                day = ''
+            ind = i
             break
     else:
-        class_name = ''
-        day = ''
+        return ['', '']
     class_name = class_name.upper()
+    now = datetime.datetime.now()
+    today = makedate(now)
+    tomorrow = makedate(datetime.datetime.fromordinal(datetime.datetime.toordinal(now) + 1))
+    yesterday = makedate(datetime.datetime.fromordinal(datetime.datetime.toordinal(now) - 1))
+    try:
+        class_name = t[i]
+        day = t[i + 1]
+    except Exception:
+        return [today, t[i]]
+    if day == 'сегодня':
+        day = today
+    elif day == 'завтра':
+        day = tomorrow
+    elif day == 'вчера':
+        day = yesterday
     return [day, class_name]
 
 
@@ -129,11 +155,6 @@ def replace_lesson(src, user_id, text):      # замена lesson в day у cla
 def get_hometask(scr, user_id, text):
     logger.log("user_req", "getting hometask")
     day, class_name = get_day_and_class_name_from_text(text)
-    print(day, class_name)
-    preset = {"devkey": config.secret['eljurapi']['devkey'], "vendor": "1543",
-              "password": config.secret['eljurapi']['password'],
-              "login": config.secret['eljurapi']['login']}
-    student = ea.Student(**preset)
     r = student.get_hometask(class_name, day)
     logger.log("user_req", "response get: " + str(r['response']))
     r = r['response']
@@ -143,10 +164,10 @@ def get_hometask(scr, user_id, text):
     if r['result'] == []:
         return "Вы неправильно ввели класс или дату"
     d = r['result']['days']
-    print(d)
     ans = ""
     for info in d.values():
-        ans += (info['title'] + ':' + '\n')
+        ans += ("--<" + info['title'] + '>--' + '\n')
+        ans += '\n'
         for lesson in info['items']:
             ans += lesson['name']
             if 'grp' in lesson.keys():
@@ -157,7 +178,8 @@ def get_hometask(scr, user_id, text):
             try:
                 ans += (lesson['files']['file'][0]['link'] + '\n')
             except Exception:
-                continue
+                pass
+            ans += "------------\n"
     return ans
 
 
