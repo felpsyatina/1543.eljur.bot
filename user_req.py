@@ -72,7 +72,7 @@ def get_day_and_lesson_and_class_name_from_text(text):
 def get_day_and_class_name_from_text(text):
     t = text.split()
     for i in range(len(t)):
-        if i in ['дз', 'домашнее', 'задание', 'домашка']:
+        if t[i] in ['дз', 'домашнее', 'задание', 'домашка']:
             continue
         else:
             try:
@@ -85,6 +85,7 @@ def get_day_and_class_name_from_text(text):
     else:
         class_name = ''
         day = ''
+    class_name = class_name.upper()
     return [day, class_name]
 
 
@@ -128,6 +129,7 @@ def replace_lesson(src, user_id, text):      # замена lesson в day у cla
 def get_hometask(scr, user_id, text):
     logger.log("user_req", "getting hometask")
     day, class_name = get_day_and_class_name_from_text(text)
+    print(day, class_name)
     preset = {"devkey": config.secret['eljurapi']['devkey'], "vendor": "1543",
               "password": config.secret['eljurapi']['password'],
               "login": config.secret['eljurapi']['login']}
@@ -135,17 +137,27 @@ def get_hometask(scr, user_id, text):
     r = student.get_hometask(class_name, day)
     logger.log("user_req", "response get: " + str(r['response']))
     r = r['response']
-    if r['error'] is  None:
+    if r['error'] is not None:
         logger.log("user_req", "error while getting the hometask")
         return "Возникла какая-то ошибка. Возможно скоро мы ее исправим."
+    if r['result'] == []:
+        return "Вы неправильно ввели класс или дату"
     d = r['result']['days']
+    print(d)
     ans = ""
-    for day, info in d.items():
+    for info in d.values():
         ans += (info['title'] + ':' + '\n')
         for lesson in info['items']:
-            ans += lesson['name'] + " группа " + lesson['grp'] + '\n'
-            ans += lesson['homework']['1']['value'] + '\n'
-            ans += lesson['files']['file'][0]['link'] + '\n'
+            ans += lesson['name']
+            if 'grp' in lesson.keys():
+                ans += (" группа " + lesson['grp'] + '\n')
+            else:
+                ans += '\n'
+            ans += (lesson['homework']['1']['value'] + '\n')
+            try:
+                ans += (lesson['files']['file'][0]['link'] + '\n')
+            except Exception:
+                continue
     return ans
 
 
