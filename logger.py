@@ -28,6 +28,7 @@ def log(module, log_line, add_time=True):
 	full_log_line = "**" + module + curtime + ": " + log_line + "\n"
 
 	sys.stderr.write(full_log_line)
+	sys.stderr.flush()
 
 	if module[-9:] == "_critical":
 		if config.params.get("send_technical_telegram_alerts", False):
@@ -35,6 +36,8 @@ def log(module, log_line, add_time=True):
 				telegram_alert(module, full_log_line)
 			except Exception as err:
 				sys.stderr.write("!!!!!!!!!!!!!!!! Cannot send telegram alert: " + str(err) + "\n")
+				sys.stderr.flush()
 		else:
 			sys.stderr.write("!!!!!!!!!!!!!!!! Technical critical alerts is switched off in config")
+			sys.stderr.flush()
 
