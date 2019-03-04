@@ -3,6 +3,7 @@ import sqlite3
 import time
 import logger
 from datetime import datetime
+import update_schedule_json_file as get_sch
 
 conn = sqlite3.connect('1543.eljur.bot.db')
 c = conn.cursor()
@@ -37,8 +38,7 @@ class LessonDbReq:
             if function is not None:
                 ans = function(*args, cursor=cursor)
                 connection.commit()
-                if ans is not None:
-                    return ans
+                return ans
 
     def gen_query_class_table(self):
         name = f"classes"
@@ -161,7 +161,6 @@ class LessonDbReq:
                 cursor.execute(query)
 
     def add_schedules(self, cursor):
-        import update_schedule_json_file as get_sch
         for c in classes:
             self.add_schedule_from_json(get_sch.update(c), c, cursor)
 
