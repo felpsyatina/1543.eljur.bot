@@ -180,7 +180,7 @@ def get_hometask(scr, user_id, text):
                 ans += (lesson['files']['file'][0]['link'] + '\n')
             except Exception:
                 pass
-            ans += "-" * 30 + "\n"
+            ans += "-" * 20 + "\n"
     return ans
 
 
