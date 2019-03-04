@@ -16,5 +16,5 @@ def load_config(filename):
 	return res
 
 
-secret = load_config(secrets_config_file)
 params = load_config(global_config_file)
+secret = load_config(cur_path + "/" + params["config_secret_path"])

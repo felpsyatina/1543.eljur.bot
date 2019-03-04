@@ -1,6 +1,5 @@
 {
-	"run_vkbot": true,
-	"run_telegrambot": true,
 	"eljur_update_sleeptime": 600,
-	"send_technical_telegram_alerts": false
+	"send_technical_telegram_alerts": false,
+	"config_secret_path": "../config_secrets.json"
 }
