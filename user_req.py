@@ -161,14 +161,10 @@ def get_hometask(scr, user_id, text):
     logger.log("user_req", "getting hometask")
     day, class_name = get_day_and_class_name_from_text(text)
     r = student.get_hometask(class_name, day)
-    logger.log("user_req", "response get: " + str(r['response']))
-    r = r['response']
-    if r['error'] is not None:
-        logger.log("user_req", "error while getting the hometask")
-        return "Возникла какая-то ошибка. Возможно скоро мы ее исправим."
-    if not r['result']:
-        return "Вы неправильно ввели класс или дату"
-    d = r['result']['days']
+    logger.log("user_req", "response get: " + str(r))
+    if not r:
+        return "Вы неправильно ввели класс или дату, или на этот(и) день(и) расписания в eljur нет."
+    d = r['days']
     ans = ""
     for info in d.values():
         ans += '\n'
@@ -189,7 +185,7 @@ def get_hometask(scr, user_id, text):
 
 
 def user_reg0(src, user_id, text):
-    user_db.run(user_db.update_user, {"status": "rasp1"}, user_id)
+    user_db.run(user_db.update_user, {"status": "reg1"}, user_id)
     return {"text": "Выберите класс.\nЕсли хотите продолжить без введения класса, нажмите \"Отмена\"",
             "buttons": [[5, 6, 7, 8], [9, 10, 11], ["Отмена"]]}
 
@@ -252,6 +248,9 @@ def parse_message_from_user(scr, user_id, text, name):
         user_db.run(user_db.add_user, name['first_name'], name['last_name'], user_id)
 
     info = user_db.run(user_db.get_user_info, user_id)
+    if info['status'] is None:
+        user_db.run(user_db.update_user, {"status": "reg0"}, user_id)
+
     if info['status'] != 'waiting':
         function = status_to_function[info['status']]
         return function(scr, user_id, text)
@@ -289,7 +288,6 @@ key_words_to_function = {"schedule": get_schedule,
 
 
 status_to_function = {
-    None : user_reg0,
     "reg0": user_reg0,
     "reg1": user_reg1,
     "reg2": user_reg2,
