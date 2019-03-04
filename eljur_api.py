@@ -1,3 +1,4 @@
+## -*- coding: utf-8 -*-
 import logger
 import json
 import requests
@@ -22,43 +23,50 @@ def _strip_key(key):
         return key
 
 
+def _strip_server_info(answer):
+    return answer["response"]["result"]
+
+
 class LoggerTemplates(object):
     @staticmethod
-    def make_log(message="Сообщение логгеру не поступило", module_name=file_name, ):
+    def make_log(message="Empty message to logger", module_name=file_name):
         logger.log(module_name, message)
 
-    def empty_var(self, func_name, param_name):
-        self.make_log(f"Не введен параметр: '{param_name} в функции '{func_name}'")
+    def error(self, error):
+        self.make_log(f"Error log: {error}")
+
+    def empty_param(self, func_name, param_name):
+        self.make_log(f"Empty parameter: '{param_name} in function '{func_name}'")
 
     def false_type_of_var(self, func_name, param_name, given_type, right_types):
         self.make_log(
-            f"Переданный функции '{func_name}' параметр '{param_name}' имеет неправильный тип '{given_type}', должен быть одним из этих '{right_types}'")
+            f"Given to"
+            f" function '{func_name}' parameter '{param_name}' has wrong type '{given_type}', must be one of them '{right_types}'")
 
     def failed_request(self, func_name, request, error, content):
         self.make_log(
-            f"Проваленный запрос '{request}' в функции '{func_name}', статус код: '{error}, \n Содержимое ответа: \n '{content}'")
+            f"Failed request '{request}' in function '{func_name}', error log: '{error}, \n Response: \n '{content}'")
 
     def successful_login(self, login):
-        self.make_log(f"Пользователь под логином '{login}' успешно получил токен сессии")
+        self.make_log(f"User with a login: '{login}' successfully received auth token")
 
     def failed_login(self, login):
-        self.make_log(f"Пользователю под логином '{login}' не ролучилось получить токен сессии")
+        self.make_log(f"User with a login: '{login}' failed attempt to receive auth token")
+
+    def strip_failde(self, response_text):
+        self.make_log(f"Failed attempt to strip request: '{response_text}'")
 
 
 class _UserBase(object):
     auth_token = ""
     '''
     Необходимый токен, который имеет срок годности. Можно получить, вызвав функции:
-    1)login_user() - логинит юзера и получает токен сессии
-    2)refresh_auth_token() - обновляет токен сессии под логином и паролем из GlobalVariables, если не получилось, 
-        то остается тем же и оставляет сообщение в логгере
+    login() - логинит юзера и получает токен сессии
     '''
     date_of_auth_token_expiration = ""
     '''
     Дата истечения срока годности сессионного токена, котырый можно получить, вызвав функции:
-    1)login_user() - логинит юзера и получает токен сессии
-    2)refresh_auth_token() - обновляет токен сессии под логином и паролем из GlobalVariables, если не получилось, 
-        то остается тем же и оставляет сообщение в логгере
+    login() - логинит юзера и получает токен сессии
     '''
     vendor = ""
     '''
@@ -81,16 +89,22 @@ class _UserBase(object):
     Информация о пользователе, запрошенную методом /getrules (функция update_rules и get_rules)
     '''
 
-    def _make_request(self, method, params={}):
+    def _make_request(self, method, params=None):
+        if not params:
+            params = {}
         request_adress = f"https://api.eljur.ru/api/{method}"
-        params = self.default_params(params)
-        answer = requests.get(request_adress, params)
-        print(answer.url)
-        if answer.status_code != requests.codes.ok:
-            Logger.failed_request("make_request", answer.url, answer.status_code, answer.text)
-        return [answer.status_code == requests.codes.ok, _json_converter(answer.text)]
+        params = self._default_params(params)
+        response = requests.get(request_adress, params)
+        if response.status_code != requests.codes.ok:
+            Logger.failed_request("make_request", response.url, response.status_code, response.text)
+        try:
+            answer = _strip_server_info(_json_converter(response.text))
+            return answer
+        except Exception as exc:
+            Logger.error(exc)
+            Logger.strip_failde(response.text)
 
-    def default_params(self, params):
+    def _default_params(self, params):
         params.update(
             {"devkey": self.devkey, "out_format": "json", "vendor": self.vendor, "auth_token": self.auth_token})
         return params
@@ -100,8 +114,6 @@ class _UserBase(object):
             if not isinstance(param_value, str):
                 Logger.false_type_of_var("UserBase.__init__", param_name, type(param_value), str)
                 return
-        self.devkey = devkey
-        self.vendor = vendor
         if self.login(login, password, vendor, devkey):
             Logger.successful_login(login)
             self.update_rules()
@@ -111,14 +123,17 @@ class _UserBase(object):
     def login(self, login, password, vendor, devkey):
         params = _strip(locals())
         params["out_format"] = "json"
-        answer = requests.get("https://api.eljur.ru/api/auth", params)
-        if answer.status_code == requests.codes.ok:
-            answer_json = _json_converter(answer.text)
-            self.auth_token = answer_json["response"]["result"]["token"]
+        response = requests.get("https://api.eljur.ru/api/auth", params)
+        if response.status_code == requests.codes.ok:
+            answer = _strip_server_info(_json_converter(response.text))
+            self.auth_token = answer["token"]
+            self.date_of_auth_token_expiration = answer["expires"]
+            self.devkey = devkey
+            self.vendor = vendor
             return True
 
     def get_rules(self):
-        answer = self.rules
+        answer = self._make_request("getrules")
         return answer
 
     def update_rules(self):
@@ -133,12 +148,81 @@ class Student(_UserBase):
     def get_schedule(self, class_=None, days=None, ring=None):
         params = _strip(locals())
         answer = self._make_request("getschedule", params)
-        return answer[1]
+        return answer
 
     def get_hometask(self, class_=None, days=None, ring=None):
         params = _strip(locals())
         answer = self._make_request("gethomework", params)
-        return answer[1]
+        return answer
+
+    def get_assessments(self, student=None, days=None):
+        params = _strip(locals())
+        answer = self._make_request("getassessments", params)
+        return answer
+
+    def get_finalassessments(self, student=None):
+        params = _strip(locals())
+        answer = self._make_request("getfinalassessments", params)
+        return answer
+
+    def get_diary(self, student=None, days=None, rings=None):
+        params = _strip(locals())
+        answer = self._make_request("getdiary", params)
+        return answer
+
+    def get_updates(self, student=None, limit=None, page=None):
+        params = _strip(locals())
+        answer = self._make_request("getupdates", params)
+        return answer
+
+    def get_periods(self, student=None, weeks=None, show_disabled=None):
+        params = _strip(locals())
+        answer = self._make_request("getperiods", params)
+        return answer
+
+    def get_marks(self, student=None, days=None):
+        params = _strip(locals())
+        answer = self._make_request("getmarks", params)
+        return answer
+
+    def get_messagereceivers(self):
+        answer = self._make_request("getmessagereceivers")
+        return answer
+
+    def get_messageinfo(self, id=None):
+        if id is None:
+            Logger.empty_param("get_messageinfo", "id")
+            return None
+        params = _strip(locals())
+        answer = self._make_request("getmessageinfo", params)
+        return answer
+
+    def get_messages(self, folder=None, unreadonly=None, limit=None, page=None):
+        params = _strip(locals())
+        answer = self._make_request("getmessages", params)
+        return answer
+
+    def send_message(self, subject=None, text=None, users_to=None):
+        if subject is None:
+            Logger.empty_param("send_message", "subject")
+            return False
+        if text is None:
+            Logger.empty_param("send_message", "text")
+            return False
+        params = _strip(locals())
+        self._make_request("sendmessage", params)
+        return True
+
+    def send_replymessage(self, replyto=None, text=None):
+        if replyto is None:
+            Logger.empty_param("send_replymessage", "replyto")
+            return False
+        if text is None:
+            Logger.empty_param("send_replymessage", "text")
+            return False
+        params = _strip(locals())
+        self._make_request("sendreplymessage", params)
+        return True
 
 
 Logger = LoggerTemplates()
