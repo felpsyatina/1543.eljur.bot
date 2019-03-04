@@ -85,9 +85,6 @@ def makedate(n):
 
 def get_day_and_class_name_from_text(text):
     t = text.split()
-    ind = 0
-    class_name = ''
-    day = ''
     for i in range(len(t)):
         if t[i] in ['дз', 'домашнее', 'задание', 'домашка']:
             continue
@@ -292,6 +289,7 @@ key_words_to_function = {"schedule": get_schedule,
 
 
 status_to_function = {
+    None : user_reg0,
     "reg0": user_reg0,
     "reg1": user_reg1,
     "reg2": user_reg2,
