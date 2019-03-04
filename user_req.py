@@ -217,9 +217,10 @@ def user_reg2(src, user_id, text):
 
 
 def user_sch0(src, user_id, text):
-    user_db.run(user_db.update_user, {"class": "null", "status": "rasp1"}, user_id)
+    info = user_db.run(user_db.get_user_info, user_id)
+    user_db.run(user_db.update_user, {"class": info['class'], "status": "rasp1"}, user_id)
     return {"text": "Выберите время",
-            "buttons": [["Сегодня"], ["Завтра"], ["Вчера"], ["Неделя"]]}
+            "buttons": [["Сегодня"], ["Завтра"], ["Неделя"], ["Отмена"]]}
 
 
 def send_commands(src, user_id, text):
@@ -230,7 +231,15 @@ def send_commands(src, user_id, text):
 
 def fast_schedule(src, user_id, text):
     info = user_db.run(user_db.get_user_info, user_id)
-    return {"text": get_schedule(src, user_id, info["class"]),
+    if info['class'] == 'null':
+        user_db.run(user_db.update_user, {"class": "null", "status": "reg0"}, user_id)
+        return user_reg0(src, user_id, text)
+    if text == "отмена":
+        user_db.run(user_db.update_user, {"class": info['class'], "status": "waiting"}, user_id)
+        return {"text": "Вы вернулись в исходное меню",
+                "buttons": waiting_buttons}
+    user_db.run(user_db.update_user, {"class": info['class'], "status": "waiting"}, user_id)
+    return {"text": get_schedule(src, user_id, "null " + info["class"]),
             "buttons": waiting_buttons}
 
 
