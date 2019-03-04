@@ -1,5 +1,7 @@
 {
 	"eljur_update_sleeptime": 600,
 	"send_technical_telegram_alerts": false,
-	"config_secret_path": "../config_secrets.json"
+	"config_secret_path": "../config_secrets.json",
+	"github_commit_bot_sleep_time": 300,
+	"github_commit_bot_state_file": "/home/vam1543/1543.eljur.bot/tools/github_commit_bot/saved_state.txt"
 }
