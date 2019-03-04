@@ -48,7 +48,7 @@ def send_but_help(user_id, text, keyb_but, msg_to_answer_id=None):
                         'reply_to_message_id': msg_to_answer_id}))
 
 
-def new_msgs():
+def new_msgs(last_msg_id, raw_msgs):
     msg_base = requests.get(url_new_msgs, data={"offset": last_msg_id}).json()
     if msg_base['ok'] == True and msg_base['result'] != []:
         is_new_msgs = True
@@ -80,7 +80,7 @@ def tg_bot_main(last_msg_id, raw_msgs):
     logger.log("tg", "starting tg_bot")
     while True:
         time.sleep(2)
-        is_new_msgs, last_msg_id, raw_msgs = new_msgs()
+        is_new_msgs, last_msg_id, raw_msgs = new_msgs(last_msg_id, raw_msgs)
         if is_new_msgs:
             for i in range(len(raw_msgs)):
                 msg_to_answer = raw_msgs[i]
