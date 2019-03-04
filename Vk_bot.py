@@ -154,6 +154,7 @@ if __name__ == '__main__':
             except Exception as err:
                 write_msg(r['user_id'], "Возникла какая-то ошибка. Возможно мы это исправим.")
                 logger.log("vkbot", "error: " + str(err))
+                continue
             logger.log("vkbot", "Received answer " + str(ans))
             if not ans.get('buttons'):
                 write_msg(r['user_id'], ans['text'])

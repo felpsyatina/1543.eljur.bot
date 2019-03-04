@@ -230,7 +230,7 @@ def send_commands(src, user_id, text):
 
 def fast_schedule(src, user_id, text):
     info = user_db.run(user_db.get_user_info, user_id)
-    return {"text": get_schedule(src, user_id, "null " + info["class"]),
+    return {"text": get_schedule(src, user_id, info["class"]),
             "buttons": waiting_buttons}
 
 
