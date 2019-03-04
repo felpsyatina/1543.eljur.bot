@@ -62,22 +62,26 @@ def new_msgs(last_msg_id, raw_msgs):
             else:
                 super_admin = '0'
             msg = msg_base[i]['message']['text']
-            raw_msgs.append({'tg_user_id': tg_user_id, 'raw_msg': msg, 'msg_id': msg_base[i]['message']['message_id'],
+            msg_id = msg_base[i]['message']['message_id']
+            user_name = {'first_name': msg_base[i]['message']['from']['first_name'],
+                         'last_name': msg_base[i]['message']['from']['last_name']}
+            raw_msgs.append({'tg_user_id': tg_user_id, 'raw_msg': msg, 'msg_id': msg_id, 'user_name': user_name,
                              'is_super_admin': super_admin})
     else:
         is_new_msgs = False
     return is_new_msgs, last_msg_id, raw_msgs
 
 
-def answer_msg(user_id, msg, msg_id):
+def answer_msg(user_id, msg, msg_id, user_name):
     logger.log("tg", "sending message to " + str(user_id))
-    result = user_req.parse_message_from_user("tg", user_id, msg)
+    result = user_req.parse_message_from_user("tg", user_id, msg, user_name)
     msg_to_send = result['text']
     send_msg(user_id, msg_to_send, msg_id)
 
 
 def tg_bot_main(last_msg_id, raw_msgs):
     logger.log("tg", "starting tg_bot")
+    bot_info()
     while True:
         time.sleep(2)
         is_new_msgs, last_msg_id, raw_msgs = new_msgs(last_msg_id, raw_msgs)
@@ -85,12 +89,13 @@ def tg_bot_main(last_msg_id, raw_msgs):
             for i in range(len(raw_msgs)):
                 msg_to_answer = raw_msgs[i]
                 if msg_to_answer['is_super_admin'] == '0':
-                    answer_msg(msg_to_answer['tg_user_id'], msg_to_answer['raw_msg'], msg_to_answer['msg_id'])
+                    answer_msg(msg_to_answer['tg_user_id'], msg_to_answer['raw_msg'], msg_to_answer['msg_id'], msg_to_answer['user_name'])
                 else:
                     send_msg(msg_to_answer['tg_user_id'], 'you are super admin', msg_to_answer['msg_id'])
-                    answer_msg(msg_to_answer['tg_user_id'], msg_to_answer['raw_msg'], msg_to_answer['msg_id'])
+                    answer_msg(msg_to_answer['tg_user_id'], msg_to_answer['raw_msg'], msg_to_answer['msg_id'], msg_to_answer['user_name'])
             raw_msgs = []
 
 
 if __name__ == '__main__':
     tg_bot_main(last_msg_id, raw_msgs)
+
