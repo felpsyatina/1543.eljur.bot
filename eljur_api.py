@@ -118,7 +118,7 @@ class _UserBase(object):
             return True
 
     def get_rules(self):
-        answer = self._make_request("getrules")
+        answer = self.rules
         return answer
 
     def update_rules(self):
@@ -126,17 +126,9 @@ class _UserBase(object):
 
 
 class Student(_UserBase):
-    # student_id = -1
 
     def __init__(self, devkey=None, login=None, password=None, vendor=None):
         super(Student, self).__init__(devkey, login, password, vendor)
-        # self.update_student_id()
-
-    # def get_student_id(self):
-    #     return self.rules["response"]["result"]["relations"]["name"]
-    #
-    # def update_student_id(self):
-    #     self.student_id = self.get_student_id()
 
     def get_schedule(self, class_=None, days=None, ring=None):
         params = _strip(locals())

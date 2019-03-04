@@ -1,15 +1,15 @@
 import logger
 from lessons_db_manip import LessonDbReq
-import schedule_parser as sp
 import answers_dict as ad
-import users_db_parser as ud
+from users_db_parser import UserDbReq
 from datetime import datetime, timedelta
 import eljur_api as ea
 import config
-import datetime
 
 
-req = LessonDbReq()
+lesson_db = LessonDbReq()
+user_db = UserDbReq()
+
 preset = {"devkey": config.secret['eljurapi']['devkey'], "vendor": "1543",
               "password": config.secret['eljurapi']['password'],
               "login": config.secret['eljurapi']['login']}
@@ -17,7 +17,7 @@ student = ea.Student(**preset)
 
 
 def update_schedule():
-    req.run(req.add_schedules)
+    lesson_db.run(lesson_db.add_schedules)
     return
 
 
@@ -26,8 +26,8 @@ def cur_date(add=0):
 
 
 def get_schedule(scr, user_id, text):
-    schedule = {"Сегодня": req.run(req.get_schedule_by_date, get_class_name_from_text(text.upper()), cur_date()),
-                "Завтра": req.run(req.get_schedule_by_date, get_class_name_from_text(text.upper()), cur_date(1))}
+    schedule = {"Сегодня": lesson_db.run(lesson_db.get_schedule_by_date, get_class_name_from_text(text.upper()), cur_date()),
+                "Завтра": lesson_db.run(lesson_db.get_schedule_by_date, get_class_name_from_text(text.upper()), cur_date(1))}
 
     logger.log("user_req", f"current_user_schedule {schedule}")
 
@@ -55,7 +55,7 @@ def register_new_user(scr, user_id, text):    # регистрация login nam
         name = text[2]
         surname = text[3]
         parallel = text[4]
-        return ud.make_new_user(login, parallel, name, surname, scr, user_id)
+        return user_db.make_new_user(login, parallel, name, surname, scr, user_id)
 
     except Exception:
         return "Чтобы зарегистрироваться вводите (без кавычек):\n регистрация \"твой логин\" " \
@@ -75,7 +75,7 @@ def get_day_and_lesson_and_class_name_from_text(text):
 
 
 def makedate(n):
-    s = datetime.datetime.isoformat(n)
+    s = datetime.isoformat(n)
     s = s.split(sep='T')
     s = s[0]
     s = s.split(sep='-')
@@ -96,13 +96,13 @@ def get_day_and_class_name_from_text(text):
             break
     else:
         return ['', '']
-    now = datetime.datetime.now()
+    now = datetime.now()
     today = makedate(now)
-    tomorrow = makedate(datetime.datetime.fromordinal(datetime.datetime.toordinal(now) + 1))
-    yesterday = makedate(datetime.datetime.fromordinal(datetime.datetime.toordinal(now) - 1))
+    tomorrow = makedate(datetime.fromordinal(datetime.toordinal(now) + 1))
+    yesterday = makedate(datetime.fromordinal(datetime.toordinal(now) - 1))
     w = now.weekday()
-    mon = datetime.datetime.fromordinal(datetime.datetime.toordinal(now) - w)
-    sun = datetime.datetime.fromordinal(datetime.datetime.toordinal(now) - w + 5)
+    mon = datetime.fromordinal(datetime.toordinal(now) - w)
+    sun = datetime.fromordinal(datetime.toordinal(now) - w + 5)
     monday = makedate(mon)
     sunday = makedate(sun)
     week = monday + '-' + sunday
@@ -123,26 +123,26 @@ def get_day_and_class_name_from_text(text):
     return [day, class_name]
 
 
-
 def generate_return(text):
     return {"text": text, "buttons": None}
 
 
 def send_acc_information(src, user_id, text):
     logger.log("user_req", "request for acc data")
-    ans_mes = ud.get_user_by_id(src, user_id)
+    ans_mes = user_db.run(user_db.get_user_info, user_id)
     if ans_mes is None:
         logger.log("user_req", "user " + str(user_id) + " is not in the database")
         answer_message = "К сожалению вас пока нет в нашей базе данных"
     else:
-        answer_message = f"Логин: {ans_mes['login']}\nИмя: {ans_mes['name']}\nФамилия: {ans_mes['surname']}\nПараллель: {ans_mes['parallel']}"
+        answer_message = f"Логин: {ans_mes['login']}\nИмя: {ans_mes['first_name']}\nФамилия: {ans_mes['last_name']}\n" \
+            f"Класс: {ans_mes['class']}\n vk_id: {ans_mes['vk_id']}"
     return answer_message
 
 
 def cancel_lesson(src, user_id, text):
     logger.log("user_req", "cancelling a lesson")
     day, lesson, class_name = get_day_and_lesson_and_class_name_from_text(text)
-    req.make_cancel(class_name, day, lesson)
+    lesson_db.make_cancel(class_name, day, lesson)
     return "Урок отменен"
 
 
@@ -150,14 +150,14 @@ def comment_lesson(src, user_id, text):      # комментарий lesson в 
     logger.log("user_req", "commenting a lesson")
     day, lesson, class_name = get_day_and_lesson_and_class_name_from_text(text)
     comment = " ".join(text.split()[6:])
-    return req.get_comment(class_name, day, lesson, comment)
+    return lesson_db.get_comment(class_name, day, lesson, comment)
 
 
 def replace_lesson(src, user_id, text):      # замена lesson в day у class_name another_lesson
     logger.log("user_req", "replacing a lesson")
     day, lesson, class_name = get_day_and_lesson_and_class_name_from_text(text)
     another_lesson = text.split()[6]
-    return req.get_replacement(class_name, day, lesson, another_lesson)
+    return lesson_db.get_replacement(class_name, day, lesson, another_lesson)
 
 
 def get_hometask(scr, user_id, text):
@@ -169,13 +169,13 @@ def get_hometask(scr, user_id, text):
     if r['error'] is not None:
         logger.log("user_req", "error while getting the hometask")
         return "Возникла какая-то ошибка. Возможно скоро мы ее исправим."
-    if r['result'] == []:
+    if not r['result']:
         return "Вы неправильно ввели класс или дату"
     d = r['result']['days']
     ans = ""
     for info in d.values():
-        ans += ("--<" + info['title'] + '>--' + '\n')
         ans += '\n'
+        ans += ("--<" + info['title'] + '>--' + '\n')
         for lesson in info['items']:
             ans += lesson['name']
             if 'grp' in lesson.keys():
@@ -187,9 +187,46 @@ def get_hometask(scr, user_id, text):
                 ans += (lesson['files']['file'][0]['link'] + '\n')
             except Exception:
                 pass
-            ans += "------------\n"
+            ans += "-" * 30 + "\n"
     return ans
 
+
+def user_reg0(src, user_id, text):
+    user_db.run(user_db.update_user, {"status": "rasp1"}, user_id)
+    return {"text": "Выберите класс.\nЕсли хотите продолжить без введения класса, нажмите \"Отмена\"",
+            "buttons": [[5, 6, 7, 8], [9, 10, 11], ["Отмена"]]}
+
+
+def user_reg1(src, user_id, text):
+    if text == "отмена":
+        user_db.run(user_db.update_user, {"class": "null", "status": "waiting"}, user_id)
+        return
+    if text in ["5", "6", "7", "8", "9", "10", "11"]:
+        user_db.run(user_db.update_user, {"class": text, "status": "reg2"}, user_id)
+        return {"text": "Выберите букву класса.\nЕсли хотите продолжить без введения класса, нажмите \"Отмена\"",
+                "buttons": [["А", "Б", "В", "Г"], ["Отмена"]]}
+    return {"text": "Выберите класс.\nЕсли хотите продолжить без введения класса, нажмите \"Отмена\"",
+            "buttons": [[5, 6, 7, 8], [9, 10, 11], ["Отмена"]]}
+
+
+def user_reg2(src, user_id, text):
+    if text == "отмена":
+        user_db.run(user_db.update_user, {"class": "null", "status": "waiting"}, user_id)
+        return {"text": send_commands(src, user_id, text),
+                "buttons": None}
+    if text in ["а", "б", "в", "г"]:
+        info = user_db.run(user_db.get_user_info, user_id)
+        user_db.run(user_db.update_user, {"class": info['class'] + text, "status": "waiting"}, user_id)
+        return {"text": "Теперь вы можете узнавать расписание или дз, нажимая лишь на одну кнопку:",
+                "buttons": waiting_buttons}
+    return {"text": "Выберите букву класса.\nЕсли хотите продолжить без введения класса, нажмите \"Отмена\"",
+            "buttons": [["А", "Б", "В", "Г"], ["Отмена"]]}
+
+
+def user_sch0(src, user_id, text):
+    user_db.run(user_db.update_user, {"class": "null", "status": "rasp1"}, user_id)
+    return {"text": "Выберите время",
+            "buttons": [["Сегодня"], ["Завтра"], ["Вчера"], ["Неделя"]]}
 
 
 def send_commands(src, user_id, text):
@@ -198,9 +235,35 @@ def send_commands(src, user_id, text):
     return ans
 
 
-def parse_message_from_user(scr, user_id, text):
+def fast_schedule(src, user_id, text):
+    info = user_db.run(user_db.get_user_info, user_id)
+    return {"text": get_schedule(src, user_id, "null " + info["class"]),
+            "buttons": waiting_buttons}
+
+
+def fast_hometask(src, user_id, text):
+    info = user_db.run(user_db.get_user_info, user_id)
+    return {"text": get_hometask(src, user_id, info["class"] + " неделя"),
+            "buttons": waiting_buttons}
+
+
+def parse_message_from_user(scr, user_id, text, name):
     logger.log("user_req", "process request")
     text = text.strip().lower()
+
+    if user_db.run(user_db.get_user_info, user_id) is None:
+        user_db.run(user_db.add_user, name['first_name'], name['last_name'], user_id)
+
+    info = user_db.run(user_db.get_user_info, user_id)
+    if info['status'] != 'waiting':
+        function = status_to_function[info['status']]
+        return function(scr, user_id, text)
+
+    info = user_db.run(user_db.get_user_info, user_id)
+    if info['status'] == 'waiting' and info['class'].lower() is not "null" and text in fast_msg_to_function.keys():
+        function = fast_msg_to_function[text]
+        return function(scr, user_id, text)
+
     try:
         for key, value in ad.quest.items():
             if key in text:
@@ -228,5 +291,22 @@ key_words_to_function = {"schedule": get_schedule,
                          }
 
 
+status_to_function = {
+    "reg0": user_reg0,
+    "reg1": user_reg1,
+    "reg2": user_reg2,
+    "rasp1": fast_schedule
+}
+
+
+fast_msg_to_function = {
+    "расписание": user_sch0,
+    "дз": fast_hometask
+}
+
+
+waiting_buttons = [["расписание"], ["дз"]]
+
+
 if __name__ == '__main__':
-    print(parse_message_from_user("lolka2", "kekka2", "расписание 10в")['text'])
+    pass
