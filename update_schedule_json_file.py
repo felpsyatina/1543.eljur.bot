@@ -34,6 +34,7 @@ def update(class_="10В", date=None):
 
     return schedule_dict
 
+
 if __name__ == '__main__':
-    pass
+    print(update())
 

@@ -17,7 +17,7 @@ student = ea.Student(**preset)
 
 
 def update_schedule():
-    lesson_db.run(lesson_db.add_schedules)
+    lesson_db.add_schedules()
     return
 
 
@@ -26,8 +26,8 @@ def cur_date(add=0):
 
 
 def get_schedule(scr, user_id, text):
-    schedule = {"Сегодня": lesson_db.run(lesson_db.get_schedule_by_date, get_class_name_from_text(text.upper()), cur_date()),
-                "Завтра": lesson_db.run(lesson_db.get_schedule_by_date, get_class_name_from_text(text.upper()), cur_date(1))}
+    schedule = {"Сегодня": lesson_db.get_schedule(get_class_name_from_text(text.upper()), cur_date()),
+                "Завтра": lesson_db.get_schedule(get_class_name_from_text(text.upper()), cur_date(1))}
 
     logger.log("user_req", f"current_user_schedule {schedule}")
 
@@ -37,12 +37,12 @@ def get_schedule(scr, user_id, text):
         for lesson_num, lesson in day_schedule.items():
 
             for it in range(len(lesson)):
-                if lesson[it][9] is not None:
-                    lesson[it] = f"{lesson[it][1]} ({lesson[it][9]})"
+                if lesson[it]['comment'] is not None:
+                    lesson[it] = f"{lesson[it]['name']} ({lesson[it]['commemt']})"
                     # 2-ой элемент массива lesson[it] - название урока
                     # 9-ый - коммент к уроку
                 else:
-                    lesson[it] = lesson[it][1]  # 2-ой элемент массива lesson[it] - название урока
+                    lesson[it] = lesson[it]['name']  # 2-ой элемент массива lesson[it] - название урока
 
             answer_string += f"{lesson_num}. {'/'.join(lesson)}\n"
     return answer_string
@@ -50,14 +50,14 @@ def get_schedule(scr, user_id, text):
 
 def register_new_user(scr, user_id, text):    # регистрация login name surname parallel
     text = text.split()
-    try:
+    if len(text) >= 5:
         login = text[1]
         name = text[2]
         surname = text[3]
         parallel = text[4]
-        return user_db.make_new_user(login, parallel, name, surname, scr, user_id)
+        return user_db.add_user(name, surname, user_id)
 
-    except Exception:
+    else:
         return "Чтобы зарегистрироваться вводите (без кавычек):\n регистрация \"твой логин\" " \
                "\"твое имя\" \"твоя фамилия\" \"твой класс\""
 
@@ -74,7 +74,7 @@ def get_day_and_lesson_and_class_name_from_text(text):
     return day, lesson, class_name
 
 
-def makedate(n):
+def make_date(n):
     s = datetime.isoformat(n)
     s = s.split(sep='T')
     s = s[0]
@@ -94,14 +94,14 @@ def get_day_and_class_name_from_text(text):
     else:
         return ['', '']
     now = datetime.now()
-    today = makedate(now)
-    tomorrow = makedate(datetime.fromordinal(datetime.toordinal(now) + 1))
-    yesterday = makedate(datetime.fromordinal(datetime.toordinal(now) - 1))
+    today = make_date(now)
+    tomorrow = make_date(datetime.fromordinal(datetime.toordinal(now) + 1))
+    yesterday = make_date(datetime.fromordinal(datetime.toordinal(now) - 1))
     w = now.weekday()
     mon = datetime.fromordinal(datetime.toordinal(now) - w)
     sun = datetime.fromordinal(datetime.toordinal(now) - w + 5)
-    monday = makedate(mon)
-    sunday = makedate(sun)
+    monday = make_date(mon)
+    sunday = make_date(sun)
     week = monday + '-' + sunday
     try:
         class_name = t[ind]
