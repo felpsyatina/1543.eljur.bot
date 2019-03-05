@@ -172,9 +172,8 @@ class LessonDbReq:
 
             cursor.execute(query)
 
-    def add_schedule_from_dict(self, class_name=None, schedule=None):
-        if schedule is None:
-            schedule = get_sch.update(class_name)
+    def add_schedule(self, class_name=None, date=None):
+        schedule = get_sch.update(class_name, date)
 
         class_id = self.get_class_id(class_name)
 
@@ -188,7 +187,7 @@ class LessonDbReq:
 
     def add_schedules(self):
         for c in classes:
-            self.add_schedule_from_dict(c)
+            self.add_schedule(c)
         logger.log("lesson_db_manip", f"all classes schedules added.")
 
     def get_schedule(self, class_name, date=None):
@@ -253,4 +252,4 @@ class LessonDbReq:
 
 if __name__ == '__main__':
     req = LessonDbReq()
-    req.setup_db()
+    req.setup_db(False)

@@ -5,7 +5,7 @@ import answers_dict as ad
 
 class MyCursor(sqlite3.Cursor):
     def __init__(self, connection):
-        super(MyCursor, self).__init__(self, connection)
+        super(MyCursor, self).__init__(connection)
 
     def __enter__(self):
         return self

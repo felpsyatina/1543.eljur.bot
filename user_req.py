@@ -26,25 +26,29 @@ def cur_date(add=0):
 
 
 def get_schedule(scr, user_id, text):
-    schedule = {"Сегодня": lesson_db.get_schedule(get_class_name_from_text(text.upper()), cur_date()),
-                "Завтра": lesson_db.get_schedule(get_class_name_from_text(text.upper()), cur_date(1))}
+    logger.log("user_req", f"getting schedule in {text}")
+
+    class_name = get_class_name_from_text(text.upper())
+    if not lesson_db.get_schedule(class_name, cur_date(1)):
+        lesson_db.add_schedule(class_name, cur_date(1))
+
+    schedule = {"Сегодня": lesson_db.get_schedule(class_name, cur_date()),
+                "Завтра": lesson_db.get_schedule(class_name, cur_date(1))}
 
     logger.log("user_req", f"current_user_schedule {schedule}")
 
     answer_string = ""
     for day_date, day_schedule in schedule.items():
-        answer_string += f"{day_date.title()}\n"
+        answer_string += f"{day_date.title()}:\n"
         for lesson_num, lesson in day_schedule.items():
 
             for it in range(len(lesson)):
                 if lesson[it]['comment'] is not None:
-                    lesson[it] = f"{lesson[it]['name']} ({lesson[it]['commemt']})"
-                    # 2-ой элемент массива lesson[it] - название урока
-                    # 9-ый - коммент к уроку
+                    lesson[it] = f"{lesson[it]['name']} ({lesson[it]['comment']})"
                 else:
-                    lesson[it] = lesson[it]['name']  # 2-ой элемент массива lesson[it] - название урока
+                    lesson[it] = f"{lesson[it]['name']}"
 
-            answer_string += f"{lesson_num}. {'/'.join(lesson)}\n"
+            answer_string += f"{lesson_num}. {'/'.join(lesson)}.\n"
     return answer_string
 
 
@@ -236,7 +240,7 @@ def fast_schedule(src, user_id, text):
         return user_reg0(src, user_id, text)
     if text == "отмена":
         user_db.run(user_db.update_user, {"class": info['class'], "status": "waiting"}, user_id)
-        return {"text": "Вы вернулись в исходное меню",
+        return {"text": "Вы в главном меню:",
                 "buttons": waiting_buttons}
     user_db.run(user_db.update_user, {"class": info['class'], "status": "waiting"}, user_id)
     return {"text": get_schedule(src, user_id, "null " + info["class"]),
@@ -256,6 +260,7 @@ def parse_message_from_user(scr, user_id, text, name):
     if user_db.run(user_db.get_user_info, user_id) is None:
         user_db.run(user_db.add_user, name['first_name'], name['last_name'], user_id)
 
+    logger.log("user_req", "requesting info")
     info = user_db.run(user_db.get_user_info, user_id)
     if info['status'] is None:
         user_db.run(user_db.update_user, {"status": "reg0"}, user_id)
@@ -300,12 +305,11 @@ status_to_function = {
     "reg0": user_reg0,
     "reg1": user_reg1,
     "reg2": user_reg2,
-    "rasp1": fast_schedule
 }
 
 
 fast_msg_to_function = {
-    "расписание": user_sch0,
+    "расписание": fast_schedule,
     "дз": fast_hometask
 }
 
