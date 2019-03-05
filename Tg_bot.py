@@ -39,12 +39,12 @@ def send_msg(user_id, text, msg_to_answer_id=None):
     requests.get(url_send_msg, data={'chat_id': user_id, 'text': text, 'reply_to_message_id': msg_to_answer_id})
 
 
-def send_but_help(user_id, text, keyb_but, msg_to_answer_id=None):
+def send_msg_and_but(user_id, text, keyb_but, msg_to_answer_id=None):
     reply_markup = json.dumps(
         {"keyboard": keyb_but,
          "one_time_keyboard": True})
     (requests.get(url_send_msg,
-                  data={'chat_id': user_id, 'parse_mode': 'HTML', 'text': text, 'reply_markup': reply_markup,
+                  data={'chat_id': user_id, 'text': text, 'reply_markup': reply_markup,
                         'reply_to_message_id': msg_to_answer_id}))
 
 
@@ -65,6 +65,7 @@ def new_msgs(last_msg_id, raw_msgs):
             msg_id = msg_base[i]['message']['message_id']
             user_name = {'first_name': msg_base[i]['message']['from']['first_name'],
                          'last_name': msg_base[i]['message']['from']['last_name']}
+            logger.log("tg", "get message - " + msg + " from" + tg_user_id)
             raw_msgs.append({'tg_user_id': tg_user_id, 'raw_msg': msg, 'msg_id': msg_id, 'user_name': user_name,
                              'is_super_admin': super_admin})
     else:
@@ -76,7 +77,8 @@ def answer_msg(user_id, msg, msg_id, user_name):
     logger.log("tg", "sending message to " + str(user_id))
     result = user_req.parse_message_from_user("tg", user_id, msg, user_name)
     msg_to_send = result['text']
-    send_msg(user_id, msg_to_send, msg_id)
+    but_to_send = result['buttons']
+    send_msg_and_but(user_id, msg_to_send, but_to_send, msg_id)
 
 
 def tg_bot_main(last_msg_id, raw_msgs):
@@ -89,10 +91,12 @@ def tg_bot_main(last_msg_id, raw_msgs):
             for i in range(len(raw_msgs)):
                 msg_to_answer = raw_msgs[i]
                 if msg_to_answer['is_super_admin'] == '0':
-                    answer_msg(msg_to_answer['tg_user_id'], msg_to_answer['raw_msg'], msg_to_answer['msg_id'], msg_to_answer['user_name'])
+                    answer_msg(msg_to_answer['tg_user_id'], msg_to_answer['raw_msg'], msg_to_answer['msg_id'],
+                               msg_to_answer['user_name'])
                 else:
                     send_msg(msg_to_answer['tg_user_id'], 'you are super admin', msg_to_answer['msg_id'])
-                    answer_msg(msg_to_answer['tg_user_id'], msg_to_answer['raw_msg'], msg_to_answer['msg_id'], msg_to_answer['user_name'])
+                    answer_msg(msg_to_answer['tg_user_id'], msg_to_answer['raw_msg'], msg_to_answer['msg_id'],
+                               msg_to_answer['user_name'])
             raw_msgs = []
 
 
