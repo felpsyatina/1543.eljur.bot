@@ -196,8 +196,8 @@ def user_reg0(src, user_id, text):
 
 def user_reg1(src, user_id, text):
     if text == "отмена":
-        user_db.run(user_db.update_user, {"class": "null", "status": "waiting"}, user_id)
-        return
+        user_db.run(user_db.update_user, {"class": "null", "status": "reg0"}, user_id)
+        return user_reg0(src, user_id, text)
     if text in ["5", "6", "7", "8", "9", "10", "11"]:
         user_db.run(user_db.update_user, {"class": text, "status": "reg2"}, user_id)
         return {"text": "Выберите букву класса.\nЕсли хотите продолжить без введения класса, нажмите \"Отмена\"",
@@ -208,13 +208,12 @@ def user_reg1(src, user_id, text):
 
 def user_reg2(src, user_id, text):
     if text == "отмена":
-        user_db.run(user_db.update_user, {"class": "null", "status": "waiting"}, user_id)
-        return {"text": send_commands(src, user_id, text),
-                "buttons": None}
+        user_db.run(user_db.update_user, {"class": "null", "status": "reg0"}, user_id)
+        return user_reg0(src, user_id, text)
     if text in ["а", "б", "в", "г"]:
         info = user_db.run(user_db.get_user_info, user_id)
         user_db.run(user_db.update_user, {"class": info['class'] + text, "status": "waiting"}, user_id)
-        return {"text": "Теперь вы можете узнавать расписание или дз, нажимая лишь на одну кнопку:",
+        return {"text": "Теперь вы можете узнавать расписание или дз, нажимая лишь на одну кнопку. \nВы можете сбросить класс, нажав \"Отмена\".",
                 "buttons": waiting_buttons}
     return {"text": "Выберите букву класса.\nЕсли хотите продолжить без введения класса, нажмите \"Отмена\"",
             "buttons": [["А", "Б", "В", "Г"], ["Отмена"]]}
@@ -314,7 +313,7 @@ fast_msg_to_function = {
 }
 
 
-waiting_buttons = [["расписание"], ["дз"]]
+waiting_buttons = [["расписание"], ["дз"], ["Отмена"]]
 
 
 if __name__ == '__main__':
