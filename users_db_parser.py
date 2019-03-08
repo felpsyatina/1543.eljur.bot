@@ -118,6 +118,32 @@ class UserDbReq:
 
             return ans_dict
 
+
+    def get_user_info_by_global_id(self, global_id=None, cursor=None):
+        if global_id is not None:
+            query = f"""
+                SELECT * FROM users WHERE
+                global_id = {global_id};
+            """
+            cursor.execute(query)
+            users_fetch = cursor.fetchone()
+
+            if users_fetch is None:
+                return None
+
+            column_desc = self.get_columns_info(cursor=cursor)
+
+            if len(users_fetch) != len(column_desc):
+                logger.log("user_db_manip", f"Каким-то чудом длины не совпадают!")
+                return
+
+            ans_dict = {}
+            for it in range(len(users_fetch)):
+                ans_dict[column_desc[it][1]] = users_fetch[it]
+
+            return ans_dict
+
+
     def update_user(self, dict_of_changes, vk_id=None, tg_id=None, cursor=None):
         for key, value in dict_of_changes.items():
             query = f"""UPDATE users SET {key}='{value}' WHERE vk_id={vk_id}"""
