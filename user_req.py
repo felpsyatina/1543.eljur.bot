@@ -213,7 +213,7 @@ def user_reg2(src, user_id, text):
     if text in ["а", "б", "в", "г"]:
         info = user_db.run(user_db.get_user_info, user_id)
         user_db.run(user_db.update_user, {"class": info['class'] + text, "status": "waiting"}, user_id)
-        return {"text": "Теперь вы можете узнавать расписание или дз, нажимая лишь на одну кнопку. \nВы можете сбросить класс, нажав \"Отмена\".",
+        return {"text": "Теперь вы можете узнавать расписание или дз, нажимая лишь на одну кнопку. \nВы можете сбросить класс, нажав \"разлогиниться\".",
                 "buttons": waiting_buttons}
     return {"text": "Выберите букву класса.\nЕсли хотите продолжить без введения класса, нажмите \"Отмена\"",
             "buttons": [["А", "Б", "В", "Г"], ["Отмена"]]}
@@ -315,11 +315,11 @@ status_to_function = {
 fast_msg_to_function = {
     "расписание": fast_schedule,
     "дз": fast_hometask,
-    "отмена": cancel_waiting
+    "разлогиниться": cancel_waiting
 }
 
 
-waiting_buttons = [["расписание"], ["дз"], ["Отмена"]]
+waiting_buttons = [["расписание"], ["дз"], ["разлогиниться"]]
 
 
 if __name__ == '__main__':
