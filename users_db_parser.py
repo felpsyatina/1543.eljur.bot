@@ -123,7 +123,7 @@ class UserDbReq:
         if global_id is not None:
             query = f"""
                 SELECT * FROM users WHERE
-                global_id = {global_id};
+                id = {global_id};
             """
             cursor.execute(query)
             users_fetch = cursor.fetchone()
