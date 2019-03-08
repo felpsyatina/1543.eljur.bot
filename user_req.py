@@ -252,6 +252,11 @@ def fast_hometask(src, user_id, text):
             "buttons": waiting_buttons}
 
 
+def cancel_waiting(src, user_id, text):
+    user_db.run(user_db.update_user, {"class": "null", "status": "reg0"}, user_id)
+    return user_reg0(src, user_id, text)
+
+
 def parse_message_from_user(scr, user_id, text, name):
     logger.log("user_req", "process request")
     text = text.strip().lower()
@@ -309,7 +314,8 @@ status_to_function = {
 
 fast_msg_to_function = {
     "расписание": fast_schedule,
-    "дз": fast_hometask
+    "дз": fast_hometask,
+    "отмена": cancel_waiting
 }
 
 
