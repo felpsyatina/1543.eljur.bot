@@ -11,6 +11,9 @@ class MyCursor(sqlite3.Cursor):
         return self
 
     def __exit__(self, ex_type, ex_value, ex_traceback):
+        if ex_type is not None:
+            logger.log("user_db_parser", f"ERROR: ex_type - {ex_type}!")
+
         if self.connected:
             self.connection.commit()
             self.close()

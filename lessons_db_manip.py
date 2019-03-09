@@ -8,7 +8,7 @@ import update_schedule_json_file as get_sch
 current_min_par = 44
 
 classes = ['5А', '5Б', '5В', '5Г', '6А', '6Б', '6В', '6Г', '7А', '7Б', '7В', '7Г', '8А', '8Б', '8В', '8Г', '9А',
-                       '9Б', '9В', '9Г', '10А', '10Б', '10В', '10Г', '11А', '11Б', '11В', '11Г']
+           '9Б', '9В', '9Г', '10А', '10Б', '10В', '10Г', '11А', '11Б', '11В', '11Г']
 
 
 def cur_date():
@@ -40,6 +40,9 @@ class MyCursor(sqlite3.Cursor):
         return self
 
     def __exit__(self, ex_type, ex_value, ex_traceback):
+        if ex_type is not None:
+            logger.log("lesson_db_manip", f"ERROR: ex_type - {ex_type}!")
+
         if self.connected:
             self.connection.commit()
             self.close()
