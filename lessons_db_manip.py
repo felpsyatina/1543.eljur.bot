@@ -41,7 +41,7 @@ class MyCursor(sqlite3.Cursor):
 
     def __exit__(self, ex_type, ex_value, ex_traceback):
         if ex_type is not None:
-            logger.log("lesson_db_manip", f"ERROR: ex_type - {ex_type}!")
+            logger.log("lessons_db_manip", f"SQLite ERROR: ex_type - {ex_type}!")
 
         if self.connected:
             self.connection.commit()
@@ -114,6 +114,8 @@ class LessonDbReq:
             logger.log("lesson_db_manip", f"table '{table_name}' created.")
 
     def get_class_id(self, class_name):
+        class_name = class_name.upper()
+
         with self.run_cursor() as cursor:
             class_num = int(class_name[:-1])
             class_letter = class_name[-1]
@@ -180,20 +182,24 @@ class LessonDbReq:
     def add_schedule(self, class_name=None, date=None):
         schedule = get_sch.update(class_name, date)
 
+        if not schedule:
+            return
+
         class_id = self.get_class_id(class_name)
 
+        print(schedule)
         for date, dict_of_this_date in schedule.items():
             day_name = dict_of_this_date["title"]
 
             for lesson in dict_of_this_date.get("items", []):
                 self.add_lesson(lesson, class_id=class_id, day_name=day_name, date=date)
 
-        logger.log("lesson_db_manip", f"schedule of class '{class_name}' added.")
+        logger.log("lessons_db_manip", f"schedule of class '{class_name}' on {date} added.")
 
     def add_schedules(self):
         for c in classes:
             self.add_schedule(c)
-        logger.log("lesson_db_manip", f"all classes schedules added.")
+        logger.log("lessons_db_manip", f"all classes schedules added.")
 
     def get_schedule(self, class_name, date=None):
         logger.log("lessons_db_manip", f"getting schedule class: {class_name}, date: {date}")

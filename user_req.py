@@ -3,6 +3,7 @@ from lessons_db_manip import LessonDbReq
 from users_db_parser import UserDbReq
 import answers_dict as ad
 from datetime import datetime, timedelta
+from datetime import date as st_date
 import eljur_api as ea
 import config
 
@@ -25,31 +26,77 @@ def cur_date(add=0):
     return (datetime.today() + timedelta(days=add)).strftime('%Y%m%d')
 
 
+def get_word_by_date(date):
+    if len(str(date)) != 8:
+        logger.log("user_req", "ERROR: get wrong date!")
+        return f"{date}"
+
+    date = str(date)
+    if date == cur_date():
+        return "Сегодня"
+    if date == cur_date(1):
+        return "Завтра"
+    if date == cur_date(2):
+        return "Послезавтра"
+    if date == cur_date(-1):
+        return "Вчера"
+    if date == cur_date(-2):
+        return "Позавчера"
+
+    y = int(date[:4])
+    m = int(date[4:6])
+    d = int(date[6:8])
+
+    formed_date = st_date(y, m, d)
+    return f"{formed_date}"
+
+
+def get_schedule_from_class(class_name, list_of_dates=None, add_room=False, add_teacher=False):
+    if list_of_dates is None:
+        list_of_dates = [cur_date()]
+
+    answer_string = ""
+    for date in list_of_dates:
+
+        temp = lesson_db.get_schedule(class_name, date)
+
+        if not temp:
+            lesson_db.add_schedule(class_name, date)
+
+        day_schedule = lesson_db.get_schedule(class_name, date)
+
+        answer_string += f"{get_word_by_date(date)}:\n"
+
+        if not day_schedule:
+            answer_string += f"Уроков (в моей базе) нет.\n"
+            continue
+
+        for lesson_num, lesson in day_schedule.items():
+            tmp = []
+            print(lesson)
+            for it in range(len(lesson)):
+                tmp.append(f"{lesson[it]['name']}")
+
+                if add_room and lesson[it]['room'] is not None:
+                    tmp[it] += f", кабинет: {lesson[it]['room']}"
+
+                if add_teacher and lesson[it]['teacher'] is not None:
+                    tmp[it] += f", учитель: {lesson[it]['teacher']}"
+
+                if lesson[it]['comment'] is not None:
+                    tmp[it] += f" ({lesson[it]['comment']})"
+
+            answer_string += f"{lesson_num}. {'/'.join(tmp)}.\n"
+    return answer_string
+
+
 def get_schedule(scr, user_id, text):
     logger.log("user_req", f"getting schedule in {text}")
 
     class_name = get_class_name_from_text(text.upper())
-    if not lesson_db.get_schedule(class_name, cur_date(1)):
-        lesson_db.add_schedule(class_name, cur_date(1))
+    dates = [cur_date(), cur_date(1)]
 
-    schedule = {"Сегодня": lesson_db.get_schedule(class_name, cur_date()),
-                "Завтра": lesson_db.get_schedule(class_name, cur_date(1))}
-
-    logger.log("user_req", f"current_user_schedule {schedule}")
-
-    answer_string = ""
-    for day_date, day_schedule in schedule.items():
-        answer_string += f"{day_date.title()}:\n"
-        for lesson_num, lesson in day_schedule.items():
-
-            for it in range(len(lesson)):
-                if lesson[it]['comment'] is not None:
-                    lesson[it] = f"{lesson[it]['name']} ({lesson[it]['comment']})"
-                else:
-                    lesson[it] = f"{lesson[it]['name']}"
-
-            answer_string += f"{lesson_num}. {'/'.join(lesson)}.\n"
-    return answer_string
+    return get_schedule_from_class(class_name, dates, add_room=True, add_teacher=True)
 
 
 def register_new_user(scr, user_id, text):    # регистрация login name surname parallel
@@ -193,7 +240,7 @@ def user_reg0(src, user_id, text):
         user_db.update_user({"status": "reg1"}, vk_id=user_id)
     if src == "tg":
         user_db.update_user({"status": "reg1"}, tg_id=user_id)
-    
+
     return {"text": "Выберите класс.\nЕсли хотите продолжить без введения класса, нажмите \"Отмена\"",
             "buttons": [[5, 6, 7, 8], [9, 10, 11], ["Отмена"]]}
 
@@ -242,13 +289,18 @@ def fast_schedule(src, user_id, text):
     if info['class'] == 'null':
         user_db.update_user({"class": "null", "status": "reg0"}, user_id)
         return user_reg0(src, user_id, text)
+    user_db.update_user({"class": info['class'], "status": "waiting"}, user_id)
     if text == "отмена":
         user_db.update_user({"class": info['class'], "status": "waiting"}, user_id)
         return {"text": "Вы в главном меню:",
                 "buttons": waiting_buttons}
     user_db.update_user({"class": info['class'], "status": "waiting"}, user_id)
-    return {"text": get_schedule(src, user_id, "null " + info["class"]),
-            "buttons": waiting_buttons}
+
+    sdl = get_schedule_from_class(info['class'], list_of_dates=[cur_date(), cur_date(1), cur_date(2)])
+    return {
+        "text": f"Класс: {info['class']}.\n{sdl}",
+        "buttons": waiting_buttons
+    }
 
 
 def fast_hometask(src, user_id, text):
