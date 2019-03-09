@@ -1,6 +1,5 @@
 import sqlite3
 import logger
-import answers_dict as ad
 
 
 class MyCursor(sqlite3.Cursor):
@@ -22,12 +21,12 @@ class UserDbReq:
     def run_cursor(self):
         return MyCursor(sqlite3.connect(self.database_name, isolation_level=None))
 
-    def del_table(self, table):
+    def del_table(self, table_name):
         with self.run_cursor() as cursor:
-            query = f'DROP TABLE IF EXISTS {table}'
+            query = f'DROP TABLE IF EXISTS {table_name}'
 
             cursor.execute(query)
-            logger.log("user_db_manip", f"table '{table}' deleted.")
+            logger.log("user_db_manip", f"table '{table_name}' deleted.")
 
     def create_users_db(self, table_name="users"):
         self.del_table(table_name)
