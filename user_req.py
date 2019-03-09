@@ -1,7 +1,7 @@
 import logger
 from lessons_db_manip import LessonDbReq
-import answers_dict as ad
 from users_db_parser import UserDbReq
+import answers_dict as ad
 from datetime import datetime, timedelta
 import eljur_api as ea
 import config
@@ -193,7 +193,7 @@ def user_reg0(src, user_id, text):
         user_db.update_user({"status": "reg1"}, vk_id=user_id)
     if src == "tg":
         user_db.update_user({"status": "reg1"}, tg_id=user_id)
-
+    
     return {"text": "Выберите класс.\nЕсли хотите продолжить без введения класса, нажмите \"Отмена\"",
             "buttons": [[5, 6, 7, 8], [9, 10, 11], ["Отмена"]]}
 
