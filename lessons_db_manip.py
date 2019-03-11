@@ -180,6 +180,8 @@ class LessonDbReq:
             cursor.execute(query)
 
     def add_schedule(self, class_name=None, date=None):
+        class_name = class_name.upper()
+
         schedule = get_sch.update(class_name, date)
 
         if not schedule:
@@ -187,7 +189,6 @@ class LessonDbReq:
 
         class_id = self.get_class_id(class_name)
 
-        print(schedule)
         for date, dict_of_this_date in schedule.items():
             day_name = dict_of_this_date["title"]
 

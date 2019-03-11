@@ -73,7 +73,6 @@ def get_schedule_from_class(class_name, list_of_dates=None, add_room=False, add_
 
         for lesson_num, lesson in day_schedule.items():
             tmp = []
-            print(lesson)
             for it in range(len(lesson)):
                 tmp.append(f"{lesson[it]['name']}")
 
