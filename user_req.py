@@ -105,7 +105,9 @@ def register_new_user(scr, user_id, text):    # регистрация login nam
         name = text[2]
         surname = text[3]
         parallel = text[4]
-        return user_db.add_user(name, surname, user_id)
+        if scr == "vk":
+            return user_db.add_user(name, surname, vk_id=user_id)
+        return user_db.add_user(name, surname, tg_id=user_id)
 
     else:
         return "Чтобы зарегистрироваться вводите (без кавычек):\n регистрация \"твой логин\" " \
@@ -176,7 +178,11 @@ def generate_return(text):
 
 def send_acc_information(src, user_id, text):
     logger.log("user_req", "request for acc data")
-    ans_mes = user_db.get_user_info(user_id)
+    if scr == "vk":
+        ans_mes = user_db.get_user_info(vk_id=user_id)
+    else:
+        ans_mes = user_db.get_user_info(tg_id=user_id)
+
     if ans_mes is None:
         logger.log("user_req", "user " + str(user_id) + " is not in the database")
         answer_message = "К сожалению вас пока нет в нашей базе данных"
@@ -246,10 +252,18 @@ def user_reg0(src, user_id, text):
 
 def user_reg1(src, user_id, text):
     if text == "отмена":
-        user_db.update_user({"class": "null", "status": "reg0"}, user_id)
+        if scr == "vk":
+            user_db.update_user({"class": "null", "status": "reg0"}, vk_id=user_id)
+        if scr == "tg":
+            user_db.update_user({"class": "null", "status": "reg0"}, tg_id=user_id)
+
         return user_reg0(src, user_id, text)
     if text in ["5", "6", "7", "8", "9", "10", "11"]:
-        user_db.update_user({"class": text, "status": "reg2"}, user_id)
+        if scr == "vk":
+            user_db.update_user({"class": text, "status": "reg2"}, vk_id=user_id)
+        if scr == "tg":
+            user_db.update_user({"class": text, "status": "reg2"}, tg_id=user_id)
+
         return {"text": "Выберите букву класса.\nЕсли хотите продолжить без введения класса, нажмите \"Отмена\"",
                 "buttons": [["А", "Б", "В", "Г"], ["Отмена"]]}
     return {"text": "Выберите класс.\nЕсли хотите продолжить без введения класса, нажмите \"Отмена\"",
@@ -258,11 +272,20 @@ def user_reg1(src, user_id, text):
 
 def user_reg2(src, user_id, text):
     if text == "отмена":
-        user_db.update_user({"class": "null", "status": "reg0"}, user_id)
+        if scr == "vk":
+            user_db.update_user({"class": "null", "status": "reg0"}, vk_id=user_id)
+        if scr == "tg":
+            user_db.update_user({"class": "null", "status": "reg0"}, tg_id=user_id)
+
         return user_reg0(src, user_id, text)
     if text in ["а", "б", "в", "г"]:
         info = user_db.get_user_info(user_id)
-        user_db.update_user({"class": info['class'] + text, "status": "waiting"}, user_id)
+
+        if scr == "vk":
+            user_db.update_user({"class": info['class'] + text, "status": "waiting"}, vk_id=user_id)
+        if scr == "tg":
+            user_db.update_user({"class": info['class'] + text, "status": "waiting"}, tg_id=user_id)
+
         return {"text": "Теперь вы можете узнавать расписание или дз, нажимая лишь на одну кнопку. \n"
                         "Вы можете сбросить класс, нажав \"разлогиниться\".",
                 "buttons": waiting_buttons}

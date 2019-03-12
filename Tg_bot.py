@@ -39,10 +39,27 @@ def send_msg(user_id, text, msg_to_answer_id=None):
     requests.get(url_send_msg, data={'chat_id': user_id, 'text': text, 'reply_to_message_id': msg_to_answer_id})
 
 
+def fix_board(board):
+    if type(board) == int:
+        return board
+
+    ans = []
+    logger.log("tg", f"BOARDS!!!!!! {board}")
+    for x in board:
+        tmp = []
+        for y in x:
+            tmp.append(str(y))
+        ans.append(tmp)
+
+    logger.log("tg", f"ANSS!!!!!! {ans}")
+    return ans
+
+
 def send_msg_and_but(user_id, text, keyb_but, msg_to_answer_id=None):
     reply_markup = json.dumps(
-        {"keyboard": keyb_but,
+        {"keyboard": fix_board(keyb_but),
          "one_time_keyboard": True})
+    logger.log("tg", str(reply_markup))
     (requests.get(url_send_msg,
                   data={'chat_id': user_id, 'text': text, 'reply_markup': reply_markup,
                         'reply_to_message_id': msg_to_answer_id}))
@@ -76,7 +93,7 @@ def new_msgs(last_msg_id, raw_msgs):
 def answer_msg(user_id, msg, msg_id, user_name):
     logger.log("tg", "sending message to " + str(user_id))
     result = user_req.parse_message_from_user("tg", user_id, msg, user_name)
-    logger.log("tg", "message: " + str(result['text']))
+    logger.log("tg", "message: " + str(result['text']) + str(result['buttons']))
     msg_to_send = result['text']
     but_to_send = result['buttons']
     send_msg_and_but(user_id, msg_to_send, but_to_send, msg_id)
@@ -95,7 +112,7 @@ def tg_bot_main(last_msg_id, raw_msgs):
                     answer_msg(msg_to_answer['tg_user_id'], msg_to_answer['raw_msg'], msg_to_answer['msg_id'],
                                msg_to_answer['user_name'])
                 else:
-                    send_msg(msg_to_answer['tg_user_id'], 'you are super admin', msg_to_answer['msg_id'])
+                    send_msg_and_but(msg_to_answer['tg_user_id'], 'you are super admin', msg_to_answer['msg_id'])
                     answer_msg(msg_to_answer['tg_user_id'], msg_to_answer['raw_msg'], msg_to_answer['msg_id'],
                                msg_to_answer['user_name'])
             raw_msgs = []
