@@ -264,7 +264,7 @@ class LessonDbReq:
                 AND date = '{date}' AND name = '{lesson_num}'
             """
             cursor.execute(query)
-            logger.log("lesson_db_manip", f"'{lesson_num}' lesson of {class_name} class in {date} edited: {edit_sting}")
+            logger.log("lesson_db_manip", f"'{lesson_num}' lesson of {class_name} class in {date} edited: {edit_string}")
 
     def setup_db(self, adding_schedule=None):
         if adding_schedule is None:

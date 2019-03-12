@@ -89,7 +89,7 @@ def get_schedule_from_class(class_name, list_of_dates=None, add_room=False, add_
     return answer_string
 
 
-def get_schedule(scr, user_id, text):
+def get_schedule(src, user_id, text):
     logger.log("user_req", f"getting schedule in {text}")
 
     class_name = get_class_name_from_text(text.upper())
@@ -98,14 +98,14 @@ def get_schedule(scr, user_id, text):
     return get_schedule_from_class(class_name, dates, add_room=True, add_teacher=True)
 
 
-def register_new_user(scr, user_id, text):    # регистрация login name surname parallel
+def register_new_user(src, user_id, text):    # регистрация login name surname parallel
     text = text.split()
     if len(text) >= 5:
         login = text[1]
         name = text[2]
         surname = text[3]
         parallel = text[4]
-        if scr == "vk":
+        if src == "vk":
             return user_db.add_user(name, surname, vk_id=user_id)
         return user_db.add_user(name, surname, tg_id=user_id)
 
@@ -178,7 +178,7 @@ def generate_return(text):
 
 def send_acc_information(src, user_id, text):
     logger.log("user_req", "request for acc data")
-    if scr == "vk":
+    if src == "vk":
         ans_mes = user_db.get_user_info(vk_id=user_id)
     else:
         ans_mes = user_db.get_user_info(tg_id=user_id)
@@ -213,7 +213,7 @@ def replace_lesson(src, user_id, text):      # замена lesson в day у cla
     return lesson_db.get_replacement(class_name, day, lesson, another_lesson)
 
 
-def get_hometask(scr, user_id, text):
+def get_hometask(src, user_id, text):
     logger.log("user_req", "getting hometask")
     day, class_name = get_day_and_class_name_from_text(text)
     r = student.get_hometask(class_name, day)
@@ -252,16 +252,16 @@ def user_reg0(src, user_id, text):
 
 def user_reg1(src, user_id, text):
     if text == "отмена":
-        if scr == "vk":
+        if src == "vk":
             user_db.update_user({"class": "null", "status": "reg0"}, vk_id=user_id)
-        if scr == "tg":
+        if src == "tg":
             user_db.update_user({"class": "null", "status": "reg0"}, tg_id=user_id)
 
         return user_reg0(src, user_id, text)
     if text in ["5", "6", "7", "8", "9", "10", "11"]:
-        if scr == "vk":
+        if src == "vk":
             user_db.update_user({"class": text, "status": "reg2"}, vk_id=user_id)
-        if scr == "tg":
+        if src == "tg":
             user_db.update_user({"class": text, "status": "reg2"}, tg_id=user_id)
 
         return {"text": "Выберите букву класса.\nЕсли хотите продолжить без введения класса, нажмите \"Отмена\"",
@@ -272,18 +272,18 @@ def user_reg1(src, user_id, text):
 
 def user_reg2(src, user_id, text):
     if text == "отмена":
-        if scr == "vk":
+        if src == "vk":
             user_db.update_user({"class": "null", "status": "reg0"}, vk_id=user_id)
-        if scr == "tg":
+        if src == "tg":
             user_db.update_user({"class": "null", "status": "reg0"}, tg_id=user_id)
 
         return user_reg0(src, user_id, text)
     if text in ["а", "б", "в", "г"]:
         info = user_db.get_user_info(user_id)
 
-        if scr == "vk":
+        if src == "vk":
             user_db.update_user({"class": info['class'] + text, "status": "waiting"}, vk_id=user_id)
-        if scr == "tg":
+        if src == "tg":
             user_db.update_user({"class": info['class'] + text, "status": "waiting"}, tg_id=user_id)
 
         return {"text": "Теперь вы можете узнавать расписание или дз, нажимая лишь на одну кнопку. \n"
@@ -336,7 +336,7 @@ def cancel_waiting(src, user_id, text):
     return user_reg0(src, user_id, text)
 
 
-def process_message_from_user(scr, user_id, text, name):
+def process_message_from_user(src, user_id, text, name):
     logger.log("user_req", "process request")
     text = text.strip().lower()
 
@@ -350,18 +350,18 @@ def process_message_from_user(scr, user_id, text, name):
 
     if info['status'] != 'waiting':
         function = status_to_function[info['status']]
-        return function(scr, user_id, text)
+        return function(src, user_id, text)
 
     info = user_db.get_user_info(user_id)
     if info['status'] == 'waiting' and info['class'].lower() is not "null" and text in fast_msg_to_function.keys():
         function = fast_msg_to_function[text]
-        return function(scr, user_id, text)
+        return function(src, user_id, text)
 
     try:
         for key, value in ad.quest.items():
             if key in text:
                 needed_function = key_words_to_function[value]
-                answer_from_function = needed_function(scr, user_id, text)
+                answer_from_function = needed_function(src, user_id, text)
 
                 return generate_return(answer_from_function)
         logger.log("user_req", f"Запрос не найден. Запрос: {text}")
@@ -372,10 +372,10 @@ def process_message_from_user(scr, user_id, text, name):
         return {"text": "Видно не судьба :( ", "buttons": None}
 
 
-def parse_message_from_user(scr, user_id, text, name):
-    logger.log("request_save", "Request\n" + scr + " " + str(user_id) + " " + str(name) + "\n" + text)
-    res = process_message_from_user(scr, user_id, text, name)
-    logger.log("request_save", "Answer for " + scr + " " + str(user_id) + "\n" + res.get("text",""))
+def parse_message_from_user(src, user_id, text, name):
+    logger.log("request_save", "Request\n" + src + " " + str(user_id) + " " + str(name) + "\n" + text)
+    res = process_message_from_user(src, user_id, text, name)
+    logger.log("request_save", "Answer for " + src + " " + str(user_id) + "\n" + res.get("text",""))
     return res
 
 
