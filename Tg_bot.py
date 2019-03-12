@@ -76,6 +76,7 @@ def new_msgs(last_msg_id, raw_msgs):
 def answer_msg(user_id, msg, msg_id, user_name):
     logger.log("tg", "sending message to " + str(user_id))
     result = user_req.parse_message_from_user("tg", user_id, msg, user_name)
+    logger.log("tg", "message: " + str(result['text']))
     msg_to_send = result['text']
     but_to_send = result['buttons']
     send_msg_and_but(user_id, msg_to_send, but_to_send, msg_id)
