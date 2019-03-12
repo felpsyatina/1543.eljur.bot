@@ -178,7 +178,7 @@ def generate_return(text):
 
 def send_acc_information(src, user_id, text):
     logger.log("user_req", "request for acc data")
-    if scr == "vk":
+    if src == "vk":
         ans_mes = user_db.get_user_info(vk_id=user_id)
     else:
         ans_mes = user_db.get_user_info(tg_id=user_id)
@@ -374,6 +374,7 @@ def process_message_from_user(scr, user_id, text, name):
 
 def parse_message_from_user(scr, user_id, text, name):
     logger.log("request_save", "Request\n" + scr + " " + str(user_id) + " " + str(name) + "\n" + text)
+    logger.log("textofrequest_save", text)
     res = process_message_from_user(scr, user_id, text, name)
     logger.log("request_save", "Answer for " + scr + " " + str(user_id) + "\n" + res.get("text",""))
     return res
