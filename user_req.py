@@ -313,7 +313,7 @@ def cancel_waiting(src, user_id, text):
     return user_reg0(src, user_id, text)
 
 
-def parse_message_from_user(scr, user_id, text, name):
+def process_message_from_user(scr, user_id, text, name):
     logger.log("user_req", "process request")
     text = text.strip().lower()
 
@@ -347,6 +347,13 @@ def parse_message_from_user(scr, user_id, text, name):
     except Exception as err:
         logger.log("user_req", f"Processing error: {err}\n Запрос: {text}")
         return {"text": "Видно не судьба :( ", "buttons": None}
+
+
+def parse_message_from_user(scr, user_id, text, name):
+    logger.log("request_save", "Request\n" + src + " " + str(user_id) + " " + str(name) + "\n" + text)
+    res = process_message_from_user(src, user_id, text, name)
+    logger.log("request_save", "Answer for " + src + " " + str(user_id) + "\n" + res.get("text",""))
+    return res
 
 
 key_words_to_function = {"schedule": get_schedule,
