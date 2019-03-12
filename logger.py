@@ -20,6 +20,19 @@ def telegram_alert(module, log_line, tg_parse_mode = None):
 	sys.stderr.write("Result code " + str(res.status_code) + "\n")
 
 
+def save_log_file(module, log_line):
+	filename = config.params["log_files"].get(module, None)
+	if not filename:
+		filename = config.params["log_files"]["default"]
+	try:
+		with open(filename, "a") as fout:
+			fout.write(log_line)
+	except Exception as err:
+			sys.stderr.write("!!!!!!!!!!!!!!!! Cannot open log file " + filename + ": " + str(err) + "\n")
+			sys.stderr.flush()
+
+
+
 def log(module, log_line, add_time=True):
 	if add_time:
 		curtime = " at " + str(datetime.now())
@@ -40,4 +53,8 @@ def log(module, log_line, add_time=True):
 		else:
 			sys.stderr.write("!!!!!!!!!!!!!!!! Technical critical alerts is switched off in config")
 			sys.stderr.flush()
+
+	if module[-5:] == "_save":
+		if config.params.get("save_log_to_file", False):
+			save_log_file(module, full_log_line)
 
