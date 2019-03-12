@@ -187,7 +187,7 @@ def send_acc_information(src, user_id, text):
         logger.log("user_req", "user " + str(user_id) + " is not in the database")
         answer_message = "К сожалению вас пока нет в нашей базе данных"
     else:
-        answer_message = f"Логин: {ans_mes['login']}\nИмя: {ans_mes['first_name']}\nФамилия: {ans_mes['last_name']}\n" \
+        answer_message = f"Имя: {ans_mes['first_name']}\nФамилия: {ans_mes['last_name']}\nКласс: {ans_mes['class']}\n" \
             f"Класс: {ans_mes['class']}\n vk_id: {ans_mes['vk_id']}"
     return answer_message
 

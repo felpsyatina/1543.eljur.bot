@@ -177,22 +177,13 @@ class LessonDbReq:
 
         with self.run_cursor() as cursor:
             query = f"""
-                INSERT INTO lessons (name, number, class_id, day_of_week, room, teacher, date, grp, comment)
+                INSERT INTO lessons (name, number, class_id, day_of_week, room, teacher, date, grp, comment, homework)
                 VALUES (
                 '{lesson_name}', {lesson_num}, {class_id}, '{day_name}', {lesson_room},
                 {lesson_teacher}, {date}, {lesson_grp}, NULL, NULL)
             """
 
             cursor.execute(query)
-
-    def add_homework(self, hometask):
-        with self.run_cursor() as cursor:
-            query = f"""
-                 UPDATE lessons SET homework = {hometask} WHERE 
-        
-        
-        
-            """
 
     def add_schedule(self, class_name=None, date=None):
         class_name = class_name.upper()
@@ -260,10 +251,11 @@ class LessonDbReq:
             query = f"""
                 UPDATE lessons SET {edit_string} WHERE 
                 class_id = '{class_id}'
-                AND date = '{date}' AND name = '{lesson_num}'
+                AND date = '{date}' AND number = '{lesson_num}'
             """
             cursor.execute(query)
-            logger.log("lesson_db_manip", f"'{lesson_num}' lesson of {class_name} class in {date} edited: {edit_string}")
+            logger.log("lesson_db_manip",
+                       f"'{lesson_num}' lesson of {class_name} class in {date} edited: {edit_string}")
 
     def setup_db(self, adding_schedule=None):
         if adding_schedule is None:
