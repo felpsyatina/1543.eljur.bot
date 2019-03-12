@@ -373,9 +373,9 @@ def process_message_from_user(scr, user_id, text, name):
 
 
 def parse_message_from_user(scr, user_id, text, name):
-    logger.log("request_save", "Request\n" + src + " " + str(user_id) + " " + str(name) + "\n" + text)
-    res = process_message_from_user(src, user_id, text, name)
-    logger.log("request_save", "Answer for " + src + " " + str(user_id) + "\n" + res.get("text",""))
+    logger.log("request_save", "Request\n" + scr + " " + str(user_id) + " " + str(name) + "\n" + text)
+    res = process_message_from_user(scr, user_id, text, name)
+    logger.log("request_save", "Answer for " + scr + " " + str(user_id) + "\n" + res.get("text",""))
     return res
 
 
