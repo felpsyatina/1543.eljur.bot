@@ -3,12 +3,17 @@ import sqlite3
 import logger
 import config
 from datetime import datetime
-import update_schedule_json_file as get_sch
+import eljur_api as ea
 
 current_min_par = 44
 
 classes = ['5А', '5Б', '5В', '5Г', '6А', '6Б', '6В', '6Г', '7А', '7Б', '7В', '7Г', '8А', '8Б', '8В', '8Г', '9А',
            '9Б', '9В', '9Г', '10А', '10Б', '10В', '10Г', '11А', '11Б', '11В', '11Г']
+
+preset = {"devkey": config.secret['eljurapi']['devkey'], "vendor": "1543",
+              "password": config.secret['eljurapi']['password'],
+              "login": config.secret['eljurapi']['login']}
+student = ea.Student(**preset)
 
 
 def cur_date():
@@ -106,7 +111,8 @@ class LessonDbReq:
                     teacher text,
                     date text,
                     grp text,
-                    comment text
+                    comment text,
+                    homework text
                 );
             """
 
@@ -174,16 +180,25 @@ class LessonDbReq:
                 INSERT INTO lessons (name, number, class_id, day_of_week, room, teacher, date, grp, comment)
                 VALUES (
                 '{lesson_name}', {lesson_num}, {class_id}, '{day_name}', {lesson_room},
-                {lesson_teacher}, {date}, {lesson_grp}, NULL)
+                {lesson_teacher}, {date}, {lesson_grp}, NULL, NULL)
             """
 
             cursor.execute(query)
 
+    def add_homework(self, hometask):
+        with self.run_cursor() as cursor:
+            query = f"""
+                 UPDATE lessons SET homework = {hometask} WHERE 
+        
+        
+        
+            """
+
     def add_schedule(self, class_name=None, date=None):
         class_name = class_name.upper()
 
-        schedule = get_sch.update(class_name, date)
-
+        schedule = student.get_schedule(class_name, date)
+        schedule = schedule['days']
         if not schedule:
             return
 
@@ -241,10 +256,10 @@ class LessonDbReq:
             class_id = self.get_class_id(class_name)
 
             edit = [f"{key} = '{item}'" for key, item in dict_of_changes]
-            edit_sting = ", ".join(edit)
+            edit_string = ", ".join(edit)
 
             query = f"""
-                UPDATE lessons SET {edit_sting} WHERE 
+                UPDATE lessons SET {edit_string} WHERE 
                 class_id = '{class_id}'
                 AND date = '{date}' AND name = '{lesson_num}'
             """
