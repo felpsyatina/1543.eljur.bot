@@ -248,7 +248,6 @@ class LessonDbReq:
 
                 lessons[lesson_num] = lesson_arr
 
-        logger.log("lessons_db_manip", f"output lessons: {lessons}")
         return lessons
 
     def edit_lesson(self, class_name, date, lesson_num, dict_of_changes=None):
