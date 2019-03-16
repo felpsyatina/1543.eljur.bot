@@ -11,7 +11,9 @@ def _json_converter(json_ans):  # превращает json строку в сл
     return json_data
 
 
-def _strip(params, more=[]):
+def _strip(params, more=None):
+    if more is None:
+        more = []
     striped_params = {_strip_key(key): value for key, value in params.items() if key not in ['self'] + more}
     return striped_params
 
