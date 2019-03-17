@@ -80,8 +80,13 @@ def new_msgs(last_msg_id, raw_msgs):
                 super_admin = '0'
             msg = msg_base[i]['message']['text']
             msg_id = msg_base[i]['message']['message_id']
-            user_name = {'first_name': msg_base[i]['message']['from']['first_name'],
+            logger.log("tg",str(msg_base[i]['message']['from']))
+            if 'last_name' in msg_base[i]['message']['from']:
+                user_name = {'first_name': msg_base[i]['message']['from']['first_name'],
                          'last_name': msg_base[i]['message']['from']['last_name']}
+            else:
+                user_name = {'first_name': msg_base[i]['message']['from']['first_name'],
+                         'last_name': 'No name'}
             logger.log("tg", "get message - " + msg + " from" + str(tg_user_id))
             raw_msgs.append({'tg_user_id': tg_user_id, 'raw_msg': msg, 'msg_id': msg_id, 'user_name': user_name,
                              'is_super_admin': super_admin})
@@ -120,4 +125,5 @@ def tg_bot_main(last_msg_id, raw_msgs):
 
 if __name__ == '__main__':
     tg_bot_main(last_msg_id, raw_msgs)
+
 
