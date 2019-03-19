@@ -12,8 +12,8 @@ lesson_db = LessonDbReq()
 user_db = UserDbReq()
 
 preset = {"devkey": config.secret['eljurapi']['devkey'], "vendor": "1543",
-              "password": config.secret['eljurapi']['password'],
-              "login": config.secret['eljurapi']['login']}
+          "password": config.secret['eljurapi']['password'],
+          "login": config.secret['eljurapi']['login']}
 student = ea.Student(**preset)
 
 
@@ -228,7 +228,7 @@ def get_hometask(src, user_id, text):
                 ans += (" группа " + lesson['grp'] + '\n')
             else:
                 ans += '\n'
-            ans += (lesson['homework']['1']['value'] + '\n')
+            ans += (lesson['hometask']['1']['value'] + '\n')
             try:
                 ans += (lesson['files']['file'][0]['link'] + '\n')
             except Exception:
