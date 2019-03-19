@@ -12,8 +12,8 @@ lesson_db = LessonDbReq()
 user_db = UserDbReq()
 
 preset = {"devkey": config.secret['eljurapi']['devkey'], "vendor": "1543",
-              "password": config.secret['eljurapi']['password'],
-              "login": config.secret['eljurapi']['login']}
+          "password": config.secret['eljurapi']['password'],
+          "login": config.secret['eljurapi']['login']}
 student = ea.Student(**preset)
 
 

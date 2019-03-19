@@ -11,8 +11,8 @@ classes = ['5А', '5Б', '5В', '5Г', '6А', '6Б', '6В', '6Г', '7А', '7Б',
            '9Б', '9В', '9Г', '10А', '10Б', '10В', '10Г', '11А', '11Б', '11В', '11Г']
 
 preset = {"devkey": config.secret['eljurapi']['devkey'], "vendor": "1543",
-              "password": config.secret['eljurapi']['password'],
-              "login": config.secret['eljurapi']['login']}
+          "password": config.secret['eljurapi']['password'],
+          "login": config.secret['eljurapi']['login']}
 student = ea.Student(**preset)
 
 
@@ -259,6 +259,20 @@ class LessonDbReq:
             cursor.execute(query)
             logger.log("lesson_db_manip",
                        f"'{lesson_num}' lesson of {class_name} class in {date} edited: {edit_string}")
+
+    def find_unsent(self, date, class_name):
+        ans = []
+        sch = self.get_schedule(class_name, date=date)
+
+        for lesson_num, lesson in sch.items():
+            for it in range(len(lesson)):
+                if not lesson[it]['unsent_change']:
+                    ans.append({"name": lesson[it]['name'],
+                                "num": lesson[it]['number'],
+                                "comment": lesson[it]['comment']})
+                    self.edit_lesson(class_name, date, lesson[it]['number'], {'unsent_change': 0})
+
+        return ans
 
     def setup_db(self, adding_schedule=None):
         if adding_schedule is None:
