@@ -123,6 +123,10 @@ def tg_bot_main(last_msg_id, raw_msgs):
 
 
 if __name__ == '__main__':
-    tg_bot_main(last_msg_id, raw_msgs)
+    try:
+        tg_bot_main(last_msg_id, raw_msgs)
+    except Exception as err:
+        logger.log("tg", "tg brokes down. Processing error: "+str(err))
+        pass
 
 
