@@ -178,10 +178,7 @@ def generate_return(text):
 
 def send_acc_information(src, user_id, text):
     logger.log("user_req", "request for acc data")
-    if src == "vk":
-        ans_mes = user_db.get_user_info(vk_id=user_id)
-    else:
-        ans_mes = user_db.get_user_info(tg_id=user_id)
+    ans_mes = user_db.get_user_info(user_id, src)
 
     if ans_mes is None:
         logger.log("user_req", "user " + str(user_id) + " is not in the database")
@@ -241,10 +238,7 @@ def get_hometask(src, user_id, text):
 
 
 def user_reg0(src, user_id, text):
-    if src == "vk":
-        user_db.update_user({"status": "reg1"}, vk_id=user_id)
-    if src == "tg":
-        user_db.update_user({"status": "reg1"}, tg_id=user_id)
+    user_db.update_user({"status": "reg1"}, user_id, src)
 
     return {"text": "Выберите класс.\nЕсли хотите продолжить без введения класса, нажмите \"Отмена\"",
             "buttons": [[5, 6, 7, 8], [9, 10, 11], ["Отмена"]]}
@@ -252,17 +246,11 @@ def user_reg0(src, user_id, text):
 
 def user_reg1(src, user_id, text):
     if text == "отмена":
-        if src == "vk":
-            user_db.update_user({"class": "null", "status": "reg0"}, vk_id=user_id)
-        if src == "tg":
-            user_db.update_user({"class": "null", "status": "reg0"}, tg_id=user_id)
+        user_db.update_user({"class": "null", "status": "reg0"}, user_id, src)
 
         return user_reg0(src, user_id, text)
     if text in ["5", "6", "7", "8", "9", "10", "11"]:
-        if src == "vk":
-            user_db.update_user({"class": text, "status": "reg2"}, vk_id=user_id)
-        if src == "tg":
-            user_db.update_user({"class": text, "status": "reg2"}, tg_id=user_id)
+        user_db.update_user({"class": text, "status": "reg2"}, user_id, src)
 
         return {"text": "Выберите букву класса.\nЕсли хотите продолжить без введения класса, нажмите \"Отмена\"",
                 "buttons": [["А", "Б", "В", "Г"], ["Отмена"]]}
@@ -272,19 +260,11 @@ def user_reg1(src, user_id, text):
 
 def user_reg2(src, user_id, text):
     if text == "отмена":
-        if src == "vk":
-            user_db.update_user({"class": "null", "status": "reg0"}, vk_id=user_id)
-        if src == "tg":
-            user_db.update_user({"class": "null", "status": "reg0"}, tg_id=user_id)
-
+        user_db.update_user({"class": "null", "status": "reg0"}, user_id, src)
         return user_reg0(src, user_id, text)
     if text in ["а", "б", "в", "г"]:
-        info = user_db.get_user_info(user_id)
-
-        if src == "vk":
-            user_db.update_user({"class": info['class'] + text, "status": "waiting"}, vk_id=user_id)
-        if src == "tg":
-            user_db.update_user({"class": info['class'] + text, "status": "waiting"}, tg_id=user_id)
+        info = user_db.get_user_info(user_id, src)
+        user_db.update_user({"class": info['class'] + text, "status": "waiting"}, user_id, src)
 
         return {"text": "Теперь вы можете узнавать расписание или дз, нажимая лишь на одну кнопку. \n"
                         "Вы можете сбросить класс, нажав \"разлогиниться\".",
@@ -294,8 +274,8 @@ def user_reg2(src, user_id, text):
 
 
 def user_sch0(src, user_id, text):
-    info = user_db.get_user_info(user_id)
-    user_db.update_user({"class": info['class'], "status": "rasp1"}, user_id)
+    info = user_db.get_user_info(user_id, src)
+    user_db.update_user({"class": info['class'], "status": "rasp1"}, user_id, src)
     return {"text": "Выберите время",
             "buttons": [["Сегодня"], ["Завтра"], ["Неделя"], ["Отмена"]]}
 
@@ -307,16 +287,16 @@ def send_commands(src, user_id, text):
 
 
 def fast_schedule(src, user_id, text):
-    info = user_db.get_user_info(user_id)
+    info = user_db.get_user_info(user_id, src)
     if info['class'] == 'null':
-        user_db.update_user({"class": "null", "status": "reg0"}, user_id)
+        user_db.update_user({"class": "null", "status": "reg0"}, user_id, src)
         return user_reg0(src, user_id, text)
-    user_db.update_user({"class": info['class'], "status": "waiting"}, user_id)
+    user_db.update_user({"class": info['class'], "status": "waiting"}, user_id, src)
     if text == "отмена":
-        user_db.update_user({"class": info['class'], "status": "waiting"}, user_id)
+        user_db.update_user({"class": info['class'], "status": "waiting"}, user_id, src)
         return {"text": "Вы в главном меню:",
                 "buttons": waiting_buttons}
-    user_db.update_user({"class": info['class'], "status": "waiting"}, user_id)
+    user_db.update_user({"class": info['class'], "status": "waiting"}, user_id, src)
 
     sdl = get_schedule_from_class(info['class'], list_of_dates=[cur_date(), cur_date(1), cur_date(2)])
     return {
@@ -326,13 +306,13 @@ def fast_schedule(src, user_id, text):
 
 
 def fast_hometask(src, user_id, text):
-    info = user_db.get_user_info(user_id)
+    info = user_db.get_user_info(user_id, src)
     return {"text": get_hometask(src, user_id, info["class"] + " неделя"),
             "buttons": waiting_buttons}
 
 
 def cancel_waiting(src, user_id, text):
-    user_db.update_user({"class": "null", "status": "reg0"}, user_id)
+    user_db.update_user({"class": "null", "status": "reg0"}, user_id, src)
     return user_reg0(src, user_id, text)
 
 
@@ -340,19 +320,19 @@ def process_message_from_user(src, user_id, text, name):
     logger.log("user_req", "process request")
     text = text.strip().lower()
 
-    if user_db.get_user_info(user_id) is None:
-        user_db.add_user(name['first_name'], name['last_name'], user_id)
+    if user_db.get_user_info(user_id, src) is None:
+        user_db.add_user(name['first_name'], name['last_name'], user_id, src)
 
     logger.log("user_req", "requesting info")
-    info = user_db.get_user_info(user_id)
+    info = user_db.get_user_info(user_id, src)
     if info['status'] is None:
-        user_db.update_user({"status": "reg0"}, user_id)
+        user_db.update_user({"status": "reg0"}, user_id, src)
 
     if info['status'] != 'waiting':
         function = status_to_function[info['status']]
         return function(src, user_id, text)
 
-    info = user_db.get_user_info(user_id)
+    info = user_db.get_user_info(user_id, src)
     if info['status'] == 'waiting' and info['class'].lower() is not "null" and text in fast_msg_to_function.keys():
         function = fast_msg_to_function[text]
         return function(src, user_id, text)

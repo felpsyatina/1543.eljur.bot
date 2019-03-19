@@ -39,7 +39,7 @@ def convert_arrays_to_dict(arr1, arr2):
 class MyCursor(sqlite3.Cursor):
     def __init__(self, connection):
         super(MyCursor, self).__init__(connection)
-        self.connected = 1
+        self.connected = 0
 
     def __enter__(self):
         return self
@@ -48,11 +48,11 @@ class MyCursor(sqlite3.Cursor):
         if ex_type is not None:
             logger.log("lessons_db_manip", f"SQLite ERROR: ex_type - {ex_type}!")
 
-        if self.connected:
+        self.connected -= 1
+        if not self.connected:
             self.connection.commit()
             self.close()
             self.connection.close()
-            self.connected = 0
 
 
 class LessonDbReq:
@@ -63,6 +63,7 @@ class LessonDbReq:
     def run_cursor(self):
         if self.cursor is None or not self.cursor.connected:
             self.cursor = MyCursor(sqlite3.connect(self.database_name, isolation_level=None))
+        self.cursor.connected += 1
         return self.cursor
 
     def del_table(self, table_name):
@@ -112,7 +113,8 @@ class LessonDbReq:
                     date text,
                     grp text,
                     comment text,
-                    homework text
+                    homework text,
+                    unsent_change integer
                 );
             """
 
@@ -177,10 +179,11 @@ class LessonDbReq:
 
         with self.run_cursor() as cursor:
             query = f"""
-                INSERT INTO lessons (name, number, class_id, day_of_week, room, teacher, date, grp, comment, homework)
+                INSERT INTO lessons 
+                (name, number, class_id, day_of_week, room, teacher, date, grp, comment, unsent_change)
                 VALUES (
                 '{lesson_name}', {lesson_num}, {class_id}, '{day_name}', {lesson_room},
-                {lesson_teacher}, {date}, {lesson_grp}, NULL, NULL)
+                {lesson_teacher}, {date}, {lesson_grp}, NULL, 0)
             """
 
             cursor.execute(query)

@@ -5,20 +5,20 @@ import logger
 class MyCursor(sqlite3.Cursor):
     def __init__(self, connection):
         super(MyCursor, self).__init__(connection)
-        self.connected = 1
+        self.connected = 0
 
     def __enter__(self):
         return self
 
     def __exit__(self, ex_type, ex_value, ex_traceback):
         if ex_type is not None:
-            logger.log("user_db_parser", f"ERROR: ex_type - {ex_type}!")
+            logger.log("lessons_db_manip", f"SQLite ERROR: ex_type - {ex_type}!")
 
-        if self.connected:
+        self.connected -= 1
+        if not self.connected:
             self.connection.commit()
             self.close()
             self.connection.close()
-            self.connected = 0
 
 
 class UserDbReq:
@@ -79,7 +79,16 @@ class UserDbReq:
             description = cursor.fetchall()
         return description
 
-    def get_user_info(self, vk_id=None, tg_id=None):
+    def get_user_info(self, user_id, src):
+        vk_id = None
+        tg_id = None
+
+        if src == "vk":
+            vk_id = user_id
+
+        if src == "tg":
+            tg_id = user_id
+
         with self.run_cursor() as cursor:
             query = None
             if vk_id is not None:
@@ -137,14 +146,14 @@ class UserDbReq:
 
                 return ans_dict
 
-    def update_user(self, dict_of_changes, vk_id=None, tg_id=None):
+    def update_user(self, dict_of_changes, user_id, src="vk"):
         upd_key = ""
 
-        if vk_id is not None:
-            upd_key = f"vk_id={vk_id}"
+        if src == "vk":
+            upd_key = f"vk_id={user_id}"
 
-        elif tg_id is not None:
-            upd_key = f"tg_id={tg_id}"
+        if src == "tg":
+            upd_key = f"tg_id={user_id}"
 
         if upd_key is None:
             logger.log("user_db_manip", f"update_user: tg_id and vk_id are None!")
