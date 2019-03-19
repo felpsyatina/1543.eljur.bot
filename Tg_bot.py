@@ -85,7 +85,7 @@ def new_msgs(last_msg_id, raw_msgs):
                          'last_name': msg_base[i]['message']['from']['last_name']}
             else:
                 user_name = {'first_name': msg_base[i]['message']['from']['first_name'],
-                         'last_name': 'Noname'}
+                         'last_name': ''}
             logger.log("tg", "get message - " + msg + " from" + str(tg_user_id))
             raw_msgs.append({'tg_user_id': tg_user_id, 'raw_msg': msg, 'msg_id': msg_id, 'user_name': user_name,
                              'is_super_admin': super_admin})
