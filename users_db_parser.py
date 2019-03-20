@@ -42,7 +42,13 @@ class UserDbReq:
             cursor.execute(query)
             logger.log("user_db_manip", f"table: '{table_name}' created.")
 
-    def add_user(self, first_name, last_name, vk_id="NULL", tg_id="NULL"):
+    def add_user(self, first_name, last_name, user_id, scr, vk_id="NULL", tg_id="NULL"):
+        if scr == "vk":
+            vk_id = user_id
+
+        if scr == "tg":
+            tg_id = user_id
+
         with self.run_cursor() as cursor:
             query = f"""
                 INSERT INTO users (first_name, last_name, class, confirmed, status, vk_id, tg_id) 
