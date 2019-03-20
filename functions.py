@@ -16,7 +16,7 @@ class MyCursor(sqlite3.Cursor):
 
     def __exit__(self, ex_type, ex_value, ex_traceback):
         if ex_type is not None:
-            logger.log("lessons_db_manip", f"SQLite ERROR: ex_type - {ex_type}!")
+            logger.log("lessons_db_manip", f"SQLite ERROR: traceback - {str(ex_traceback)}!")
 
         self.connected -= 1
         if not self.connected:

@@ -127,7 +127,7 @@ if __name__ == '__main__':
         try:
             tg_bot_main(last_msg_id, raw_msgs)
         except Exception as err:
-            logger.log("tg", "tg brokes down. Processing error: "+str(err))
+            logger.log("tg", "tg brokes down. Processing error: " + str(err))
             time.sleep(5)
 
 
