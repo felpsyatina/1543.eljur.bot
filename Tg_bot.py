@@ -82,10 +82,10 @@ def new_msgs(last_msg_id, raw_msgs):
             msg_id = msg_base[i]['message']['message_id']
             if 'last_name' in msg_base[i]['message']['from']:
                 user_name = {'first_name': msg_base[i]['message']['from']['first_name'],
-                         'last_name': msg_base[i]['message']['from']['last_name']}
+                             'last_name': msg_base[i]['message']['from']['last_name']}
             else:
                 user_name = {'first_name': msg_base[i]['message']['from']['first_name'],
-                         'last_name': ''}
+                             'last_name': ''}
             logger.log("tg", "get message - " + msg + " from" + str(tg_user_id))
             raw_msgs.append({'tg_user_id': tg_user_id, 'raw_msg': msg, 'msg_id': msg_id, 'user_name': user_name,
                              'is_super_admin': super_admin})
@@ -122,12 +122,16 @@ def tg_bot_main(last_msg_id, raw_msgs):
             raw_msgs = []
 
 
+def run_tg_bot():
+    try:
+        tg_bot_main(last_msg_id, raw_msgs)
+    except Exception as err:
+        logger.log("tg", "tg brokes down. Processing error: " + str(err))
+        time.sleep(5)
+        run_tg_bot()
+
+
 if __name__ == '__main__':
-    while True:
-        try:
-            tg_bot_main(last_msg_id, raw_msgs)
-        except Exception as err:
-            logger.log("tg", "tg brokes down. Processing error: " + str(err))
-            time.sleep(5)
+    run_tg_bot()
 
 
