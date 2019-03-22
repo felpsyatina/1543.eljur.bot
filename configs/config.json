@@ -10,5 +10,6 @@
 		"textofrequest_save": "/home/vam1543/1543.eljur.bot/logs/requests.txt"
 	},
 	"min_par": 44,
-	"fir_stat": "waiting"
+	"fir_stat": "waiting",
+	"max_subs": 5
 }

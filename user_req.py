@@ -4,13 +4,15 @@ from users_db_parser import UserDbReq
 import answers_dict as ad
 from datetime import datetime, timedelta
 from datetime import date as st_date
-from functions import SUBS
+from functions import SUBS, classes
 import eljur_api as ea
 import config
 
 
 lesson_db = LessonDbReq()
 user_db = UserDbReq()
+
+max_subs = config.params['max_subs']
 
 preset = {"devkey": config.secret['eljurapi']['devkey'], "vendor": "1543",
           "password": config.secret['eljurapi']['password'],
@@ -323,7 +325,12 @@ def gen_subs_but(src, user_id, text):
     user_subs = info['subs'].split()
 
     buttons = []
+
     for row in SUBS:
+        if len(row) == 1:
+            buttons.append([[row[0], 1]])
+            continue
+
         new_row = []
         for c in row:
             if c in user_subs:
@@ -336,7 +343,7 @@ def gen_subs_but(src, user_id, text):
     return buttons
 
 
-def subs(src, user_id, text):
+def to_subs(src, user_id, text):
     info = user_db.get_user_info(user_id, src)
     user_subs = info['subs']
 
@@ -371,6 +378,10 @@ def change_sub(src, user_id, text):
                 "buttons": gen_subs_but(src, user_id, text)}
 
     else:
+        if len(user_subs) >= max_subs:
+            return {"text": f"Количество подписок не может превышать {max_subs}.",
+                    "buttons": gen_subs_but(src, user_id, text)}
+
         new_user_subs = ' '.join(user_subs + [c])
         user_db.update_user({'subs': new_user_subs}, user_id, src)
 
@@ -378,30 +389,16 @@ def change_sub(src, user_id, text):
                 "buttons": gen_subs_but(src, user_id, text)}
 
 
-def menu(src, user_id, text):
+def to_menu(src, user_id, text):
     user_db.update_user({'status': 'menu'}, user_id, src)
 
     return {"text": f"Ты в главном меню.",
             "buttons": menu_buttons}
 
 
-def process_message_from_user(src, user_id, text, name):
-    logger.log("user_req", "process request")
-    text = text.strip().lower()
-
-    if user_db.get_user_info(user_id, src) is None:
-        user_db.add_user(name['first_name'], name['last_name'], user_id, src)
-
-    logger.log("user_req", "requesting info")
-    info = user_db.get_user_info(user_id, src)
-
-    if info['status'] != 'menu':
-        function = status_to_function[info['status']]
-        return function(src, user_id, text)
-
-    info = user_db.get_user_info(user_id, src)
-    if info['status'] == 'menu' and info['class'].lower() is not "null" and text in fast_msg_to_function.keys():
-        function = fast_msg_to_function[text]
+def parse_menu(src, user_id, text):
+    if text in fast_query.keys():
+        function = fast_query[text]
         return function(src, user_id, text)
 
     try:
@@ -417,6 +414,35 @@ def process_message_from_user(src, user_id, text, name):
     except Exception as err:
         logger.log("user_req", f"Processing error: {err}\n Запрос: {text}")
         return {"text": "Видно не судьба :( ", "buttons": None}
+
+
+def parse_subs(src, user_id, text):
+    if text == "вернуться в меню":
+        return to_menu(src, user_id, text)
+
+    if text.upper() in classes:
+        return change_sub(src, user_id, text)
+
+    return {"text": "Чтобы вернутся в меню, нажмите \"Вернуться в меню\".",
+            "buttons": gen_subs_but(src, user_id, text)}
+
+
+def process_message_from_user(src, user_id, text, name):
+    logger.log("user_req", "process request")
+    text = text.strip().lower()
+
+    if user_db.get_user_info(user_id, src) is None:
+        user_db.add_user(name['first_name'], name['last_name'], user_id, src)
+
+    logger.log("user_req", "requesting info")
+    info = user_db.get_user_info(user_id, src)
+
+    if info['status'] not in parse_functions.keys():
+        user_db.update_user({'status': 'menu'}, user_id, src)
+        info = user_db.get_user_info(user_id, src)
+
+    parse_func = parse_functions[info['status']]
+    return parse_func(src, user_id, text)
 
 
 def parse_message_from_user(src, user_id, text, name):
@@ -438,18 +464,16 @@ key_words_to_function = {"schedule": get_schedule,
                          "hometask": get_hometask
                          }
 
-
-status_to_function = {
-    "reg0": user_reg0,
-    "reg1": user_reg1,
-    "reg2": user_reg2,
+parse_functions = {
+    "menu": parse_menu,
+    "subs": parse_subs
 }
 
 
-fast_msg_to_function = {
+fast_query = {
     "расписание": fast_schedule,
     "дз": fast_hometask,
-    "подписки": subs
+    "подписки": to_subs
 }
 
 
