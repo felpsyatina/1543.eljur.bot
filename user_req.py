@@ -266,11 +266,11 @@ def user_reg2(src, user_id, text):
         return user_reg0(src, user_id, text)
     if text in ["а", "б", "в", "г"]:
         info = user_db.get_user_info(user_id, src)
-        user_db.update_user({"class": info['class'] + text, "status": "waiting"}, user_id, src)
+        user_db.update_user({"class": info['class'] + text, "status": "menu"}, user_id, src)
 
         return {"text": "Теперь вы можете узнавать расписание или дз, нажимая лишь на одну кнопку. \n"
                         "Вы можете сбросить класс, нажав \"разлогиниться\".",
-                "buttons": waiting_buttons}
+                "buttons": menu_buttons}
     return {"text": "Выберите букву класса.\nЕсли хотите продолжить без введения класса, нажмите \"Отмена\"",
             "buttons": [["А", "Б", "В", "Г"], ["Отмена"]]}
 
@@ -293,27 +293,27 @@ def fast_schedule(src, user_id, text):
     if info['class'] == 'null':
         user_db.update_user({"class": "null", "status": "reg0"}, user_id, src)
         return user_reg0(src, user_id, text)
-    user_db.update_user({"class": info['class'], "status": "waiting"}, user_id, src)
+    user_db.update_user({"class": info['class'], "status": "menu"}, user_id, src)
     if text == "отмена":
-        user_db.update_user({"class": info['class'], "status": "waiting"}, user_id, src)
+        user_db.update_user({"class": info['class'], "status": "menu"}, user_id, src)
         return {"text": "Вы в главном меню:",
-                "buttons": waiting_buttons}
-    user_db.update_user({"class": info['class'], "status": "waiting"}, user_id, src)
+                "buttons": menu_buttons}
+    user_db.update_user({"class": info['class'], "status": "menu"}, user_id, src)
 
     sdl = get_schedule_from_class(info['class'], list_of_dates=[cur_date(), cur_date(1), cur_date(2)])
     return {
         "text": f"Класс: {info['class']}.\n{sdl}",
-        "buttons": waiting_buttons
+        "buttons": menu_buttons
     }
 
 
 def fast_hometask(src, user_id, text):
     info = user_db.get_user_info(user_id, src)
     return {"text": get_hometask(src, user_id, info["class"] + " неделя"),
-            "buttons": waiting_buttons}
+            "buttons": menu_buttons}
 
 
-def cancel_waiting(src, user_id, text):
+def cancel_menu(src, user_id, text):
     user_db.update_user({"class": "null", "status": "reg0"}, user_id, src)
     return user_reg0(src, user_id, text)
 
@@ -340,8 +340,49 @@ def subs(src, user_id, text):
     info = user_db.get_user_info(user_id, src)
     user_subs = info['subs']
 
+    user_db.update_user({'status': 'subs'}, user_id, src)
+
     return {"text": f"Классы, на которые ты подписан: {user_subs}.",
             "buttons": gen_subs_but(src, user_id, text)}
+
+
+def del_arr_elem(arr, obj):
+    if obj not in arr:
+        return False
+
+    new_arr = []
+    for e in arr:
+        if e != obj:
+            new_arr.append(e)
+
+    return new_arr
+
+
+def change_sub(src, user_id, text):
+    info = user_db.get_user_info(user_id, src)
+    user_subs = info['subs'].split()
+    c = text.upper()
+
+    if c in user_subs:
+        new_user_subs = ' '.join(del_arr_elem(user_subs, c))
+        user_db.update_user({'subs': new_user_subs}, user_id, src)
+
+        return {"text": f"Ты отписался от \"{c}\".",
+                "buttons": gen_subs_but(src, user_id, text)}
+
+    else:
+        new_user_subs = ' '.join(user_subs + [c])
+        user_db.update_user({'subs': new_user_subs}, user_id, src)
+
+        return {"text": f"Ты подписался на обновления \"{c}\".",
+                "buttons": gen_subs_but(src, user_id, text)}
+
+
+def menu(src, user_id, text):
+    user_db.update_user({'status': 'menu'}, user_id, src)
+
+    return {"text": f"Ты в главном меню.",
+            "buttons": menu_buttons}
 
 
 def process_message_from_user(src, user_id, text, name):
@@ -354,12 +395,12 @@ def process_message_from_user(src, user_id, text, name):
     logger.log("user_req", "requesting info")
     info = user_db.get_user_info(user_id, src)
 
-    if info['status'] != 'waiting':
+    if info['status'] != 'menu':
         function = status_to_function[info['status']]
         return function(src, user_id, text)
 
     info = user_db.get_user_info(user_id, src)
-    if info['status'] == 'waiting' and info['class'].lower() is not "null" and text in fast_msg_to_function.keys():
+    if info['status'] == 'menu' and info['class'].lower() is not "null" and text in fast_msg_to_function.keys():
         function = fast_msg_to_function[text]
         return function(src, user_id, text)
 
@@ -412,7 +453,7 @@ fast_msg_to_function = {
 }
 
 
-waiting_buttons = [["Расписание"], [["ДЗ"]], ["Подписки"]]
+menu_buttons = [["Расписание"], [["ДЗ"]], ["Подписки"]]
 
 
 if __name__ == '__main__':
