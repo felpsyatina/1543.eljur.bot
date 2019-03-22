@@ -1,6 +1,9 @@
 import sqlite3
 import logger
+import config
 from functions import MyCursor, convert_arrays_to_dict
+
+first_status = config.params['fir_stat']
 
 
 class UserDbReq:
@@ -53,7 +56,7 @@ class UserDbReq:
         with self.run_cursor() as cursor:
             query = f"""
                 INSERT INTO users (first_name, last_name, class, confirmed, status, vk_id, tg_id, subs) 
-                VALUES('{first_name}', '{last_name}', null, 0, 'reg0', {vk_id}, {tg_id}, '')
+                VALUES('{first_name}', '{last_name}', null, 0, '{first_status}', {vk_id}, {tg_id}, '')
             """
             cursor.execute(query)
             logger.log("user_db_manip", f"user '{first_name} {last_name}' created!")

@@ -336,6 +336,14 @@ def gen_subs_but(src, user_id, text):
     return buttons
 
 
+def subs(src, user_id, text):
+    info = user_db.get_user_info(user_id, src)
+    user_subs = info['subs']
+
+    return {"text": f"Классы, на которые ты подписан: {user_subs}.",
+            "buttons": gen_subs_but(src, user_id, text)}
+
+
 def process_message_from_user(src, user_id, text, name):
     logger.log("user_req", "process request")
     text = text.strip().lower()
@@ -345,8 +353,6 @@ def process_message_from_user(src, user_id, text, name):
 
     logger.log("user_req", "requesting info")
     info = user_db.get_user_info(user_id, src)
-    if info['status'] is None:
-        user_db.update_user({"status": "reg0"}, user_id, src)
 
     if info['status'] != 'waiting':
         function = status_to_function[info['status']]
@@ -402,7 +408,7 @@ status_to_function = {
 fast_msg_to_function = {
     "расписание": fast_schedule,
     "дз": fast_hometask,
-    "разлогиниться": cancel_waiting
+    "подписки": subs
 }
 
 
