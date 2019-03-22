@@ -101,7 +101,7 @@ def answer_msg(user_id, msg, msg_id, user_name):
         logger.log("tg", "message: " + str(result['text']) + str(result['buttons']))
 
     except Exception as err:
-        result = {"text": "error", "buttons": []}
+        result = {"text": "error", "buttons": [[]]}
         logger.log("tg", f"error: {str(err)}")
 
     msg_to_send = result['text']
