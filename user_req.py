@@ -4,6 +4,7 @@ from users_db_parser import UserDbReq
 import answers_dict as ad
 from datetime import datetime, timedelta
 from datetime import date as st_date
+from functions import SUBS
 import eljur_api as ea
 import config
 
@@ -106,8 +107,8 @@ def register_new_user(src, user_id, text):    # регистрация login nam
         surname = text[3]
         parallel = text[4]
         if src == "vk":
-            return user_db.add_user(name, surname, vk_id=user_id)
-        return user_db.add_user(name, surname, tg_id=user_id)
+            return user_db.add_user(name, surname, user_id, src)
+        return user_db.add_user(name, surname, user_id, src)
 
     else:
         return "Чтобы зарегистрироваться вводите (без кавычек):\n регистрация \"твой логин\" " \
@@ -317,6 +318,24 @@ def cancel_waiting(src, user_id, text):
     return user_reg0(src, user_id, text)
 
 
+def gen_subs_but(src, user_id, text):
+    info = user_db.get_user_info(user_id, src)
+    user_subs = info['subs'].split()
+
+    buttons = []
+    for row in SUBS:
+        new_row = []
+        for c in row:
+            if c in user_subs:
+                new_row.append([c, 2])
+            else:
+                new_row.append([c, 0])
+
+        buttons.append(new_row)
+
+    return buttons
+
+
 def process_message_from_user(src, user_id, text, name):
     logger.log("user_req", "process request")
     text = text.strip().lower()
@@ -357,7 +376,7 @@ def parse_message_from_user(src, user_id, text, name):
     logger.log("request_save", "Request\n" + src + " " + str(user_id) + " " + str(name) + "\n" + text)
     logger.log("textofrequest_save", text)
     res = process_message_from_user(src, user_id, text, name)
-    logger.log("request_save", "Answer for " + src + " " + str(user_id) + "\n" + res.get("text",""))
+    logger.log("request_save", "Answer for " + src + " " + str(user_id) + "\n" + res.get("text", ""))
     return res
 
 
@@ -387,7 +406,7 @@ fast_msg_to_function = {
 }
 
 
-waiting_buttons = [["расписание"], ["дз"], ["разлогиниться"]]
+waiting_buttons = [["Расписание"], [["ДЗ"]], ["Подписки"]]
 
 
 if __name__ == '__main__':

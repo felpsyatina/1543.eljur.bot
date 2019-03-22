@@ -35,7 +35,8 @@ class UserDbReq:
                     status text not null,
                     request text,
                     vk_id int unique,
-                    tg_id int unique 
+                    tg_id int unique, 
+                    subs text
                 );
             """
 
@@ -51,8 +52,8 @@ class UserDbReq:
 
         with self.run_cursor() as cursor:
             query = f"""
-                INSERT INTO users (first_name, last_name, class, confirmed, status, vk_id, tg_id) 
-                VALUES('{first_name}', '{last_name}', null, 0, 'reg0', {vk_id}, {tg_id})
+                INSERT INTO users (first_name, last_name, class, confirmed, status, vk_id, tg_id, subs) 
+                VALUES('{first_name}', '{last_name}', null, 0, 'reg0', {vk_id}, {tg_id}, '')
             """
             cursor.execute(query)
             logger.log("user_db_manip", f"user '{first_name} {last_name}' created!")

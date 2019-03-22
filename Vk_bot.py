@@ -6,9 +6,11 @@ import threading
 from collections import deque
 from time import sleep
 from vk_api.longpoll import VkLongPoll, VkEventType
+from random import randint
 import config
 import user_req
 import logger
+from functions import COLORS, SUBS
 
 
 token = config.secret["vk"]["token"]
@@ -31,12 +33,12 @@ def alerts(a, mess, wait=1):
         sleep(wait)
 
 
-def write_key(u_id, keybor, mess="kek"):
+def write_key(u_id, keyboard, mess="kek"):
     try:
         vk.method('messages.send', {
             'user_id': u_id,
             'message': mess,
-            'keyboard': json.dumps(keybor, ensure_ascii=False),
+            'keyboard': json.dumps(keyboard, ensure_ascii=False),
             'v': "5.53"})
     except Exception:
         vk.method('messages.send', {'user_id': u_id, 'message': fail, 'v': "5.53"})
@@ -105,6 +107,47 @@ def make_key_arr(a):
         return {}
 
 
+def get_color(s):
+    if type(s) == int and 0 <= s <= 3:
+        return COLORS[s]
+
+    if type(s) == str and s in COLORS:
+        return s
+
+    logger.log("vk", "get wrong color, returning prime.")
+    return COLORS[0]
+
+
+def gen_but(obj):
+    if type(obj) == str:
+        return {"text": obj, "color": get_color(0)}
+
+    if type(obj) == list:
+        if len(obj) == 1:
+            return {"text": obj[0], "color": get_color(0)}
+
+        if len(obj) == 2:
+            return {"text": obj[0], "color": get_color(obj[1])}
+
+        logger.log("vk", f"wrong button: {obj}.")
+
+
+def keyboard_with_colors(arr):
+    if type(arr) != list:
+        logger.log("vk", "get not array.")
+        return {}
+
+    new_ans = []
+    for line in arr:
+        new_line = []
+
+        for e in line:
+            new_line.append(gen_but(e))
+
+        new_ans.append(new_line)
+    return make_key(new_ans)
+
+
 def go():
     global queue
     while True:
@@ -112,7 +155,7 @@ def go():
             for event in longpoll.listen():
                 if event.type == VkEventType.MESSAGE_NEW and event.to_me:
                     queue.append({'user_id': event.user_id, 'message': event.text, 'message_id': event.message_id, 'from_user': event.from_user})
-                sleep(0.2)
+                sleep(0.1)
         except Exception:
             logger.log("vkbot", "Error while listening")
             sleep(1)
@@ -159,7 +202,7 @@ if __name__ == '__main__':
             if not ans.get('buttons'):
                 write_msg(r['user_id'], ans['text'])
             else:
-                new_key = make_key_arr(ans['buttons'])
+                new_key = keyboard_with_colors(ans['buttons'])
                 write_key(r['user_id'], new_key, ans['text'])
             logger.log("vkbot", "answer sent: " + ans['text'])
         else:
