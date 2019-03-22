@@ -292,26 +292,39 @@ def send_commands(src, user_id, text):
 
 def fast_schedule(src, user_id, text):
     info = user_db.get_user_info(user_id, src)
-    if info['class'] == 'null':
-        user_db.update_user({"class": "null", "status": "reg0"}, user_id, src)
-        return user_reg0(src, user_id, text)
-    user_db.update_user({"class": info['class'], "status": "menu"}, user_id, src)
-    if text == "отмена":
-        user_db.update_user({"class": info['class'], "status": "menu"}, user_id, src)
-        return {"text": "Вы в главном меню:",
-                "buttons": menu_buttons}
-    user_db.update_user({"class": info['class'], "status": "menu"}, user_id, src)
+    ans_msg = ""
+    user_subs = info['subs'].split()
 
-    sdl = get_schedule_from_class(info['class'], list_of_dates=[cur_date(), cur_date(1), cur_date(2)])
+    if len(user_subs) == 0:
+        return {"text": "Вы не подписаны ни на один из классов.",
+                "buttons": menu_buttons}
+
+    list_of_dates = [cur_date(), cur_date(1), cur_date(2)]
+
+    for c in user_subs:
+        ans_msg += f"\nКласс {c}:\n"
+        ans_msg += get_schedule_from_class(c, list_of_dates=list_of_dates)
+
     return {
-        "text": f"Класс: {info['class']}.\n{sdl}",
+        "text": ans_msg,
         "buttons": menu_buttons
     }
 
 
 def fast_hometask(src, user_id, text):
     info = user_db.get_user_info(user_id, src)
-    return {"text": get_hometask(src, user_id, info["class"] + " неделя"),
+    ans_msg = ""
+    user_subs = info['subs'].split()
+
+    if len(user_subs) == 0:
+        return {"text": "Вы не подписаны ни на один из классов.",
+                "buttons": menu_buttons}
+
+    for c in user_subs:
+        ans_msg += f"\nКласс {c}:"
+        ans_msg += get_hometask(src, user_id, c + " завтра")
+
+    return {"text": ans_msg,
             "buttons": menu_buttons}
 
 
