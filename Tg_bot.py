@@ -128,16 +128,7 @@ def tg_bot_main(last_msg_id, raw_msgs):
             raw_msgs = []
 
 
-def run_tg_bot():
-    try:
-        tg_bot_main(last_msg_id, raw_msgs)
-    except Exception as err:
-        logger.log("tg", "tg brokes down. Processing error: " + str(err))
-        time.sleep(5)
-        run_tg_bot()
-
-
 if __name__ == '__main__':
-    run_tg_bot()
+    tg_bot_main(last_msg_id, raw_msgs)
 
 
