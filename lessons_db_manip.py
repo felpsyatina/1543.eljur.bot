@@ -2,15 +2,9 @@
 import sqlite3
 import logger
 import config
-import eljur_api as ea
-from functions import MyCursor, convert_arrays_to_dict, cur_date, classes
+from functions import MyCursor, convert_arrays_to_dict, cur_date, classes, student
 
 current_min_par = config.params['min_par']
-
-preset = {"devkey": config.secret['eljurapi']['devkey'], "vendor": "1543",
-          "password": config.secret['eljurapi']['password'],
-          "login": config.secret['eljurapi']['login']}
-student = ea.Student(**preset)
 
 
 def is_token_exists():
@@ -210,17 +204,19 @@ class LessonDbReq:
 
         return lessons
 
-    def edit_lesson(self, class_name, date, lesson_num, dict_of_changes=None):
+    def edit_lesson(self, class_name, date, lesson_num, name="NULL", dict_of_changes=None):
         with self.run_cursor() as cursor:
             class_id = self.get_class_id(class_name)
 
-            edit = [f"{key} = '{item}'" for key, item in dict_of_changes]
+            edit = [f"{key} = '{item}'" for key, item in dict_of_changes.items()]
             edit_string = ", ".join(edit)
 
             query = f"""
                 UPDATE lessons SET {edit_string} WHERE 
                 class_id = '{class_id}'
-                AND date = '{date}' AND number = '{lesson_num}'
+                AND date = '{date}' 
+                AND number = '{lesson_num}'
+                AND name = '{name}'
             """
             cursor.execute(query)
             logger.log("lesson_db_manip",
@@ -236,7 +232,7 @@ class LessonDbReq:
                     ans.append({"name": lesson[it]['name'],
                                 "num": lesson[it]['number'],
                                 "comment": lesson[it]['comment']})
-                    self.edit_lesson(class_name, date, lesson[it]['number'], {'unsent_change': 0})
+                    self.edit_lesson(class_name, date, lesson[it]['number'], dict_of_changes={'unsent_change': 0})
 
         return ans
 

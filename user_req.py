@@ -2,10 +2,9 @@ import logger
 from lessons_db_manip import LessonDbReq
 from users_db_parser import UserDbReq
 import answers_dict as ad
-from datetime import datetime, timedelta
+from datetime import datetime
 from datetime import date as st_date
-from functions import SUBS, classes
-import eljur_api as ea
+from functions import SUBS, classes, cur_date, student
 import config
 
 
@@ -14,19 +13,10 @@ user_db = UserDbReq()
 
 max_subs = config.params['max_subs']
 
-preset = {"devkey": config.secret['eljurapi']['devkey'], "vendor": "1543",
-          "password": config.secret['eljurapi']['password'],
-          "login": config.secret['eljurapi']['login']}
-student = ea.Student(**preset)
-
 
 def update_schedule():
     lesson_db.add_schedules()
     return
-
-
-def cur_date(add=0):
-    return (datetime.today() + timedelta(days=add)).strftime('%Y%m%d')
 
 
 def get_word_by_date(date):
