@@ -228,7 +228,7 @@ def get_hometask(src, user_id, text):
                 ans += (" группа " + lesson['grp'] + '\n')
             else:
                 ans += '\n'
-            ans += (lesson['hometask']['1']['value'] + '\n')
+            ans += (lesson['homework']['1']['value'] + '\n')
             try:
                 ans += (lesson['files']['file'][0]['link'] + '\n')
             except Exception:
