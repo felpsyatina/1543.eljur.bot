@@ -119,6 +119,7 @@ class UserDbReq:
             for it in range(len(users_fetch)):
                 ans_dict[column_desc[it][1]] = users_fetch[it]
 
+            logger.log("users_db_parser", f"returning info: {ans_dict}")
             return ans_dict
 
     def get_user_info_by_global_id(self, global_id=None):
