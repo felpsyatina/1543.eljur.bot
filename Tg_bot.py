@@ -53,7 +53,7 @@ def fix_board(board):
                     tmp.append(str(y[0]))
                 else:
                     if y[1]:
-                        tmp.append(f"**{y[0]}**")
+                        tmp.append(f"{y[0]} *bold*")
                     else:
                         tmp.append(f"{y[0]}")
             else:
