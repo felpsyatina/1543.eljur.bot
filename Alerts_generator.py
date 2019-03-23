@@ -100,11 +100,16 @@ def get_and_send_for_all():
         class_participants = user_db.get_users_by_subs(c)
         logger.log("alerts", f"{c}: {class_participants}")
 
-        message = f"\nКласс {c}:\n"
+        ans = []
         for date in [cur_date(), cur_date(1), cur_date(2)]:
-            message += get_homework(date, c)
-            message += "\n"
-        Alerts.send_alerts(class_participants, message)
+            task = get_homework(date, c)
+            if task:
+                ans.append(task)
+
+        logger.log("alerts", f"new {c}: {ans}")
+        if ans:
+            message = f"\nКласс {c}:\n" + "\n".join(ans)
+            Alerts.send_alerts(class_participants, message)
 
 
 if __name__ == '__main__':
