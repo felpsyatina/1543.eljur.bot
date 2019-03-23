@@ -6,7 +6,7 @@ import Alerts
 from functions import classes, cur_date, get_word_by_date, student, tm, del_op
 
 
-flag_on_PC = 1
+flag_on_PC = 0
 
 
 if flag_on_PC:
