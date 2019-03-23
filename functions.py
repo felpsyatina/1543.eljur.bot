@@ -54,6 +54,16 @@ def convert_arrays_to_dict(arr1, arr2):
     return {arr1[it]: arr2[it] for it in range(length)}
 
 
+def del_op(s, sym='\''):
+    ans = ""
+    for let in s:
+        if let == sym:
+            ans += ' '
+        else:
+            ans += let
+    return ans
+
+
 def cur_date(add=0):
     return (datetime.today() + timedelta(days=add)).strftime('%Y%m%d')
 

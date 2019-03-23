@@ -3,7 +3,7 @@ from users_db_parser import UserDbReq as Udb
 import logger
 import Alerts
 
-from functions import classes, cur_date, get_word_by_date, student, tm
+from functions import classes, cur_date, get_word_by_date, student, tm, del_op
 
 lesson_db = Ldb()
 user_db = Udb()
@@ -33,8 +33,9 @@ def update_homework():
                         temp += f"{task['1']['value']}\n"
 
                     if 'files' in lesson.keys():
+                        temp += "Файлы:\n"
                         for file in lesson['files']['file']:
-                            temp += f"   {file['filename']}: {file['link']}\n"
+                            temp += f"{file['filename']}: {file['link']}\n"
 
                     if temp:
                         add_dict[lesson_name] = temp
@@ -48,10 +49,13 @@ def update_homework():
                 for lesson in lessons:
                     if lesson['name'] in add_dict.keys() and add_dict[lesson['name']]:
                         if add_dict[lesson['name']] != lesson['homework']:
+                            if '\'' in add_dict[lesson['name']]:
+                                add_dict[lesson['name']] = del_op(add_dict[lesson['name']])
                             lesson_db.edit_lesson(class_name, date, num, lesson['name'],
                                                   {'homework': add_dict[lesson['name']],
                                                    'unsent_homework': 1})
                         add_dict[lesson['name']] = None
+            logger.log("alerts", f"{class_name} on {date} added")
 
 
 def get_changes(to_date, for_class):
@@ -68,10 +72,8 @@ def get_changes(to_date, for_class):
 
 def get_homework(to_date, for_class):
     alerts = lesson_db.find_unsent_homework(to_date, for_class)
-    print(alerts)
     message = ""
     for alert in alerts:
-        print(alert)
         homework = alert['homework']
         name = alert['name']
         date = get_word_by_date(to_date)
@@ -88,7 +90,9 @@ def send_changes(for_date, to_class):
 def get_and_send_for_all():
     for c in classes:
         class_participants = user_db.get_users_by_subs(c)
-        message = ""
+        print(c, class_participants)
+
+        message = f"\nКласс {c}:\n"
         for date in [cur_date(), cur_date(1), cur_date(2)]:
             message += get_homework(date, c)
             message += "\n"
