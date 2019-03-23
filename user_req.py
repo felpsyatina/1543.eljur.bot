@@ -437,6 +437,9 @@ def process_message_from_user(src, user_id, text, name):
     if user_db.get_user_info(user_id, src) is None:
         user_db.add_user(name['first_name'], name['last_name'], user_id, src)
 
+    if user_db.get_user_info(user_id, src)['subs'] is None:
+        user_db.update_user({'subs': ""}, user_id, src)
+
     logger.log("user_req", "requesting info")
     info = user_db.get_user_info(user_id, src)
 

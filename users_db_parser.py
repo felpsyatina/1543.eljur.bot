@@ -147,7 +147,7 @@ class UserDbReq:
 
                 return ans_dict
 
-    def update_user(self, dict_of_changes, user_id, src="vk"):
+    def update_user(self, dict_of_changes, user_id, src):
         upd_key = ""
 
         if src == "vk":
