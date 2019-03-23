@@ -311,8 +311,8 @@ def fast_hometask(src, user_id, text):
                 "buttons": menu_buttons}
 
     for c in user_subs:
-        ans_msg += f"\nКласс {c}:"
-        ans_msg += get_hometask(src, user_id, c + " завтра")
+        ans_msg += f"\nКласс {c}:\n"
+        ans_msg += get_hometask(src, user_id, c + " неделя")
 
     return {"text": ans_msg,
             "buttons": menu_buttons}
