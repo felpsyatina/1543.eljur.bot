@@ -71,6 +71,14 @@ class UserDbReq:
             description = cursor.fetchall()
         return description
 
+    def get_columns_names(self, table="users"):
+        columns_info = self.get_columns_info(table=table)
+        names = []
+        for column in columns_info:
+            names.append(column[1])
+
+        return names
+
     def get_user_info(self, user_id, src):
         vk_id = None
         tg_id = None
@@ -157,27 +165,22 @@ class UserDbReq:
                 cursor.execute(query)
             logger.log("user_db_manip", f"{upd_key} updated")
 
-    def get_users_by_class(self, class_name):
+    def get_users_by_subs(self, class_name):
         ans = []
 
         with self.run_cursor() as cursor:
             query = f"""
-                    SELECT * FROM users WHERE
-                    class = {class_name};
+                    SELECT * FROM users;
                 """
 
             cursor.execute(query)
             users_fetch = cursor.fetchall()
 
-            columns = self.get_columns_info()
-
-            if len(users_fetch) != len(columns):
-                logger.log("user_db_manip", f"Каким-то чудом длины не совпадают!")
-                return
+            columns = self.get_columns_names()
 
             for user in users_fetch:
                 info = convert_arrays_to_dict(columns, user)
-                if info['class'] == class_name:
+                if class_name in info['subs']:
                     ans.append(info['id'])
 
         return ans

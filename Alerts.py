@@ -1,14 +1,17 @@
-import users_db_parser
+from users_db_parser import UserDbReq
 import Vk_bot
 import Tg_bot
 import logger
+
+
+user_db = UserDbReq()
 
 
 def send_alerts(a, mess):
     vk = []
     tg = []
     for id in a:
-        info = users_db_parser.get_user_by_global_id(id)
+        info = user_db.get_user_info_by_global_id(id)
         vk_id = info['vk_id']
         tg_id = info['tg_id']
         if vk_id:

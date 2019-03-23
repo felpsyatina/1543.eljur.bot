@@ -74,7 +74,8 @@ class LessonDbReq:
                     grp text,
                     comment text,
                     homework text,
-                    unsent_change integer
+                    unsent_change integer,
+                    unsent_homework integer
                 );
             """
 
@@ -140,10 +141,10 @@ class LessonDbReq:
         with self.run_cursor() as cursor:
             query = f"""
                 INSERT INTO lessons 
-                (name, number, class_id, day_of_week, room, teacher, date, grp, comment, unsent_change)
+                (name, number, class_id, day_of_week, room, teacher, date, grp, comment, unsent_change, unsent_homework)
                 VALUES (
                 '{lesson_name}', {lesson_num}, {class_id}, '{day_name}', {lesson_room},
-                {lesson_teacher}, {date}, {lesson_grp}, NULL, 0)
+                {lesson_teacher}, {date}, {lesson_grp}, NULL, 0, 0)
             """
 
             cursor.execute(query)
@@ -222,7 +223,7 @@ class LessonDbReq:
             logger.log("lesson_db_manip",
                        f"'{lesson_num}' lesson of {class_name} class in {date} edited: {edit_string}")
 
-    def find_unsent(self, date, class_name):
+    def find_unsent_changes(self, date, class_name):
         ans = []
         sch = self.get_schedule(class_name, date=date)
 
@@ -232,7 +233,23 @@ class LessonDbReq:
                     ans.append({"name": lesson[it]['name'],
                                 "num": lesson[it]['number'],
                                 "comment": lesson[it]['comment']})
-                    self.edit_lesson(class_name, date, lesson[it]['number'], dict_of_changes={'unsent_change': 0})
+                    self.edit_lesson(class_name, date, lesson[it]['number'],
+                                     name=lesson[it]['name'], dict_of_changes={'unsent_change': 0})
+
+        return ans
+
+    def find_unsent_homework(self, date, class_name):
+        ans = []
+        sch = self.get_schedule(class_name, date=date)
+
+        for lesson_num, lesson in sch.items():
+            for it in range(len(lesson)):
+                if lesson[it]['unsent_homework']:
+                    ans.append({"name": lesson[it]['name'],
+                                "num": lesson[it]['number'],
+                                "homework": lesson[it]['homework']})
+                    self.edit_lesson(class_name, date, lesson[it]['number'],
+                                     name=lesson[it]['name'], dict_of_changes={'unsent_homework': 0})
 
         return ans
 

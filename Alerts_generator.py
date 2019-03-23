@@ -50,12 +50,12 @@ def update_homework():
                         if add_dict[lesson['name']] != lesson['homework']:
                             lesson_db.edit_lesson(class_name, date, num, lesson['name'],
                                                   {'homework': add_dict[lesson['name']],
-                                                   'unsent_change': 1})
+                                                   'unsent_homework': 1})
                         add_dict[lesson['name']] = None
 
 
 def get_changes(to_date, for_class):
-    alerts = lesson_db.find_unsent(to_date, for_class)
+    alerts = lesson_db.find_unsent_changes(to_date, for_class)
     message = ""
     for alert in alerts:
         comment = alert['comment']
@@ -66,20 +66,36 @@ def get_changes(to_date, for_class):
     return message
 
 
+def get_homework(to_date, for_class):
+    alerts = lesson_db.find_unsent_homework(to_date, for_class)
+    print(alerts)
+    message = ""
+    for alert in alerts:
+        print(alert)
+        homework = alert['homework']
+        name = alert['name']
+        date = get_word_by_date(to_date)
+        message += f"Выложено дз по {name} на {date}:\n {homework}\n"
+    return message
+
+
 def send_changes(for_date, to_class):
-    class_participants = user_db.get_users_by_class(to_class)
+    class_participants = user_db.get_users_by_subs(to_class)
     message = get_changes(for_date, to_class)
     Alerts.send_alerts(class_participants, message)
 
 
 def get_and_send_for_all():
-    for c in classes:
+    for c in ["10В"]:
+        class_participants = user_db.get_users_by_subs(c)
+        message = ""
         for date in [cur_date(), cur_date(1), cur_date(2)]:
-            send_changes(date, c)
+            message += get_homework(date, c)
+            message += "\n"
+        Alerts.send_alerts(class_participants, message)
 
 
 if __name__ == '__main__':
     update_homework()
     if is_time_to_work():
-        print(1)
         get_and_send_for_all()
