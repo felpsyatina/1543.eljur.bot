@@ -10,7 +10,7 @@ user_db = Udb()
 
 
 def is_time_to_work():
-    hour = tm().hour
+    hour = tm().hour + 3
     if 7 <= hour < 22:
         return True
     else:
