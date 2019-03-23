@@ -48,7 +48,17 @@ def fix_board(board):
     for x in board:
         tmp = []
         for y in x:
-            tmp.append(str(y))
+            if type(y) == list:
+                if len(y) == 1:
+                    tmp.append(str(y[0]))
+                else:
+                    if y[1]:
+                        tmp.append(f"**{y[0]}**")
+                    else:
+                        tmp.append(f"{y[0]}")
+            else:
+                tmp.append(str(y))
+
         ans.append(tmp)
 
     logger.log("tg", f"ANS!!!!!! {ans}")

@@ -86,7 +86,7 @@ def send_changes(for_date, to_class):
 
 
 def get_and_send_for_all():
-    for c in ["10В"]:
+    for c in classes:
         class_participants = user_db.get_users_by_subs(c)
         message = ""
         for date in [cur_date(), cur_date(1), cur_date(2)]:
