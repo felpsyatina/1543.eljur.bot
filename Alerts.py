@@ -4,7 +4,12 @@ import Tg_bot
 import logger
 
 
-user_db = UserDbReq()
+flag_on_PC = 0
+
+if flag_on_PC:
+    user_db = UserDbReq()
+else:
+    user_db = UserDbReq("1543.eljur.bot/1543.eljur.bot.db")
 
 
 def send_alerts(a, mess):
