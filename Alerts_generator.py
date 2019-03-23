@@ -18,7 +18,7 @@ def is_time_to_work():
 
 
 def update_homework():
-    for class_name in ["10В"]:
+    for class_name in classes:
         for date in [cur_date(), cur_date(1), cur_date(2)]:
             r = student.get_hometask(class_name, date)
             add_dict = {}

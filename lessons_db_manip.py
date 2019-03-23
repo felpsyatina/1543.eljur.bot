@@ -33,9 +33,9 @@ class LessonDbReq:
             logger.log("lesson_db_manip", f"table '{table_name}' deleted.")
 
     def create_classes_db(self, table_name="classes"):
-        self.del_table(table_name)
-
         with self.run_cursor() as cursor:
+            self.del_table(table_name)
+
             query = f"""
                 create table {table_name}
                 (

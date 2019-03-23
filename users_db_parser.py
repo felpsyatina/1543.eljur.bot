@@ -181,8 +181,9 @@ class UserDbReq:
 
             for user in users_fetch:
                 info = convert_arrays_to_dict(columns, user)
-                if class_name in info['subs']:
-                    ans.append(info['id'])
+                if info['subs']:
+                    if class_name in info['subs'].split():
+                        ans.append(info['id'])
 
         return ans
 
