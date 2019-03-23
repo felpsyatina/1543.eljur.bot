@@ -5,8 +5,16 @@ import Alerts
 
 from functions import classes, cur_date, get_word_by_date, student, tm, del_op
 
-lesson_db = Ldb()
-user_db = Udb()
+
+flag_on_PC = 1
+
+
+if flag_on_PC:
+    lesson_db = Ldb()
+    user_db = Udb()
+else:
+    lesson_db = Ldb("1543.eljur.bot/1543.eljur.bot.db")
+    user_db = Udb("1543.eljur.bot/1543.eljur.bot.db")
 
 
 def is_time_to_work():
@@ -90,7 +98,7 @@ def send_changes(for_date, to_class):
 def get_and_send_for_all():
     for c in classes:
         class_participants = user_db.get_users_by_subs(c)
-        print(c, class_participants)
+        logger.log("alerts", f"{c}: {class_participants}")
 
         message = f"\nКласс {c}:\n"
         for date in [cur_date(), cur_date(1), cur_date(2)]:

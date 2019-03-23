@@ -352,7 +352,11 @@ def to_subs(src, user_id, text):
 
     user_db.update_user({'status': 'subs'}, user_id, src)
 
-    return {"text": f"Классы, на которые ты подписан: {user_subs}.",
+    if user_subs:
+        return {"text": f"Классы, на которые ты подписан: {user_subs}.",
+                "buttons": gen_subs_but(src, user_id, text)}
+
+    return {"text": f"У тебя пока нет подписок на классы.",
             "buttons": gen_subs_but(src, user_id, text)}
 
 
