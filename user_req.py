@@ -4,7 +4,7 @@ from users_db_parser import UserDbReq
 import answers_dict as ad
 from datetime import datetime
 from datetime import date as st_date
-from functions import SUBS, classes, cur_date, student
+from functions import SUBS, classes, cur_date, student, del_arr_elem
 import config
 
 
@@ -358,18 +358,6 @@ def to_subs(src, user_id, text):
 
     return {"text": f"У тебя пока нет подписок на классы.",
             "buttons": gen_subs_but(src, user_id, text)}
-
-
-def del_arr_elem(arr, obj):
-    if obj not in arr:
-        return False
-
-    new_arr = []
-    for e in arr:
-        if e != obj:
-            new_arr.append(e)
-
-    return new_arr
 
 
 def change_sub(src, user_id, text):

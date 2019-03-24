@@ -26,8 +26,11 @@ def is_time_to_work():
 
 
 def update_homework():
+    dates = [cur_date(), cur_date(1), cur_date(2)]
+    last = cur_date(2)
+
     for class_name in classes:
-        for date in [cur_date(), cur_date(1), cur_date(2)]:
+        for date in dates:
             r = student.get_hometask(class_name, date)
             add_dict = {}
             if r:
@@ -56,12 +59,17 @@ def update_homework():
             for num, lessons in schedule.items():
                 for lesson in lessons:
                     if lesson['name'] in add_dict.keys() and add_dict[lesson['name']]:
+                        if '\'' in add_dict[lesson['name']]:
+                            add_dict[lesson['name']] = del_op(add_dict[lesson['name']])
                         if add_dict[lesson['name']] != lesson['homework']:
-                            if '\'' in add_dict[lesson['name']]:
-                                add_dict[lesson['name']] = del_op(add_dict[lesson['name']])
-                            lesson_db.edit_lesson(class_name, date, num, lesson['name'],
-                                                  {'homework': add_dict[lesson['name']],
-                                                   'unsent_homework': 1})
+                            if date != last:
+                                lesson_db.edit_lesson(class_name, date, num, lesson['name'],
+                                                      {'homework': add_dict[lesson['name']],
+                                                       'unsent_homework': 1})
+                            else:
+                                lesson_db.edit_lesson(class_name, date, num, lesson['name'],
+                                                      {'homework': add_dict[lesson['name']]})
+
                         add_dict[lesson['name']] = None
             logger.log("alerts", f"{class_name} on {date} added")
 

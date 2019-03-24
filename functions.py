@@ -46,6 +46,18 @@ def make_lined(s, symbol="̶"):
     return ans
 
 
+def del_arr_elem(arr, obj):
+    if obj not in arr:
+        return False
+
+    new_arr = []
+    for e in arr:
+        if e != obj:
+            new_arr.append(e)
+
+    return new_arr
+
+
 def convert_arrays_to_dict(arr1, arr2):
     if len(arr1) != len(arr2):
         return False
