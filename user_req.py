@@ -7,7 +7,6 @@ from datetime import date as st_date
 from functions import SUBS, classes, cur_date, student, del_arr_elem
 import config
 
-
 lesson_db = LessonDbReq()
 user_db = UserDbReq()
 
@@ -91,7 +90,7 @@ def get_schedule(src, user_id, text):
     return get_schedule_from_class(class_name, dates, add_room=True, add_teacher=True)
 
 
-def register_new_user(src, user_id, text):    # регистрация login name surname parallel
+def register_new_user(src, user_id, text):  # регистрация login name surname parallel
     text = text.split()
     if len(text) >= 5:
         login = text[1]
@@ -189,14 +188,14 @@ def cancel_lesson(src, user_id, text):
     return "Урок отменен"
 
 
-def comment_lesson(src, user_id, text):      # комментарий lesson в day у class_name comment
+def comment_lesson(src, user_id, text):  # комментарий lesson в day у class_name comment
     logger.log("user_req", "commenting a lesson")
     day, lesson, class_name = get_day_and_lesson_and_class_name_from_text(text)
     comment = " ".join(text.split()[6:])
     return lesson_db.get_comment(class_name, day, lesson, comment)
 
 
-def replace_lesson(src, user_id, text):      # замена lesson в day у class_name another_lesson
+def replace_lesson(src, user_id, text):  # замена lesson в day у class_name another_lesson
     logger.log("user_req", "replacing a lesson")
     day, lesson, class_name = get_day_and_lesson_and_class_name_from_text(text)
     another_lesson = text.split()[6]
@@ -455,22 +454,22 @@ def parse_message_from_user(src, user_id, text, name):
     return res
 
 
-key_words_to_function = {"schedule": get_schedule,
-                         "registration": register_new_user,
-                         "account": send_acc_information,
-                         "cancel": cancel_lesson,
-                         "replacement": replace_lesson,
-                         "comment": comment_lesson,
-                         # "support": support_message,
-                         "commands": send_commands,
-                         "hometask": get_hometask
-                         }
+key_words_to_function = {
+    "schedule": get_schedule,
+    "registration": register_new_user,
+    "account": send_acc_information,
+    "cancel": cancel_lesson,
+    "replacement": replace_lesson,
+    "comment": comment_lesson,
+    # "support": support_message,
+    "commands": send_commands,
+    "hometask": get_hometask
+}
 
 parse_functions = {
     "menu": parse_menu,
     "subs": parse_subs
 }
-
 
 fast_query = {
     "расписание": fast_schedule,
@@ -478,9 +477,7 @@ fast_query = {
     "подписки": to_subs
 }
 
-
 menu_buttons = [["Расписание"], [["ДЗ"]], ["Подписки"]]
-
 
 if __name__ == '__main__':
     pass
