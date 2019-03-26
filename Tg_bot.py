@@ -41,7 +41,7 @@ def send_msg(user_id, text, msg_to_answer_id=None):
 
 def fix_board(board):
     if type(board) != list:
-        return board
+        return [[]]
 
     ans = []
     logger.log("tg", f"BOARDS!!!!!! {board}")
@@ -53,7 +53,7 @@ def fix_board(board):
                     tmp.append(str(y[0]))
                 else:
                     if y[1]:
-                        tmp.append(f"{y[0]} *bold*")
+                        tmp.append(f"{y[0]}")
                     else:
                         tmp.append(f"{y[0]}")
             else:
