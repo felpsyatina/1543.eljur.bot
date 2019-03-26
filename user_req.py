@@ -418,8 +418,7 @@ def parse_subs(src, user_id, text):
     if text.upper() in classes:
         return change_sub(src, user_id, text)
 
-    return {"text": "Чтобы вернутся в меню, нажмите \"Вернуться в меню\".",
-            "buttons": gen_subs_but(src, user_id, text)}
+    return None
 
 
 def process_message_from_user(src, user_id, text, name):
@@ -440,7 +439,12 @@ def process_message_from_user(src, user_id, text, name):
         info = user_db.get_user_info(user_id, src)
 
     parse_func = parse_functions[info['status']]
-    return parse_func(src, user_id, text)
+
+    answer = parse_func(src, user_id, text)
+    if answer is not None:
+        return answer
+
+    return parse_menu(src, user_id, text)
 
 
 def parse_message_from_user(src, user_id, text, name):
