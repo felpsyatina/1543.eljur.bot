@@ -146,5 +146,3 @@ class StudentsDbReq:
 if __name__ == '__main__':
     req = StudentsDbReq()
     req.setup_db()
-    req.add_student("Лобзик", "Лобстеров", "12В", {"англ": "С"})
-    print(req.get_student_info("Лобзик", "Лобстеров"))
