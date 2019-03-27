@@ -2,11 +2,16 @@ from lessons_db_manip import LessonDbReq as Ldb
 from users_db_parser import UserDbReq as Udb
 import logger
 import Alerts
+import config
 
 from functions import classes, cur_date, get_word_by_date, student, tm, del_op
 
+print(classes)
+classes = ["10В"]
 
-flag_on_PC = 0
+
+DATES_ADD = [0, 1, 2, 3]
+flag_on_PC = config.params['flag_on_PC']
 
 
 if flag_on_PC:
@@ -26,8 +31,8 @@ def is_time_to_work():
 
 
 def update_homework():
-    dates = [cur_date(), cur_date(1), cur_date(2)]
-    last = cur_date(2)
+    dates = [cur_date(d) for d in DATES_ADD]
+    last = max(dates)
 
     for class_name in classes:
         for date in dates:
@@ -74,6 +79,16 @@ def update_homework():
             logger.log("alerts", f"{class_name} on {date} added")
 
 
+def erase_flags():
+    dates = [cur_date(d) for d in DATES_ADD]
+
+    for class_name in classes:
+        for date in dates:
+            lesson_db.erase_unsent_changes(date, class_name)
+
+    logger.log("alerts", "flags deleted")
+
+
 def get_changes(to_date, for_class):
     alerts = lesson_db.find_unsent_changes(to_date, for_class)
     message = ""
@@ -86,7 +101,7 @@ def get_changes(to_date, for_class):
     return message
 
 
-def get_homework(to_date, for_class):
+def get_homework_and_send(to_date, for_class):
     alerts = lesson_db.find_unsent_homework(to_date, for_class)
     message = ""
     for alert in alerts:
@@ -94,7 +109,6 @@ def get_homework(to_date, for_class):
         name = alert['name']
         date = get_word_by_date(to_date)
         message += f"Выложено дз по {name} на {date}:\n {homework}\n"
-    return message
 
 
 def send_changes(for_date, to_class):
@@ -103,24 +117,47 @@ def send_changes(for_date, to_class):
     Alerts.send_alerts(class_participants, message)
 
 
+def send_to_user(user, date, c, schedule):
+    subs = user['subs']
+
+    if c not in subs:
+        return
+
+    date_word = get_word_by_date(date)
+
+    title = f"Выложено дз на {date_word}:\n"
+    ans = ""
+
+    for lesson in schedule:
+        print(lesson)
+        if 'grp' not in lesson:
+            ans += f"{lesson['name']}:\n{lesson['homework']}\n"
+        else:
+            if lesson['grp'] in subs[c].get(lesson['name'], []):
+                ans += f"{lesson['name']}:\n{lesson['homework']}\n"
+
+    if ans:
+        Alerts.send_alerts([user['id']], title + ans)
+
+
 def get_and_send_for_all():
-    for c in classes:
-        class_participants = user_db.get_users_by_subs(c)
-        logger.log("alerts", f"{c}: {class_participants}")
+    dates = [cur_date(d) for d in DATES_ADD]
+    users = user_db.get_all_users()
 
-        ans = []
-        for date in [cur_date(), cur_date(1), cur_date(2)]:
-            task = get_homework(date, c)
-            if task:
-                ans.append(task)
+    for date in dates:
+        for c in classes:
+            schedule = lesson_db.find_unsent_homework(date, c)
+            if not schedule:
+                continue
 
-        logger.log("alerts", f"new {c}: {ans}")
-        if ans:
-            message = f"\nКласс {c}:\n" + "\n".join(ans)
-            Alerts.send_alerts(class_participants, message)
+            for user in users:
+                send_to_user(user, date, c, schedule)
+
+    logger.log("alerts", "alerts are sent")
 
 
 if __name__ == '__main__':
     update_homework()
     if is_time_to_work():
         get_and_send_for_all()
+        erase_flags()

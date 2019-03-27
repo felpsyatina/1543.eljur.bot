@@ -1,6 +1,7 @@
 import sqlite3
 import logger
 import config
+from json import dumps as jd, loads as jl
 from functions import MyCursor, convert_arrays_to_dict
 
 first_status = config.params['fir_stat']
@@ -46,7 +47,10 @@ class UserDbReq:
             cursor.execute(query)
             logger.log("user_db_manip", f"table: '{table_name}' created.")
 
-    def add_user(self, first_name, last_name, user_id, scr, vk_id="NULL", tg_id="NULL"):
+    def add_user(self, first_name, last_name, user_id, scr):
+        vk_id = "NULL"
+        tg_id = "NULL"
+
         if scr == "vk":
             vk_id = user_id
 
@@ -56,7 +60,7 @@ class UserDbReq:
         with self.run_cursor() as cursor:
             query = f"""
                 INSERT INTO users (first_name, last_name, class, confirmed, status, vk_id, tg_id, subs) 
-                VALUES('{first_name}', '{last_name}', null, 0, '{first_status}', {vk_id}, {tg_id}, '')
+                VALUES('{first_name}', '{last_name}', null, 0, '{first_status}', {vk_id}, {tg_id}, '{jd({})}')
             """
             cursor.execute(query)
             logger.log("user_db_manip", f"user '{first_name} {last_name}' created!")
@@ -117,7 +121,10 @@ class UserDbReq:
 
             ans_dict = {}
             for it in range(len(users_fetch)):
-                ans_dict[column_desc[it][1]] = users_fetch[it]
+                if column_desc[it][1] == "subs":
+                    ans_dict[column_desc[it][1]] = jl(users_fetch[it])
+                else:
+                    ans_dict[column_desc[it][1]] = users_fetch[it]
 
             logger.log("users_db_parser", f"returning info: {ans_dict}")
             return ans_dict
@@ -143,7 +150,10 @@ class UserDbReq:
 
                 ans_dict = {}
                 for it in range(len(users_fetch)):
-                    ans_dict[column_desc[it][1]] = users_fetch[it]
+                    if column_desc[it][1] == "subs":
+                        ans_dict[column_desc[it][1]] = jl(users_fetch[it])
+                    else:
+                        ans_dict[column_desc[it][1]] = users_fetch[it]
 
                 return ans_dict
 
@@ -162,11 +172,14 @@ class UserDbReq:
 
         with self.run_cursor() as cursor:
             for key, value in dict_of_changes.items():
-                query = f"""UPDATE users SET {key}='{value}' WHERE {upd_key}"""
+                if key == "subs":
+                    query = f"""UPDATE users SET {key}='{jd(value)}' WHERE {upd_key}"""
+                else:
+                    query = f"""UPDATE users SET {key}='{value}' WHERE {upd_key}"""
                 cursor.execute(query)
             logger.log("user_db_manip", f"{upd_key} updated")
 
-    def get_users_by_subs(self, class_name):
+    def get_users_by_subs(self, class_name, lesson=None, group=None):
         ans = []
 
         with self.run_cursor() as cursor:
@@ -182,10 +195,30 @@ class UserDbReq:
             for user in users_fetch:
                 info = convert_arrays_to_dict(columns, user)
                 if info['subs']:
-                    if class_name in info['subs'].split():
-                        ans.append(info['id'])
+                    if class_name in info['subs'].keys():
+                        if group is None:
+                            ans.append(info['id'])
+                        else:
+                            if group in info['subs'].get(lesson, []):
+                                ans.append(info['id'])
 
         return ans
+
+    def get_all_users(self):
+        with self.run_cursor() as cursor:
+            query = f"""
+                SELECT id FROM users;
+            """
+
+            cursor.execute(query)
+            users_fetch = cursor.fetchall()
+
+            ans = []
+
+            for user_id in users_fetch:
+                ans.append(self.get_user_info_by_global_id(user_id[0]))
+
+            return ans
 
     def setup_db(self):
         self.create_users_db()
@@ -194,3 +227,7 @@ class UserDbReq:
 if __name__ == '__main__':
     req = UserDbReq()
     req.setup_db()
+    req.add_user("Сева", "Савинский", 111990238, "vk")
+    req.update_user({"subs": {"10В": {"Английский": ["С"], "Алгебра": ["Я"]}}}, 111990238, "vk")
+    inf = req.get_all_users()
+    print(inf)

@@ -2,9 +2,10 @@ from users_db_parser import UserDbReq
 import Vk_bot
 import Tg_bot
 import logger
+import config
 
 
-flag_on_PC = 0
+flag_on_PC = config.params['flag_on_PC']
 
 if flag_on_PC:
     user_db = UserDbReq()
@@ -15,8 +16,8 @@ else:
 def send_alerts(a, mess):
     vk = []
     tg = []
-    for id in a:
-        info = user_db.get_user_info_by_global_id(id)
+    for u_id in a:
+        info = user_db.get_user_info_by_global_id(u_id)
         vk_id = info['vk_id']
         tg_id = info['tg_id']
         if vk_id:

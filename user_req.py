@@ -345,9 +345,13 @@ def gen_subs_but(src, user_id, text):
     return buttons
 
 
+def gen_opt_but(src, user_id, text):
+    info = user_db.get_user_info(user_id, src)
+
+
 def to_subs(src, user_id, text):
     info = user_db.get_user_info(user_id, src)
-    user_subs = info['subs']
+    user_subs = info['subs'].keys()
 
     user_db.update_user({'status': 'subs'}, user_id, src)
 
@@ -388,6 +392,13 @@ def to_menu(src, user_id, text):
 
     return {"text": f"Ты в главном меню.",
             "buttons": menu_buttons}
+
+
+def to_opt(src, user_id, text):
+    user_db.update_user({'status': 'opt'}, user_id, src)
+
+    return {"text": f"Ты в главном меню.",
+            "buttons": gen_opt_but(src, user_id, text)}
 
 
 def parse_menu(src, user_id, text):
@@ -474,10 +485,11 @@ parse_functions = {
 fast_query = {
     "расписание": fast_schedule,
     "дз": fast_hometask,
-    "подписки": to_subs
+    "подписки": to_subs,
+    "настрока подписок": to_opt
 }
 
-menu_buttons = [["Расписание"], [["ДЗ"]], ["Подписки"]]
+menu_buttons = [[["Расписание"], 1], [["ДЗ"], 1], [["Подписки"]], [["Настройка подписок"]]]
 
 if __name__ == '__main__':
     pass

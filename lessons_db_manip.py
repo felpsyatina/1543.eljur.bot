@@ -69,7 +69,6 @@ class LessonDbReq:
     def add_class_groups(self, class_id, lesson, group):
         with self.run_cursor() as cursor:
             groups = self.get_class_groups(class_id)
-            print(groups, lesson)
             if lesson not in groups:
                 groups[lesson] = []
 
@@ -80,6 +79,7 @@ class LessonDbReq:
                 UPDATE classes SET groups = '{jd(groups)}' WHERE id = {class_id}
             """
             cursor.execute(query)
+            logger.log("lesson_db_manip", f"added group {group} in {class_id}")
 
     def create_lessons_db(self, table_name="lessons"):
         self.del_table(table_name)
@@ -125,7 +125,7 @@ class LessonDbReq:
             fetch = cursor.fetchone()
 
             id_of_class = fetch[0]
-            return id_of_class
+        return id_of_class
 
     def get_columns_info(self, table="lessons"):
         with self.run_cursor() as cursor:
@@ -260,10 +260,16 @@ class LessonDbReq:
                     ans.append({"name": lesson[it]['name'],
                                 "num": lesson[it]['number'],
                                 "comment": lesson[it]['comment']})
+        return ans
+
+    def erase_unsent_changes(self, date, class_name):
+        sch = self.get_schedule(class_name, date=date)
+
+        for lesson_num, lesson in sch.items():
+            for it in range(len(lesson)):
+                if not lesson[it]['unsent_change']:
                     self.edit_lesson(class_name, date, lesson[it]['number'],
                                      name=lesson[it]['name'], dict_of_changes={'unsent_change': 0})
-
-        return ans
 
     def find_unsent_homework(self, date, class_name):
         ans = []
@@ -272,11 +278,15 @@ class LessonDbReq:
         for lesson_num, lesson in sch.items():
             for it in range(len(lesson)):
                 if lesson[it]['unsent_homework']:
-                    ans.append({"name": lesson[it]['name'],
-                                "num": lesson[it]['number'],
-                                "homework": lesson[it]['homework']})
-                    self.edit_lesson(class_name, date, lesson[it]['number'],
-                                     name=lesson[it]['name'], dict_of_changes={'unsent_homework': 0})
+                    if 'grp' in lesson[it]:
+                        ans.append({"name": lesson[it]['name'],
+                                    "num": lesson[it]['number'],
+                                    "homework": lesson[it]['homework'],
+                                    "grp": lesson[it]['grp']})
+                    else:
+                        ans.append({"name": lesson[it]['name'],
+                                    "num": lesson[it]['number'],
+                                    "homework": lesson[it]['homework']})
 
         return ans
 
