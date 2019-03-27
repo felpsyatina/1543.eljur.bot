@@ -227,7 +227,4 @@ class UserDbReq:
 if __name__ == '__main__':
     req = UserDbReq()
     req.setup_db()
-    req.add_user("Сева", "Савинский", 111990238, "vk")
-    req.update_user({"subs": {"10В": {"Английский": ["С"], "Алгебра": ["Я"]}}}, 111990238, "vk")
-    inf = req.get_all_users()
-    print(inf)
+

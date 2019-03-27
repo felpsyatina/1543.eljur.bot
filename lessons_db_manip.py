@@ -75,11 +75,11 @@ class LessonDbReq:
             if group not in groups[lesson]:
                 groups[lesson].append(group)
 
-            query = f"""
-                UPDATE classes SET groups = '{jd(groups)}' WHERE id = {class_id}
-            """
-            cursor.execute(query)
-            logger.log("lesson_db_manip", f"added group {group} in {class_id}")
+                query = f"""
+                    UPDATE classes SET groups = '{jd(groups)}' WHERE id = {class_id}
+                """
+                cursor.execute(query)
+                logger.log("lesson_db_manip", f"added group {group} in {class_id}")
 
     def create_lessons_db(self, table_name="lessons"):
         self.del_table(table_name)
@@ -303,4 +303,4 @@ class LessonDbReq:
 
 if __name__ == '__main__':
     req = LessonDbReq()
-    req.setup_db()
+    req.setup_db(False)

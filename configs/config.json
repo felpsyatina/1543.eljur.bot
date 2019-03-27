@@ -12,5 +12,5 @@
 	"min_par": 44,
 	"fir_stat": "waiting",
 	"max_subs": 5,
-	"flag_on_PC": 0
+	"flag_on_PC": 1
 }

@@ -6,9 +6,6 @@ import config
 
 from functions import classes, cur_date, get_word_by_date, student, tm, del_op
 
-print(classes)
-classes = ["10В"]
-
 
 DATES_ADD = [0, 1, 2, 3]
 flag_on_PC = config.params['flag_on_PC']
@@ -129,11 +126,10 @@ def send_to_user(user, date, c, schedule):
     ans = ""
 
     for lesson in schedule:
-        print(lesson)
         if 'grp' not in lesson:
             ans += f"{lesson['name']}:\n{lesson['homework']}\n"
         else:
-            if lesson['grp'] in subs[c].get(lesson['name'], []):
+            if lesson['grp'] in subs[c].get(lesson['name'], []) or lesson['grp'] is None:
                 ans += f"{lesson['name']}:\n{lesson['homework']}\n"
 
     if ans:
@@ -158,6 +154,6 @@ def get_and_send_for_all():
 
 if __name__ == '__main__':
     update_homework()
-    if is_time_to_work():
+    if 1:  # is_time_to_work():
         get_and_send_for_all()
         erase_flags()

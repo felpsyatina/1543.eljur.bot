@@ -282,7 +282,7 @@ def send_commands(src, user_id, text):
 def fast_schedule(src, user_id, text):
     info = user_db.get_user_info(user_id, src)
     ans_msg = ""
-    user_subs = info['subs'].split()
+    user_subs = info['subs'].keys()
 
     if len(user_subs) == 0:
         return {"text": "Вы не подписаны ни на один из классов.",
@@ -303,7 +303,7 @@ def fast_schedule(src, user_id, text):
 def fast_hometask(src, user_id, text):
     info = user_db.get_user_info(user_id, src)
     ans_msg = ""
-    user_subs = info['subs'].split()
+    user_subs = info['subs'].keys()
 
     if len(user_subs) == 0:
         return {"text": "Вы не подписаны ни на один из классов.",
@@ -324,7 +324,7 @@ def cancel_menu(src, user_id, text):
 
 def gen_subs_but(src, user_id, text):
     info = user_db.get_user_info(user_id, src)
-    user_subs = info['subs'].split()
+    user_subs = list(info['subs'].keys())
 
     buttons = []
 
@@ -347,16 +347,35 @@ def gen_subs_but(src, user_id, text):
 
 def gen_opt_but(src, user_id, text):
     info = user_db.get_user_info(user_id, src)
+    subs = info['subs']
+
+    buttons = [[["Вернуться в меню", 1]]]
+    for c, lessons in subs.items():
+        class_id = lesson_db.get_class_id(c)
+        class_groups = lesson_db.get_class_groups(class_id)
+
+        for lesson, groups in class_groups.items():
+            line = []
+            lesson = lesson.lower()
+            for g in groups:
+                g = g.lower()
+                if g in lessons.get(lesson, []):
+                    line.append([f"{c} {lesson} {g}", 2])
+                else:
+                    line.append([f"{c} {lesson} {g}", 0])
+            buttons.append(line)
+
+    return buttons
 
 
 def to_subs(src, user_id, text):
     info = user_db.get_user_info(user_id, src)
-    user_subs = info['subs'].keys()
+    user_subs = list(info['subs'].keys())
 
     user_db.update_user({'status': 'subs'}, user_id, src)
 
     if user_subs:
-        return {"text": f"Классы, на которые ты подписан: {user_subs}.",
+        return {"text": f"Классы, на которые ты подписан: {' '.join(user_subs)}.",
                 "buttons": gen_subs_but(src, user_id, text)}
 
     return {"text": f"У тебя пока нет подписок на классы.",
@@ -365,11 +384,12 @@ def to_subs(src, user_id, text):
 
 def change_sub(src, user_id, text):
     info = user_db.get_user_info(user_id, src)
-    user_subs = info['subs'].split()
+    user_subs = info['subs']
     c = text.upper()
 
-    if c in user_subs:
-        new_user_subs = ' '.join(del_arr_elem(user_subs, c))
+    if c in user_subs.keys():
+        new_user_subs = user_subs
+        del new_user_subs[c]
         user_db.update_user({'subs': new_user_subs}, user_id, src)
 
         return {"text": f"Ты отписался от \"{c}\".",
@@ -380,11 +400,55 @@ def change_sub(src, user_id, text):
             return {"text": f"Количество подписок не может превышать {max_subs}.",
                     "buttons": gen_subs_but(src, user_id, text)}
 
-        new_user_subs = ' '.join(user_subs + [c])
+        new_user_subs = user_subs
+        new_user_subs[c] = {}
         user_db.update_user({'subs': new_user_subs}, user_id, src)
 
         return {"text": f"Ты подписался на обновления \"{c}\".",
                 "buttons": gen_subs_but(src, user_id, text)}
+
+
+def is_change_grp(text):
+    text = text.split()
+    if len(text) != 3:
+        return False
+
+    if text[0].upper() not in classes:
+        return False
+
+    return True
+
+
+def change_grp(src, user_id, text):
+    info = user_db.get_user_info(user_id, src)
+    user_subs = info['subs']
+    user_class, user_lesson, user_group = text.split()
+    user_class = user_class.upper()
+
+    if user_class not in user_subs:
+        return {"text": f"Ты не подписан на этот класс.",
+                "buttons": gen_opt_but(src, user_id, text)}
+
+    class_subs = user_subs[user_class]
+    lesson_subs = class_subs.get(user_lesson, [])
+
+    if user_group in lesson_subs:
+        new_lesson_subs = del_arr_elem(lesson_subs, user_group)
+        user_subs[user_class][user_lesson] = new_lesson_subs
+
+        user_db.update_user({'subs': user_subs}, user_id, src)
+
+        return {"text": f"Ты отписался от \"{user_class} {user_lesson} {user_group}\".",
+                "buttons": gen_opt_but(src, user_id, text)}
+
+    else:
+        new_lesson_subs = lesson_subs + [user_group]
+        user_subs[user_class][user_lesson] = new_lesson_subs
+
+        user_db.update_user({'subs': user_subs}, user_id, src)
+
+        return {"text": f"Ты подписался на \"{user_class} {user_lesson} {user_group}\".",
+                "buttons": gen_opt_but(src, user_id, text)}
 
 
 def to_menu(src, user_id, text):
@@ -395,9 +459,16 @@ def to_menu(src, user_id, text):
 
 
 def to_opt(src, user_id, text):
+    info = user_db.get_user_info(user_id, src)
+    user_subs = list(info['subs'].keys())
+
+    if len(user_subs) >= 2:
+        return {"text": f"Пока не поддерживается управление подписками сразу двух классов.",
+                "buttons": menu_buttons}
+
     user_db.update_user({'status': 'opt'}, user_id, src)
 
-    return {"text": f"Ты в главном меню.",
+    return {"text": f"Ты подписан на {user_subs[0]}.",
             "buttons": gen_opt_but(src, user_id, text)}
 
 
@@ -427,6 +498,16 @@ def parse_subs(src, user_id, text):
 
     if text.upper() in classes:
         return change_sub(src, user_id, text)
+
+    return None
+
+
+def parse_opt(src, user_id, text):
+    if text == "вернуться в меню":
+        return to_menu(src, user_id, text)
+
+    if is_change_grp(text):
+        return change_grp(src, user_id, text)
 
     return None
 
@@ -479,17 +560,18 @@ key_words_to_function = {
 
 parse_functions = {
     "menu": parse_menu,
-    "subs": parse_subs
+    "subs": parse_subs,
+    "opt": parse_opt
 }
 
 fast_query = {
     "расписание": fast_schedule,
     "дз": fast_hometask,
     "подписки": to_subs,
-    "настрока подписок": to_opt
+    "настройка подписок": to_opt
 }
 
-menu_buttons = [[["Расписание"], 1], [["ДЗ"], 1], [["Подписки"]], [["Настройка подписок"]]]
+menu_buttons = [[["Расписание", 1]], [["ДЗ", 1]], [["Подписки"]], [["Настройка подписок"]]]
 
 if __name__ == '__main__':
     pass
