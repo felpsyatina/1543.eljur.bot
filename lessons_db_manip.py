@@ -2,6 +2,7 @@
 import sqlite3
 import logger
 import config
+from json import dumps as jd, loads as jl
 from functions import MyCursor, convert_arrays_to_dict, cur_date, classes, student
 
 current_min_par = config.params['min_par']
@@ -42,7 +43,8 @@ class LessonDbReq:
                     id integer not null
                         primary key autoincrement,
                     parallel int not null,
-                    letter text not null
+                    letter text not null,
+                    groups text
                 );
             """
             cursor.execute(query)
@@ -50,10 +52,34 @@ class LessonDbReq:
 
             for num in range(current_min_par, current_min_par + 7):
                 for let in ["А", "Б", "В", "Г"]:
-                    query = f"INSERT INTO classes (parallel, letter) VALUES({num}, '{let}')"
+                    query = f"INSERT INTO classes (parallel, letter, groups) VALUES({num}, '{let}', '{jd({})}')"
                     cursor.execute(query)
 
             logger.log("lesson_db_manip", f"added classes in '{table_name}'.")
+
+    def get_class_groups(self, class_id):
+        with self.run_cursor() as cursor:
+            query = f"""
+                SELECT groups FROM classes WHERE id = {class_id}
+            """
+            cursor.execute(query)
+            fetch = cursor.fetchone()
+        return jl(fetch[0])
+
+    def add_class_groups(self, class_id, lesson, group):
+        with self.run_cursor() as cursor:
+            groups = self.get_class_groups(class_id)
+            print(groups, lesson)
+            if lesson not in groups:
+                groups[lesson] = []
+
+            if group not in groups[lesson]:
+                groups[lesson].append(group)
+
+            query = f"""
+                UPDATE classes SET groups = '{jd(groups)}' WHERE id = {class_id}
+            """
+            cursor.execute(query)
 
     def create_lessons_db(self, table_name="lessons"):
         self.del_table(table_name)
@@ -133,8 +159,9 @@ class LessonDbReq:
         else:
             lesson_teacher = "NULL"
 
-        if lesson.get("grp", 0):
+        if "grp" in lesson:
             lesson_grp = f"'{lesson['grp']}'"
+            self.add_class_groups(class_id, lesson_name, lesson["grp"])
         else:
             lesson_grp = "NULL"
 
@@ -266,4 +293,4 @@ class LessonDbReq:
 
 if __name__ == '__main__':
     req = LessonDbReq()
-    req.setup_db(False)
+    req.setup_db()
