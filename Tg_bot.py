@@ -17,7 +17,6 @@ url_new_msgs = URL + 'getupdates'
 
 
 def bot_info():
-    print(URL)
     bot_info = requests.get(url_get_me).json()
     return bot_info
 
@@ -44,7 +43,6 @@ def fix_board(board):
         return [[]]
 
     ans = []
-    logger.log("tg", f"BOARDS!!!!!! {board}")
     for x in board:
         tmp = []
         for y in x:
@@ -60,8 +58,6 @@ def fix_board(board):
                 tmp.append(str(y))
 
         ans.append(tmp)
-
-    logger.log("tg", f"ANS!!!!!! {ans}")
     return ans
 
 
@@ -69,7 +65,7 @@ def send_msg_and_but(user_id, text, keyb_but, msg_to_answer_id=None):
     reply_markup = json.dumps(
         {"keyboard": fix_board(keyb_but),
          "one_time_keyboard": True})
-    logger.log("tg", str(reply_markup))
+    logger.log("tg", 'send msg- ' + str(text) + ' and but- ' + str(keyb_but) + ' to ' + str(user_id))
     (requests.get(url_send_msg,
                   data={'chat_id': user_id, 'text': text, 'reply_markup': reply_markup,
                         'reply_to_message_id': msg_to_answer_id}))
@@ -105,14 +101,13 @@ def new_msgs(last_msg_id, raw_msgs):
 
 
 def answer_msg(user_id, msg, msg_id, user_name):
-    logger.log("tg", "sending message to " + str(user_id))
     try:
         result = user_req.parse_message_from_user("tg", user_id, msg, user_name)
-        logger.log("tg", "message: " + str(result['text']) + str(result['buttons']))
+        logger.log("tg", "got message from user_req: " + str(result['text']) + str(result['buttons']))
 
     except Exception as err:
         result = {"text": "error", "buttons": [[]]}
-        logger.log("tg", f"error: {str(err)}")
+        logger.log("tg", f"couldn't get message from user_req: {str(err)}")
 
     msg_to_send = result['text']
     but_to_send = result['buttons']
@@ -140,5 +135,6 @@ def tg_bot_main(last_msg_id, raw_msgs):
 
 if __name__ == '__main__':
     tg_bot_main(last_msg_id, raw_msgs)
+
 
 
