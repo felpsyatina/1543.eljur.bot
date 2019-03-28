@@ -154,6 +154,6 @@ def get_and_send_for_all():
 
 if __name__ == '__main__':
     update_homework()
-    if 1:  # is_time_to_work():
+    if is_time_to_work():
         get_and_send_for_all()
         erase_flags()
