@@ -81,7 +81,7 @@ def erase_flags():
 
     for class_name in classes:
         for date in dates:
-            lesson_db.erase_unsent_changes(date, class_name)
+            lesson_db.erase_unsent_homework(date, class_name)
 
     logger.log("alerts", "flags deleted")
 

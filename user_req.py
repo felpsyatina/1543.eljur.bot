@@ -81,6 +81,45 @@ def get_schedule_from_class(class_name, list_of_dates=None, add_room=False, add_
     return answer_string
 
 
+def get_schedule_from_subs(class_name, user_subs, list_of_dates=None, add_room=False, add_teacher=False):
+    if list_of_dates is None:
+        list_of_dates = [cur_date()]
+
+    answer_string = ""
+    for date in list_of_dates:
+        temp = lesson_db.get_schedule_by_subs(class_name, date, user_subs)
+
+        if not temp:
+            lesson_db.add_schedule(class_name, date)
+
+        day_schedule = lesson_db.get_schedule_by_subs(class_name, date, user_subs)
+
+        answer_string += f"{get_word_by_date(date)}:\n"
+
+        if not day_schedule:
+            answer_string += f"Уроков (в моей базе) нет.\n"
+            continue
+
+        for lesson_num, lesson in day_schedule.items():
+            tmp = []
+            for it in range(len(lesson)):
+                tmp.append(f"{lesson[it]['name']}")
+
+                if add_room and lesson[it]['room'] is not None:
+                    tmp[it] += f", кабинет: {lesson[it]['room']}"
+
+                if add_teacher and lesson[it]['teacher'] is not None:
+                    tmp[it] += f", учитель: {lesson[it]['teacher']}"
+
+                if lesson[it]['comment'] is not None:
+                    tmp[it] += f" ({lesson[it]['comment']})"
+
+            answer_string += f"{lesson_num}. {'/'.join(tmp)}.\n"
+        answer_string += '\n'
+
+    return answer_string
+
+
 def get_schedule(src, user_id, text):
     logger.log("user_req", f"getting schedule in {text}")
 
@@ -282,7 +321,7 @@ def send_commands(src, user_id, text):
 def fast_schedule(src, user_id, text):
     info = user_db.get_user_info(user_id, src)
     ans_msg = ""
-    user_subs = info['subs'].keys()
+    user_subs = info['subs']
 
     if len(user_subs) == 0:
         return {"text": "Вы не подписаны ни на один из классов.",
@@ -290,9 +329,9 @@ def fast_schedule(src, user_id, text):
 
     list_of_dates = [cur_date(), cur_date(1), cur_date(2)]
 
-    for c in user_subs:
+    for c, subs in user_subs.items():
         ans_msg += f"\nКласс {c}:\n"
-        ans_msg += get_schedule_from_class(c, list_of_dates=list_of_dates)
+        ans_msg += get_schedule_from_subs(c, subs, list_of_dates=list_of_dates)
 
     return {
         "text": ans_msg,

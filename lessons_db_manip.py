@@ -232,6 +232,48 @@ class LessonDbReq:
 
         return lessons
 
+    def get_schedule_by_subs(self, class_name, date, user_subs):
+        logger.log("lessons_db_manip", f"getting schedule by subs class: {class_name}, date: {date}, subs: {user_subs}")
+
+        if date is None:
+            date = cur_date()
+
+        class_id = self.get_class_id(class_name)
+        columns = self.get_columns_names()
+        lessons = {}
+
+        with self.run_cursor() as cursor:
+            for lesson_num in range(0, 10):  # максимально 10 уроков
+                query = f"""
+                    SELECT * FROM lessons WHERE class_id = {class_id} AND date = '{date}' AND number = {lesson_num}
+                """
+                cursor.execute(query)
+                lesson_arr = cursor.fetchall()
+
+                if not lesson_arr:
+                    continue
+
+                ans_arr = []
+                for it in range(len(lesson_arr)):
+                    if not lesson_arr[it]:
+                        continue
+
+                    tmp = convert_arrays_to_dict(columns, lesson_arr[it])
+
+                    name = tmp['name'].lower()
+                    if tmp.get('grp', None) is not None and user_subs.get(name, []):
+                        if tmp['grp'].lower() not in user_subs[name]:
+                            tmp = None
+
+                    if not tmp:
+                        continue
+
+                    ans_arr.append(tmp)
+                    del tmp
+
+                lessons[lesson_num] = ans_arr
+        return lessons
+
     def edit_lesson(self, class_name, date, lesson_num, name="NULL", dict_of_changes=None):
         with self.run_cursor() as cursor:
             class_id = self.get_class_id(class_name)
@@ -262,7 +304,7 @@ class LessonDbReq:
                                 "comment": lesson[it]['comment']})
         return ans
 
-    def erase_unsent_changes(self, date, class_name):
+    def erase_unsent_homework(self, date, class_name):
         sch = self.get_schedule(class_name, date=date)
 
         for lesson_num, lesson in sch.items():
