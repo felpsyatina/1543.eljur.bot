@@ -26,7 +26,7 @@ def alerts(alerts_ids, msg):
         time.sleep(1)
         user_id = alerts_ids[i]
         send_msg(user_id, msg)
-        logger.log("tg", "sending alert to" + user_id)
+        logger.log("tg", f"sending alert to {user_id}")
 
 
 def bot_upd():
@@ -62,10 +62,11 @@ def fix_board(board):
 
 
 def send_msg_and_but(user_id, text, keyb_but, msg_to_answer_id=None):
+    keyb_but=fix_board(keyb_but)
     reply_markup = json.dumps(
-        {"keyboard": fix_board(keyb_but),
+        {"keyboard": keyb_but,
          "one_time_keyboard": True})
-    logger.log("tg", 'send msg- ' + str(text) + ' and but- ' + str(keyb_but) + ' to ' + str(user_id))
+    logger.log("tg", f"send msg - {str(text)} and but - {str(keyb_but)} to {str(user_id)}")
     (requests.get(url_send_msg,
                   data={'chat_id': user_id, 'text': text, 'reply_markup': reply_markup,
                         'reply_to_message_id': msg_to_answer_id}))
@@ -92,7 +93,7 @@ def new_msgs(last_msg_id, raw_msgs):
             else:
                 user_name = {'first_name': msg_base[i]['message']['from']['first_name'],
                              'last_name': ''}
-            logger.log("tg", "get message - " + msg + " from" + str(tg_user_id))
+            logger.log("tg", f"get message - {msg} from {str(tg_user_id)}")
             raw_msgs.append({'tg_user_id': tg_user_id, 'raw_msg': msg, 'msg_id': msg_id, 'user_name': user_name,
                              'is_super_admin': super_admin})
     else:
@@ -103,7 +104,7 @@ def new_msgs(last_msg_id, raw_msgs):
 def answer_msg(user_id, msg, msg_id, user_name):
     try:
         result = user_req.parse_message_from_user("tg", user_id, msg, user_name)
-        logger.log("tg", "got message from user_req: " + str(result['text']) + str(result['buttons']))
+        logger.log("tg", f"got message from user_req: {str(result['text'])} {str(result['buttons'])}")
 
     except Exception as err:
         result = {"text": "error", "buttons": [[]]}
@@ -135,6 +136,3 @@ def tg_bot_main(last_msg_id, raw_msgs):
 
 if __name__ == '__main__':
     tg_bot_main(last_msg_id, raw_msgs)
-
-
-
