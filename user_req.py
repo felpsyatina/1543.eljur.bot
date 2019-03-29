@@ -77,7 +77,9 @@ def get_schedule_from_subs(class_name, user_subs, list_of_dates, a_room=False, a
         for lesson_num, lesson in day_schedule.items():
             tmp = []
             for it in range(len(lesson)):
-                tmp.append(f"{lesson[it]['name']}\n")
+                tmp.append(f"{lesson[it]['name']}")
+                if a_homework or a_room or a_teacher:
+                    tmp[it] += "\n"
 
                 if a_room and lesson[it]['room'] is not None:
                     tmp[it] += f"Кабинет: {lesson[it]['room']}\n"
