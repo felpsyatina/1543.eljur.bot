@@ -3,7 +3,7 @@ from lessons_db_manip import LessonDbReq
 from users_db_parser import UserDbReq
 import answers_dict as ad
 from datetime import datetime
-from functions import SUBS, classes, cur_date, student, del_arr_elem, get_word_by_date
+from functions import SUBS, classes, cur_date, student, del_arr_elem, get_word_by_date, make_lined
 import config
 
 lesson_db = LessonDbReq()
@@ -55,7 +55,7 @@ def get_schedule_from_class(class_name, list_of_dates=None, add_room=False, add_
     return answer_string
 
 
-def get_schedule_from_subs(class_name, user_subs, list_of_dates=None, add_room=False, add_teacher=False):
+def get_schedule_from_subs(class_name, user_subs, list_of_dates, a_room=False, a_teacher=False, a_homework=False):
     if list_of_dates is None:
         list_of_dates = [cur_date()]
 
@@ -68,7 +68,7 @@ def get_schedule_from_subs(class_name, user_subs, list_of_dates=None, add_room=F
 
         day_schedule = lesson_db.get_schedule_by_subs(class_name, date, user_subs)
 
-        answer_string += f"{get_word_by_date(date)}:\n"
+        answer_string += f"{make_lined(get_word_by_date(date), symbol='̲')}:\n\n"
 
         if not day_schedule:
             answer_string += f"Уроков (в моей базе) нет.\n"
@@ -79,16 +79,22 @@ def get_schedule_from_subs(class_name, user_subs, list_of_dates=None, add_room=F
             for it in range(len(lesson)):
                 tmp.append(f"{lesson[it]['name']}")
 
-                if add_room and lesson[it]['room'] is not None:
-                    tmp[it] += f", кабинет: {lesson[it]['room']}"
+                if a_room and lesson[it]['room'] is not None:
+                    tmp[it] += f"Кабинет: {lesson[it]['room']}\n"
 
-                if add_teacher and lesson[it]['teacher'] is not None:
-                    tmp[it] += f", учитель: {lesson[it]['teacher']}"
+                if a_teacher and lesson[it]['teacher'] is not None:
+                    tmp[it] += f"Учитель: {lesson[it]['teacher']}\n"
+
+                if a_homework and lesson[it]['homework'] is not None:
+                    tmp[it] += f"Домашнее задание: \n{lesson[it]['homework']}\n"
 
                 if lesson[it]['comment'] is not None:
-                    tmp[it] += f" ({lesson[it]['comment']})"
+                    tmp[it] += f"Комментарий: ({lesson[it]['comment']})\n"
 
-            answer_string += f"{lesson_num}. {'/'.join(tmp)}.\n"
+            if a_homework or a_room or a_teacher:
+                answer_string += "\n"
+
+            answer_string += f"{lesson_num}. {'/'.join(tmp).rstrip()}.\n"
         answer_string += '\n'
 
     return answer_string
@@ -194,7 +200,7 @@ def replace_lesson(src, user_id, text):  # замена lesson в day у class_n
 
 
 def get_hometask(src, user_id, text):
-    logger.log("user_req", "getting hometask")
+    logger.log("user_req", f"getting hometask of {text}")
     day, class_name = get_day_and_class_name_from_text(text)
     r = student.get_hometask(class_name, day)
     logger.log("user_req", "response get: " + str(r))
@@ -240,7 +246,7 @@ def fast_schedule(src, user_id, text):
 
     for c, subs in user_subs.items():
         ans_msg += f"\nКласс {c}:\n"
-        ans_msg += get_schedule_from_subs(c, subs, list_of_dates=list_of_dates)
+        ans_msg += get_schedule_from_subs(c, subs, list_of_dates)
 
     return {
         "text": ans_msg,
@@ -251,15 +257,17 @@ def fast_schedule(src, user_id, text):
 def fast_hometask(src, user_id, text):
     info = user_db.get_user_info(user_id, src)
     ans_msg = ""
-    user_subs = info['subs'].keys()
+    user_subs = info['subs']
 
     if len(user_subs) == 0:
         return {"text": "Вы не подписаны ни на один из классов.",
                 "buttons": menu_buttons}
 
-    for c in user_subs:
+    list_of_dates = [cur_date(), cur_date(1), cur_date(2)]
+
+    for c, subs in user_subs.items():
         ans_msg += f"\nКласс {c}:\n"
-        ans_msg += get_hometask(src, user_id, c + " неделя")
+        ans_msg += get_schedule_from_subs(c, subs, list_of_dates, True, True, True)
 
     return {"text": ans_msg,
             "buttons": menu_buttons}

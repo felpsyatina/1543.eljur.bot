@@ -39,10 +39,11 @@ class MyCursor(sqlite3.Cursor):
 
 
 def make_lined(s, symbol="̶"):
-    ans = ""
+    ans = symbol
     for x in s:
-        ans += symbol
         ans += x
+        ans += symbol
+
     return ans
 
 
