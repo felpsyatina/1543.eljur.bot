@@ -31,6 +31,16 @@ def is_time_to_work():
         return False
 
 
+def dates_add():
+    hour = tm().hour + 3
+    minutes = tm().minute
+
+    if 15 <= hour and 30 <= minutes:
+        return [1, 2, 3, 4]
+
+    return [0, 1, 2, 3]
+
+
 def update_homework():
     dates = [cur_date(d) for d in DATES_ADD]
     last = max(dates)
@@ -81,7 +91,7 @@ def update_homework():
 
 
 def erase_flags():
-    dates = [cur_date(d) for d in DATES_ADD]
+    dates = [cur_date(d) for d in dates_add()]
 
     for class_name in classes:
         for date in dates:
@@ -141,7 +151,7 @@ def send_to_user(user, date, c, schedule):
 
 
 def get_and_send_for_all():
-    dates = [cur_date(d) for d in DATES_ADD]
+    dates = [cur_date(d) for d in dates_add()]
     users = user_db.get_all_users()
 
     for date in dates:

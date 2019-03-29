@@ -3,8 +3,7 @@ from lessons_db_manip import LessonDbReq
 from users_db_parser import UserDbReq
 import answers_dict as ad
 from datetime import datetime
-from datetime import date as st_date
-from functions import SUBS, classes, cur_date, student, del_arr_elem
+from functions import SUBS, classes, cur_date, student, del_arr_elem, get_word_by_date
 import config
 
 lesson_db = LessonDbReq()
@@ -16,31 +15,6 @@ max_subs = config.params['max_subs']
 def update_schedule():
     lesson_db.add_schedules()
     return
-
-
-def get_word_by_date(date):
-    if len(str(date)) != 8:
-        logger.log("user_req", "ERROR: get wrong date!")
-        return f"{date}"
-
-    date = str(date)
-    if date == cur_date():
-        return "Сегодня"
-    if date == cur_date(1):
-        return "Завтра"
-    if date == cur_date(2):
-        return "Послезавтра"
-    if date == cur_date(-1):
-        return "Вчера"
-    if date == cur_date(-2):
-        return "Позавчера"
-
-    y = int(date[:4])
-    m = int(date[4:6])
-    d = int(date[6:8])
-
-    formed_date = st_date(y, m, d)
-    return f"{formed_date}"
 
 
 def get_schedule_from_class(class_name, list_of_dates=None, add_room=False, add_teacher=False):
@@ -129,22 +103,6 @@ def get_schedule(src, user_id, text):
     return get_schedule_from_class(class_name, dates, add_room=True, add_teacher=True)
 
 
-def register_new_user(src, user_id, text):  # регистрация login name surname parallel
-    text = text.split()
-    if len(text) >= 5:
-        login = text[1]
-        name = text[2]
-        surname = text[3]
-        parallel = text[4]
-        if src == "vk":
-            return user_db.add_user(name, surname, user_id, src)
-        return user_db.add_user(name, surname, user_id, src)
-
-    else:
-        return "Чтобы зарегистрироваться вводите (без кавычек):\n регистрация \"твой логин\" " \
-               "\"твое имя\" \"твоя фамилия\" \"твой класс\""
-
-
 def get_class_name_from_text(text):
     class_name = text.split()[1]
     return class_name
@@ -189,6 +147,7 @@ def get_day_and_class_name_from_text(text):
     try:
         class_name = t[ind]
         day = t[ind + 1]
+
     except Exception:
         return [today, t[ind]]
     class_name = class_name.upper()
@@ -215,16 +174,9 @@ def send_acc_information(src, user_id, text):
         logger.log("user_req", "user " + str(user_id) + " is not in the database")
         answer_message = "К сожалению вас пока нет в нашей базе данных"
     else:
-        answer_message = f"Имя: {ans_mes['first_name']}\nФамилия: {ans_mes['last_name']}\nКласс: {ans_mes['class']}\n" \
-            f"Класс: {ans_mes['class']}\n vk_id: {ans_mes['vk_id']}"
+        answer_message = f"Имя: {ans_mes['first_name']}\nФамилия: {ans_mes['last_name']}\n" \
+            f"Класс: {ans_mes['subs'].keys()}\n vk_id: {ans_mes['vk_id']}"
     return answer_message
-
-
-def cancel_lesson(src, user_id, text):
-    logger.log("user_req", "cancelling a lesson")
-    day, lesson, class_name = get_day_and_lesson_and_class_name_from_text(text)
-    lesson_db.make_cancel(class_name, day, lesson)
-    return "Урок отменен"
 
 
 def comment_lesson(src, user_id, text):  # комментарий lesson в day у class_name comment
@@ -267,49 +219,6 @@ def get_hometask(src, user_id, text):
                 pass
             ans += "-" * 20 + "\n"
     return ans
-
-
-def user_reg0(src, user_id, text):
-    user_db.update_user({"status": "reg1"}, user_id, src)
-
-    return {"text": "Выберите класс.\nЕсли хотите продолжить без введения класса, нажмите \"Отмена\"",
-            "buttons": [[5, 6, 7, 8], [9, 10, 11], ["Отмена"]]}
-
-
-def user_reg1(src, user_id, text):
-    if text == "отмена":
-        user_db.update_user({"class": "null", "status": "reg0"}, user_id, src)
-
-        return user_reg0(src, user_id, text)
-    if text in ["5", "6", "7", "8", "9", "10", "11"]:
-        user_db.update_user({"class": text, "status": "reg2"}, user_id, src)
-
-        return {"text": "Выберите букву класса.\nЕсли хотите продолжить без введения класса, нажмите \"Отмена\"",
-                "buttons": [["А", "Б", "В", "Г"], ["Отмена"]]}
-    return {"text": "Выберите класс.\nЕсли хотите продолжить без введения класса, нажмите \"Отмена\"",
-            "buttons": [[5, 6, 7, 8], [9, 10, 11], ["Отмена"]]}
-
-
-def user_reg2(src, user_id, text):
-    if text == "отмена":
-        user_db.update_user({"class": "null", "status": "reg0"}, user_id, src)
-        return user_reg0(src, user_id, text)
-    if text in ["а", "б", "в", "г"]:
-        info = user_db.get_user_info(user_id, src)
-        user_db.update_user({"class": info['class'] + text, "status": "menu"}, user_id, src)
-
-        return {"text": "Теперь вы можете узнавать расписание или дз, нажимая лишь на одну кнопку. \n"
-                        "Вы можете сбросить класс, нажав \"разлогиниться\".",
-                "buttons": menu_buttons}
-    return {"text": "Выберите букву класса.\nЕсли хотите продолжить без введения класса, нажмите \"Отмена\"",
-            "buttons": [["А", "Б", "В", "Г"], ["Отмена"]]}
-
-
-def user_sch0(src, user_id, text):
-    info = user_db.get_user_info(user_id, src)
-    user_db.update_user({"class": info['class'], "status": "rasp1"}, user_id, src)
-    return {"text": "Выберите время",
-            "buttons": [["Сегодня"], ["Завтра"], ["Неделя"], ["Отмена"]]}
 
 
 def send_commands(src, user_id, text):
@@ -356,14 +265,9 @@ def fast_hometask(src, user_id, text):
             "buttons": menu_buttons}
 
 
-def cancel_menu(src, user_id, text):
-    user_db.update_user({"class": "null", "status": "reg0"}, user_id, src)
-    return user_reg0(src, user_id, text)
-
-
 def gen_subs_but(src, user_id, text):
     info = user_db.get_user_info(user_id, src)
-    user_subs = list(info['subs'].keys())
+    user_subs = info['subs'].keys()
 
     buttons = []
 
@@ -395,9 +299,7 @@ def gen_opt_but(src, user_id, text):
 
         for lesson, groups in class_groups.items():
             line = []
-            lesson = lesson.lower()
             for g in groups:
-                g = g.lower()
                 if g in lessons.get(lesson, []):
                     line.append([f"{c} {lesson} {g}", 2])
                 else:
@@ -463,6 +365,8 @@ def change_grp(src, user_id, text):
     user_subs = info['subs']
     user_class, user_lesson, user_group = text.split()
     user_class = user_class.upper()
+    user_lesson = user_lesson.capitalize()
+    user_group = user_group.capitalize()
 
     if user_class not in user_subs:
         return {"text": f"Ты не подписан на этот класс.",
@@ -587,9 +491,7 @@ def parse_message_from_user(src, user_id, text, name):
 
 key_words_to_function = {
     "schedule": get_schedule,
-    "registration": register_new_user,
     "account": send_acc_information,
-    "cancel": cancel_lesson,
     "replacement": replace_lesson,
     "comment": comment_lesson,
     # "support": support_message,
