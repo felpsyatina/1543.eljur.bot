@@ -151,6 +151,7 @@ class UserDbReq:
                 ans_dict = {}
                 for it in range(len(users_fetch)):
                     if column_desc[it][1] == "subs":
+                        logger.log("alerts", f"User subs: {users_fetch[it]}")
                         ans_dict[column_desc[it][1]] = jl(users_fetch[it])
                     else:
                         ans_dict[column_desc[it][1]] = users_fetch[it]
@@ -227,4 +228,3 @@ class UserDbReq:
 if __name__ == '__main__':
     req = UserDbReq()
     req.setup_db()
-

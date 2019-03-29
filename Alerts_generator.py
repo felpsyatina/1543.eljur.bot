@@ -20,7 +20,11 @@ else:
 
 
 def is_time_to_work():
-    hour = tm().hour + 3
+    hour = tm().hour
+
+    if not flag_on_PC:
+        hour += 3
+
     if 7 <= hour < 22:
         return True
     else:
@@ -122,7 +126,7 @@ def send_to_user(user, date, c, schedule):
 
     date_word = get_word_by_date(date)
 
-    title = f"Выложено дз на {date_word}:\n"
+    title = f"Выложено домашнее задание на {date_word.lower()}:\n"
     ans = ""
 
     for lesson in schedule:
