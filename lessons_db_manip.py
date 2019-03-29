@@ -260,9 +260,9 @@ class LessonDbReq:
 
                     tmp = convert_arrays_to_dict(columns, lesson_arr[it])
 
-                    name = tmp['name'].lower()
+                    name = tmp['name']
                     if tmp.get('grp', None) is not None and user_subs.get(name, []):
-                        if tmp['grp'].lower() not in user_subs[name]:
+                        if tmp['grp'] not in user_subs[name]:
                             tmp = None
 
                     if not tmp:
