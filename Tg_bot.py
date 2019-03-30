@@ -85,8 +85,10 @@ def new_msgs(last_msg_id, raw_msgs):
                 super_admin = '1'
             else:
                 super_admin = '0'
-            msg = msg_base[i]['message']['text']
-            msg_id = msg_base[i]['message']['message_id']
+            if 'text' in msg_base[i]['message']:
+                msg = msg_base[i]['message']['text']
+            else:
+                msg = ''
             if 'last_name' in msg_base[i]['message']['from']:
                 user_name = {'first_name': msg_base[i]['message']['from']['first_name'],
                              'last_name': msg_base[i]['message']['from']['last_name']}
@@ -136,3 +138,4 @@ def tg_bot_main(last_msg_id, raw_msgs):
 
 if __name__ == '__main__':
     tg_bot_main(last_msg_id, raw_msgs)
+
