@@ -274,7 +274,7 @@ class LessonDbReq:
                 lessons[lesson_num] = ans_arr
         return lessons
 
-    def edit_lesson(self, class_name, date, lesson_num, name="NULL", dict_of_changes=None):
+    def edit_lesson(self, class_name, date, lesson_num, name, dict_of_changes=None):
         with self.run_cursor() as cursor:
             class_id = self.get_class_id(class_name)
 
@@ -310,8 +310,10 @@ class LessonDbReq:
         for lesson_num, lesson in sch.items():
             for it in range(len(lesson)):
                 if not lesson[it]['unsent_change']:
+                    print(class_name, date, lesson[it]['number'], lesson[it]['name'])
+
                     self.edit_lesson(class_name, date, lesson[it]['number'],
-                                     name=lesson[it]['name'], dict_of_changes={'unsent_change': 0})
+                                     name=lesson[it]['name'], dict_of_changes={'unsent_homework': 0})
 
     def find_unsent_homework(self, date, class_name):
         ans = []
