@@ -36,13 +36,13 @@ def dates_add():
     minutes = tm().minute
 
     if 15 <= hour and 30 <= minutes:
-        return [1, 2, 3, 4]
+        return [1, 2, 3]
 
     return [0, 1, 2, 3]
 
 
 def update_homework():
-    dates = [cur_date(d) for d in DATES_ADD]
+    dates = [cur_date(d) for d in dates_add()]
     last = max(dates)
 
     for class_name in classes:
