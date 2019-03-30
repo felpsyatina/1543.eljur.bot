@@ -12,6 +12,33 @@ user_db = UserDbReq()
 max_subs = config.params['max_subs']
 
 
+class User:
+    def __init__(self, user):
+        self.id = user['id']
+        self.src = user.get('src', 'vk')
+
+        self.first_name = user.get('first_name', 'Иван')
+        self.last_name = user.get('last_name', 'Иванов')
+        self.sex = user.get('sex', 0)
+
+        info = user_db.get_user_info(self.id, self.src)
+
+        self.subs = info.get('subs', {})
+        self.status = info.get('status', 'menu')
+
+    def update_db(self):
+        changes = {
+            'subs': self.subs,
+            'status': self.status
+        }
+        user_db.update_user(changes, self.id, self.src)
+
+
+class Buttons:
+    def __init__(self, user):
+        pass
+
+
 def update_schedule():
     lesson_db.add_schedules()
     return

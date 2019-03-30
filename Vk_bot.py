@@ -6,11 +6,10 @@ import threading
 from collections import deque
 from time import sleep
 from vk_api.longpoll import VkLongPoll, VkEventType
-from random import randint
 import config
 import user_req
 import logger
-from functions import COLORS, SUBS
+from functions import COLORS
 
 
 token = config.secret["vk"]["token"]
@@ -20,33 +19,38 @@ fail = "Простите, в нашем коде кто-то набагал. М�
 queue = deque()
 
 
-def write_msg(u_id, mess):
+def write(u_id, mess, keyboard=None, attach=None):
     try:
-        vk.method('messages.send', {'user_id': u_id, 'message': mess, 'v': "5.53"})
-    except Exception:
-        vk.method('messages.send', {'user_id': u_id, 'message': fail, 'v': "5.53"})
+        params = {
+            'user_id': u_id,
+            'message': mess,
+            'v': "5.53"
+        }
+
+        if keyboard:
+            params['keyboard'] = keyboard
+
+        if attach:
+            params['attachment'] = attach
+
+        vk.method('messages.send', params)
+
+    except Exception as ex:
+        params = {'user_id': u_id, 'message': fail, 'v': "5.53"}
+        vk.method('messages.send', params)
+        logger.log("vk", f"'write' error {ex}")
 
 
 def alerts(a, mess, wait=1):
     for u_id in a:
-        write_msg(u_id, mess)
+        write(u_id, mess)
         sleep(wait)
-
-
-def write_key(u_id, keyboard, mess="kek"):
-    try:
-        vk.method('messages.send', {
-            'user_id': u_id,
-            'message': mess,
-            'keyboard': json.dumps(keyboard, ensure_ascii=False),
-            'v': "5.53"})
-    except Exception:
-        vk.method('messages.send', {'user_id': u_id, 'message': fail, 'v': "5.53"})
 
 
 def _get_users_info_from_vk_ids(user_ids):
     string = ", ".join([str(i) for i in user_ids])
-    return vk.method('users.get', {'user_ids' : string})
+    answer = vk.method('users.get', {'user_ids': f"{string}", 'fields': 'sex'})
+    return answer
 
 
 def make_key(a):
@@ -135,7 +139,7 @@ def gen_but(obj):
 def keyboard_with_colors(arr):
     if type(arr) != list:
         logger.log("vk", "get not array.")
-        return {}
+        return None
 
     new_ans = []
     for line in arr:
@@ -155,7 +159,7 @@ def go():
             for event in longpoll.listen():
                 if event.type == VkEventType.MESSAGE_NEW and event.to_me:
                     queue.append({'user_id': event.user_id, 'message': event.text, 'message_id': event.message_id, 'from_user': event.from_user})
-                sleep(0.1)
+                sleep(0.05)
         except Exception:
             logger.log("vkbot", "Error while listening")
             sleep(1)
@@ -195,15 +199,16 @@ if __name__ == '__main__':
             try:
                 ans = user_req.parse_message_from_user("vk", r['user_id'], r['message'], name)
             except Exception as err:
-                write_msg(r['user_id'], "Возникла какая-то ошибка. Возможно мы это исправим.")
+                write(r['user_id'], "Возникла какая-то ошибка. Возможно мы это исправим.")
                 logger.log("vkbot", "error: " + str(err))
                 continue
             logger.log("vkbot", "Received answer " + str(ans))
-            if not ans.get('buttons'):
-                write_msg(r['user_id'], ans['text'])
-            else:
-                new_key = keyboard_with_colors(ans['buttons'])
-                write_key(r['user_id'], new_key, ans['text'])
+
+            buttons = keyboard_with_colors(ans.get('buttons', None))
+            photo = ans.get('attach', None)
+
+            write(r['user_id'], ans['text'], buttons, buttons)
+
             logger.log("vkbot", "answer sent: " + ans['text'])
         else:
-            sleep(1)
+            sleep(0.2)
