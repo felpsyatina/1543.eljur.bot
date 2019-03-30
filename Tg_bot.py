@@ -89,6 +89,7 @@ def new_msgs(last_msg_id, raw_msgs):
                 msg = msg_base[i]['message']['text']
             else:
                 msg = ''
+            msg_id = msg_base[i]['message']['message_id']
             if 'last_name' in msg_base[i]['message']['from']:
                 user_name = {'first_name': msg_base[i]['message']['from']['first_name'],
                              'last_name': msg_base[i]['message']['from']['last_name']}
