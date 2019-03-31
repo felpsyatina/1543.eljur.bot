@@ -106,7 +106,7 @@ def new_msgs(last_msg_id, raw_msgs):
 
 def answer_msg(user_id, msg, msg_id, user_name):
     try:
-        result = user_req.parse_message_from_user("tg", user_id, msg, user_name)
+        result = user_req.parse_message_from_user({'src': "tg", 'id': user_id, 'text': msg, 'sex': '0', 'first_name': user_name['first_name'], 'last_name': user_name['last_name']})
         logger.log("tg", f"got message from user_req: {str(result['text'])} {str(result['buttons'])}")
 
     except Exception as err:
@@ -139,4 +139,5 @@ def tg_bot_main(last_msg_id, raw_msgs):
 
 if __name__ == '__main__':
     tg_bot_main(last_msg_id, raw_msgs)
+
 
