@@ -49,7 +49,11 @@ class User:
             self.status = "menu"
 
         my_function = self.parse_functions[self.status]
-        return my_function()
+        ans = my_function()
+
+        if ans is not None:
+            return ans
+        return self.parse_menu()
 
     def parse_menu(self):
         return parse_menu(self.src, self.id, self.text)
@@ -59,7 +63,6 @@ class User:
 
     def parse_opt(self):
         return parse_opt(self.src, self.id, self.text)
-
 
 
 def update_schedule():

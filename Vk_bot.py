@@ -28,7 +28,7 @@ def write(u_id, mess, keyboard=None, attach=None):
         }
 
         if keyboard:
-            params['keyboard'] = keyboard
+            params['keyboard'] = json.dumps(keyboard, ensure_ascii=False)
 
         if attach:
             params['attachment'] = attach
@@ -220,9 +220,9 @@ if __name__ == '__main__':
             logger.log("vkbot", "Received answer " + str(ans))
 
             mes_buttons = keyboard_with_colors(ans.get('buttons', None))
+
             mes_attach = ans.get('attach', None)
-            print(ans)
-            write(r['user_id'], ans['text'], make_key(mes_buttons), mes_attach)
+            write(r['user_id'], ans['text'], mes_buttons, mes_attach)
 
             logger.log("vkbot", "answer sent: " + ans['text'])
         else:
