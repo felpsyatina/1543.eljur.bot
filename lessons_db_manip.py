@@ -199,7 +199,7 @@ class LessonDbReq:
             self.add_schedule(c)
         logger.log("lessons_db_manip", f"all classes schedules added.")
 
-    def get_schedule(self, class_name, date=None):
+    def get_schedule(self, class_name, date):
         logger.log("lessons_db_manip", f"getting schedule class: {class_name}, date: {date}")
 
         if date is None:

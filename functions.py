@@ -13,6 +13,9 @@ SUBS = [["Вернуться в меню"], ['5А', '5Б', '5В', '5Г'], ['6А'
 COLORS = ["default", "primary", "positive", "negative"]
 
 
+ROMANS = ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX"]
+
+
 preset = {"devkey": config.secret['eljurapi']['devkey'], "vendor": "1543",
           "password": config.secret['eljurapi']['password'],
           "login": config.secret['eljurapi']['login']}

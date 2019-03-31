@@ -34,13 +34,14 @@ class UserDbReq:
                        primary key autoincrement,
                     first_name text not null,
                     last_name text not null,
-                    class text,
                     confirmed int not null, 
                     status text not null,
                     request text,
                     vk_id int unique,
                     tg_id int unique, 
-                    subs text
+                    subs text,
+                    schedule_params text,
+                    homework_params text
                 );
             """
 
@@ -59,8 +60,8 @@ class UserDbReq:
 
         with self.run_cursor() as cursor:
             query = f"""
-                INSERT INTO users (first_name, last_name, class, confirmed, status, vk_id, tg_id, subs) 
-                VALUES('{first_name}', '{last_name}', null, 0, '{first_status}', {vk_id}, {tg_id}, '{jd({})}')
+                INSERT INTO users (first_name, last_name, confirmed, status, vk_id, tg_id, subs) 
+                VALUES('{first_name}', '{last_name}', 0, '{first_status}', {vk_id}, {tg_id}, '{jd({})}')
             """
             cursor.execute(query)
             logger.log("user_db_manip", f"user '{first_name} {last_name}' created!")

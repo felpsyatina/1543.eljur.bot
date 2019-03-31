@@ -3,13 +3,62 @@ from lessons_db_manip import LessonDbReq
 from users_db_parser import UserDbReq
 import answers_dict as ad
 from datetime import datetime
-from functions import SUBS, classes, cur_date, student, del_arr_elem, get_word_by_date, make_lined
+from functions import SUBS, classes, cur_date, student, del_arr_elem, get_word_by_date, make_lined, ROMANS
 import config
+from json import loads as jl, dumps as jd
 
 lesson_db = LessonDbReq()
 user_db = UserDbReq()
 
 max_subs = config.params['max_subs']
+
+
+class ScheduleInfo:
+    def __init__(self, schedule_params):
+        self.list_of_adds = [0, 1, 2]
+        self.add_teacher = 0
+        self.add_room = 0
+
+        if schedule_params is not None:
+            params = jl(schedule_params)
+            self.list_of_adds = params['list_of_adds']
+            self.add_teacher = params['add_teacher']
+            self.add_room = params['add_room']
+
+    def list_of_dates(self):
+        return [int(cur_date(a)) for a in self.list_of_adds]
+
+    def convert(self):
+        ans = {
+            "list_of_adds": self.list_of_adds,
+            "add_teacher": self.add_teacher,
+            "add_room": self.add_room
+        }
+        return jd(ans)
+
+
+class HomeworkInfo:
+    def __init__(self, schedule_params):
+        self.list_of_adds = [0, 1, 2]
+        self.add_teacher = 0
+        self.add_room = 0
+
+        if schedule_params is not None:
+            params = jl(schedule_params)
+            self.list_of_adds = params['list_of_adds']
+            self.add_teacher = params['add_teacher']
+            self.add_room = params['add_room']
+
+    def list_of_dates(self):
+        return [cur_date(a) for a in self.list_of_adds]
+
+    def convert(self):
+        ans = {
+            "list_of_adds": self.list_of_adds,
+            "add_teacher": self.add_teacher,
+            "add_room": self.add_room
+        }
+        return jd(ans)
 
 
 class User:
@@ -24,12 +73,16 @@ class User:
         self.sex = user.get('sex', 0)
 
         info = user_db.get_user_info(self.id, self.src)
-        if info is False:
+        if info is None:
             user_db.add_user(self.first, self.last, self.id, self.src)
+            info = user_db.get_user_info(self.id, self.src)
             self.is_new = True
 
         self.subs = info.get('subs', {})
         self.status = info.get('status', 'menu')
+
+        self.schedule_params = ScheduleInfo(info.get('schedule_params', None))
+        self.homework_params = HomeworkInfo(info.get('homework_params', None))
 
         self.parse_functions = {
             "menu": self.parse_menu,
@@ -37,10 +90,20 @@ class User:
             "opt": self.parse_opt
         }
 
+        self.fast_functions = {
+            "расписание": self.schedule,
+            "дз": self.homework,
+            "подписки": self.to_subs,
+            "настройка подписок": self.to_opt
+        }
+        logger.log("user_req", f"user {self.first} {self.last} created")
+
     def update_db(self):
         changes = {
             'subs': self.subs,
-            'status': self.status
+            'status': self.status,
+            'schedule_params': self.schedule_params.convert(),
+            'homework_params': self.homework_params.convert()
         }
         user_db.update_user(changes, self.id, self.src)
 
@@ -56,13 +119,252 @@ class User:
         return self.parse_menu()
 
     def parse_menu(self):
-        return parse_menu(self.src, self.id, self.text)
+        if self.text in self.fast_functions:
+            function = self.fast_functions[self.text]
+            return function()
+
+        try:
+            for key, value in ad.quest.items():
+                if key in self.text:
+                    needed_function = key_words_to_function[value]
+                    answer_from_function = needed_function(self.src, self.id, self.text)
+
+                    return generate_return(answer_from_function)
+            logger.log("user_req", f"Запрос не найден. Запрос: {self.text}")
+            return {"text": "Запроса не найдено :( ", "buttons": None}
+
+        except Exception as err:
+            logger.log("user_req", f"Processing error: {err}\n Запрос: {self.text}")
+            return {"text": "Видно не судьба :( ", "buttons": None}
 
     def parse_subs(self):
-        return parse_subs(self.src, self.id, self.text)
+        if self.text == "вернуться в меню":
+            return self.to_menu()
+
+        if self.text.upper() in classes:
+            return self.change_sub()
+
+        return None
 
     def parse_opt(self):
         return parse_opt(self.src, self.id, self.text)
+
+    def lessons_parse(self, lessons, _homework):
+        if len(lessons) == 0:
+            return ""
+
+        _room = self.schedule_params.add_room
+        _teacher = self.schedule_params.add_room
+        _any = _homework or _teacher or _room
+
+        num = lessons[0]['number']
+
+        if len(lessons) == 1:
+            lesson = lessons[0]
+            name = lesson['name']
+
+            ans = f"{num}. {name}\n"
+            if _room and lesson['room'] is not None:
+                ans += f"• Кабинет: {lesson['room']}\n"
+
+            if _teacher and lesson['teacher'] is not None:
+                ans += f"• Учитель: {lesson['teacher']}\n"
+
+            if _homework and lesson['homework'] is not None:
+                ans += f"• Домашнее задание: \n{lesson['homework']}\n"
+
+            if lesson['comment'] is not None:
+                ans += f"Комментарий: ({lesson['comment']})\n"
+
+            if _any:
+                ans += "\n"
+
+            return ans
+
+        if not _any:
+            return f"{num}. {'/'.join([lesson['name'] for lesson in lessons])}\n"
+
+        ans = f"{num}. "
+        for it in range(len(lessons)):
+            lesson = lessons[it]
+            name = lesson['name']
+
+            ans += f"{it + 1}) {name}\n"
+
+            if _room and lesson['room'] is not None:
+                ans += f"• Кабинет: {lesson['room']}\n"
+
+            if _teacher and lesson['teacher'] is not None:
+                ans += f"• Учитель: {lesson['teacher']}\n"
+
+            if _homework and lesson['homework'] is not None:
+                ans += f"• Домашнее задание: \n{lesson['homework']}\n"
+
+            if lesson['comment'] is not None:
+                ans += f"Комментарий: ({lesson['comment']})\n"
+
+        return ans
+
+    def lessons_good(self, lessons, c):
+        ans = []
+        for lesson in lessons:
+            if lesson['grp'] is None:
+                ans.append(lesson)
+                continue
+
+            if lesson['grp'] in self.subs.get(c, {}):
+                ans.append(lesson)
+
+        if ans:
+            return ans
+        return lessons
+
+    def day_schedule(self, c, d, _homework):
+        schedule = lesson_db.get_schedule(c, d)
+        answer_arr = []
+        print(schedule)
+
+        for num, lessons in schedule.items():
+            user_lessons = self.lessons_good(lessons, c)
+            str_lessons = self.lessons_parse(user_lessons, _homework)
+            print(str_lessons)
+
+            answer_arr.append(str_lessons)
+
+        return "".join(answer_arr)
+
+    def schedule(self):
+        logger.log("user_req", f"getting schedule for {self.first} {self.last}")
+
+        if not self.subs:
+            return {
+                "text": "Ты не подписан ни на один из классов. Чтобы подписаться, нажми на \"подписки\"."
+            }
+
+        list_of_dates = self.schedule_params.list_of_dates()
+        answer_arr = []
+
+        for c in self.subs.keys():
+            answer_arr.append(f"Класс {c}:\n")
+            it = 1
+            for d in list_of_dates:
+                answer_arr.append(f"{ROMANS[it]}. {get_word_by_date(d)}:")
+                day_schedule = self.day_schedule(c, d, 0)
+                if day_schedule:
+                    answer_arr.append(day_schedule)
+                else:
+                    answer_arr.append("Уроков (в моей базе) нет.\n")
+                it += 1
+
+        return generate_return("\n".join(answer_arr))
+
+    def homework(self):
+        logger.log("user_req", f"getting schedule for {self.first} {self.last}")
+
+        if not self.subs:
+            return {
+                "text": "Ты не подписан ни на один из классов. Чтобы подписаться, нажми на \"подписки\"."
+            }
+
+        list_of_dates = self.schedule_params.list_of_dates()
+        answer_arr = []
+
+        for c in self.subs.keys():
+            answer_arr.append(f"Класс {c}:\n")
+            it = 1
+            for d in list_of_dates:
+                answer_arr.append(f"{ROMANS[it]}. {get_word_by_date(d)}:")
+                day_schedule = self.day_schedule(c, d, 1)
+                if day_schedule:
+                    answer_arr.append(day_schedule)
+                else:
+                    answer_arr.append("Уроков (в моей базе) нет.\n")
+                it += 1
+
+        return generate_return("\n".join(answer_arr))
+
+    def gen_subs_but(self):
+        buttons = []
+
+        for row in SUBS:
+            if len(row) == 1:
+                buttons.append([[row[0], 1]])
+                continue
+
+            new_row = []
+            for c in row:
+                if c in self.subs:
+                    new_row.append([c, 2])
+                else:
+                    new_row.append([c, 0])
+
+            buttons.append(new_row)
+
+        return buttons
+
+    def gen_opt_but(self):
+        buttons = [[["Вернуться в меню", 1]]]
+        for c, lessons in self.subs.items():
+            class_id = lesson_db.get_class_id(c)
+            class_groups = lesson_db.get_class_groups(class_id)
+
+            for lesson, groups in class_groups.items():
+                line = []
+                for g in groups:
+                    if g in lessons.get(lesson, []):
+                        line.append([f"{c} {lesson} {g}", 2])
+                    else:
+                        line.append([f"{c} {lesson} {g}", 0])
+                buttons.append(line)
+
+        return buttons
+
+    def to_subs(self):
+        self.status = "subs"
+
+        user_classes = self.subs.keys()
+        if user_classes:
+            return {"text": f"Классы, на которые ты подписан: {' '.join(user_classes)}.",
+                    "buttons": self.gen_subs_but()}
+
+        return {"text": f"У тебя пока нет подписок на классы.",
+                "buttons": self.gen_subs_but()}
+
+    def to_opt(self):
+        user_subs = list(self.subs.keys())
+
+        if len(user_subs) >= 2:
+            return {"text": f"Пока не поддерживается управление подписками сразу двух классов.",
+                    "buttons": menu_buttons}
+        self.status = "opt"
+
+        return {"text": f"Ты подписан на {user_subs[0]}.",
+                "buttons": self.gen_opt_but()}
+
+    def to_menu(self):
+        self.status = "menu"
+
+        return {"text": f"Ты в главном меню.",
+                "buttons": menu_buttons}
+
+    def change_sub(self):
+        c = self.text.upper()
+
+        if c in self.subs:
+            del self.subs[c]
+
+            return {"text": f"Ты отписался от \"{c}\".",
+                    "buttons": self.gen_subs_but()}
+
+        else:
+            if len(self.subs) >= max_subs:
+                return {"text": f"Количество подписок не может превышать {max_subs}.",
+                        "buttons": self.gen_subs_but()}
+
+            self.subs[c] = {}
+
+            return {"text": f"Ты подписался на обновления \"{c}\".",
+                    "buttons": self.gen_subs_but()}
 
 
 def update_schedule():
@@ -324,7 +626,7 @@ def fast_hometask(src, user_id, text):
 
     for c, subs in user_subs.items():
         ans_msg += f"\nКласс {c}:\n"
-        ans_msg += get_schedule_from_subs(c, subs, list_of_dates, True, True, True)
+        ans_msg += get_schedule_from_subs(c, subs, list_of_dates, a_homework=True)
 
     return {"text": ans_msg,
             "buttons": menu_buttons}
@@ -486,7 +788,6 @@ def send_sausage(src, user_id, text):
 
 
 def parse_menu(src, user_id, text):
-    print(text)
     if text in fast_query.keys():
         function = fast_query[text]
         return function(src, user_id, text)
@@ -530,7 +831,10 @@ def process_message_from_user(user_dict):
     logger.log("user_req", "process request")
     user = User(user_dict)
 
-    return user.parse_message()
+    answer = user.parse_message()
+    user.update_db()
+
+    return answer
 
 
 def parse_message_from_user(ud):
