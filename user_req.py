@@ -16,15 +16,26 @@ class User:
     def __init__(self, user):
         self.id = user['id']
         self.src = user.get('src', 'vk')
+        self.text = user['text'].rstrip().lower()
+        self.is_new = False
 
-        self.first_name = user.get('first_name', 'Иван')
-        self.last_name = user.get('last_name', 'Иванов')
+        self.first = user.get('first_name', 'Иван')
+        self.last = user.get('last_name', 'Иванов')
         self.sex = user.get('sex', 0)
 
         info = user_db.get_user_info(self.id, self.src)
+        if info is False:
+            user_db.add_user(self.first, self.last, self.id, self.src)
+            self.is_new = True
 
         self.subs = info.get('subs', {})
         self.status = info.get('status', 'menu')
+
+        self.parse_functions = {
+            "menu": self.parse_menu,
+            "subs": self.parse_subs,
+            "opt": self.parse_opt
+        }
 
     def update_db(self):
         changes = {
@@ -33,10 +44,22 @@ class User:
         }
         user_db.update_user(changes, self.id, self.src)
 
+    def parse_message(self):
+        if self.status not in self.parse_functions:
+            self.status = "menu"
 
-class Buttons:
-    def __init__(self, user):
-        pass
+        my_function = self.parse_functions[self.status]
+        return my_function()
+
+    def parse_menu(self):
+        return parse_menu(self.src, self.id, self.text)
+
+    def parse_subs(self):
+        return parse_subs(self.src, self.id, self.text)
+
+    def parse_opt(self):
+        return parse_opt(self.src, self.id, self.text)
+
 
 
 def update_schedule():
@@ -198,7 +221,9 @@ def get_day_and_class_name_from_text(text):
 
 
 def generate_return(text):
-    return {"text": text, "buttons": None}
+    if type(text) == str:
+        return {"text": text, "buttons": None}
+    return text
 
 
 def send_acc_information(src, user_id, text):
@@ -452,7 +477,13 @@ def to_opt(src, user_id, text):
             "buttons": gen_opt_but(src, user_id, text)}
 
 
+def send_sausage(src, user_id, text):
+    return {"text": f"Вот твои сосиски!",
+            "attach": "photo-177204484_456239027"}
+
+
 def parse_menu(src, user_id, text):
+    print(text)
     if text in fast_query.keys():
         function = fast_query[text]
         return function(src, user_id, text)
@@ -492,37 +523,21 @@ def parse_opt(src, user_id, text):
     return None
 
 
-def process_message_from_user(src, user_id, text, name):
+def process_message_from_user(user_dict):
     logger.log("user_req", "process request")
-    text = text.strip().lower()
+    user = User(user_dict)
 
-    if user_db.get_user_info(user_id, src) is None:
-        user_db.add_user(name['first_name'], name['last_name'], user_id, src)
-
-    if user_db.get_user_info(user_id, src)['subs'] is None:
-        user_db.update_user({'subs': ""}, user_id, src)
-
-    logger.log("user_req", "requesting info")
-    info = user_db.get_user_info(user_id, src)
-
-    if info['status'] not in parse_functions.keys():
-        user_db.update_user({'status': 'menu'}, user_id, src)
-        info = user_db.get_user_info(user_id, src)
-
-    parse_func = parse_functions[info['status']]
-
-    answer = parse_func(src, user_id, text)
-    if answer is not None:
-        return answer
-
-    return parse_menu(src, user_id, text)
+    return user.parse_message()
 
 
-def parse_message_from_user(src, user_id, text, name):
-    logger.log("request_save", "Request\n" + src + " " + str(user_id) + " " + str(name) + "\n" + text)
-    logger.log("textofrequest_save", text)
-    res = process_message_from_user(src, user_id, text, name)
-    logger.log("request_save", "Answer for " + src + " " + str(user_id) + "\n" + res.get("text", ""))
+def parse_message_from_user(ud):
+    logger.log(
+        "request_save",
+        f"Request\n {ud['src']} {ud['id']} {ud['first_name']} {ud['last_name']}\n{ud['text']}"
+    )
+    logger.log("textofrequest_save", ud['text'])
+    res = process_message_from_user(ud)
+    logger.log("request_save", f"Answer for {ud['src']} {ud['id']}\n {res.get('text', '')}")
     return res
 
 
@@ -533,7 +548,8 @@ key_words_to_function = {
     "comment": comment_lesson,
     # "support": support_message,
     "commands": send_commands,
-    "hometask": get_hometask
+    "hometask": get_hometask,
+    "sausage": send_sausage
 }
 
 parse_functions = {
@@ -550,6 +566,7 @@ fast_query = {
 }
 
 menu_buttons = [[["Расписание", 1]], [["ДЗ", 1]], [["Подписки"]], [["Настройка подписок"]]]
+
 
 if __name__ == '__main__':
     pass

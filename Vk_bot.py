@@ -158,10 +158,15 @@ def go():
         try:
             for event in longpoll.listen():
                 if event.type == VkEventType.MESSAGE_NEW and event.to_me:
-                    queue.append({'user_id': event.user_id, 'message': event.text, 'message_id': event.message_id, 'from_user': event.from_user})
+                    queue.append({
+                        'user_id': event.user_id,
+                        'message': event.text,
+                        'message_id': event.message_id,
+                        'from_user': event.from_user
+                    })
                 sleep(0.05)
-        except Exception:
-            logger.log("vkbot", "Error while listening")
+        except Exception as ex:
+            logger.log("vkbot", f"Error while listening: {ex}")
             sleep(1)
 
 
@@ -196,18 +201,28 @@ if __name__ == '__main__':
             r = get_next()
             logger.log("vkbot", "new message from " + str(r["user_id"]) + " message: " + str(r["message"]))
             name = _get_users_info_from_vk_ids([r['user_id']])[0]
+
+            u_dict = {
+                "first_name": name['first_name'],
+                "last_name": name['last_name'],
+                "sex": name['sex'],
+                "src": "vk",
+                "id": r['user_id'],
+                "text": r['message'],
+            }
+
             try:
-                ans = user_req.parse_message_from_user("vk", r['user_id'], r['message'], name)
+                ans = user_req.parse_message_from_user(u_dict)
             except Exception as err:
                 write(r['user_id'], "Возникла какая-то ошибка. Возможно мы это исправим.")
                 logger.log("vkbot", "error: " + str(err))
                 continue
             logger.log("vkbot", "Received answer " + str(ans))
 
-            buttons = keyboard_with_colors(ans.get('buttons', None))
-            photo = ans.get('attach', None)
-
-            write(r['user_id'], ans['text'], buttons, buttons)
+            mes_buttons = keyboard_with_colors(ans.get('buttons', None))
+            mes_attach = ans.get('attach', None)
+            print(ans)
+            write(r['user_id'], ans['text'], make_key(mes_buttons), mes_attach)
 
             logger.log("vkbot", "answer sent: " + ans['text'])
         else:

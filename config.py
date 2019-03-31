@@ -6,6 +6,7 @@ cur_path = os.path.dirname(os.path.abspath(__file__))
 
 secrets_config_file = cur_path + "/configs/config_secrets.json"
 global_config_file = cur_path + "/configs/config.json"
+messages_config_file = cur_path + "/configs/config_messages.json"
 
 
 def load_config(filename):
@@ -18,3 +19,4 @@ def load_config(filename):
 
 params = load_config(global_config_file)
 secret = load_config(cur_path + "/" + params["config_secret_path"])
+mes = load_config(cur_path + "/" + params["config_secret_path"])

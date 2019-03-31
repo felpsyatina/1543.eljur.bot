@@ -54,7 +54,8 @@ quest = {'что': 'commands',
          'дз': 'hometask',
          'домашнее': 'hometask',
          'задание': 'hometask',
-         'домашка': 'hometask'
+         'домашка': 'hometask',
+         'сосиски': 'sausage'
          }
 
 
