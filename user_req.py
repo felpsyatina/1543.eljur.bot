@@ -186,24 +186,25 @@ class User:
         if len(lessons) == 0:
             return ""
 
-        _room = self.schedule_params.add_room
-        _teacher = self.schedule_params.add_room
-        _any = _homework or _teacher or _room
-
         num = lessons[0]['number']
 
         if len(lessons) == 1:
             lesson = lessons[0]
             name = lesson['name']
 
+            _room = self.schedule_params.add_room and lesson['room'] is not None
+            _teacher = self.schedule_params.add_teacher and lesson['teacher'] is not None
+            _homework = _homework and lesson['homework'] is not None
+            _any = _homework or _teacher or _room
+
             ans = f"{num}. {name}\n"
-            if _room and lesson['room'] is not None:
+            if _room:
                 ans += f"• Кабинет: {lesson['room']}\n"
 
-            if _teacher and lesson['teacher'] is not None:
+            if _teacher:
                 ans += f"• Учитель: {lesson['teacher']}\n"
 
-            if _homework and lesson['homework'] is not None:
+            if _homework:
                 ans += f"• Домашнее задание: \n{lesson['homework']}\n"
 
             if lesson['comment'] is not None:
@@ -214,13 +215,18 @@ class User:
 
             return ans
 
-        if not _any:
+        if not (_homework or self.schedule_params.add_teacher or self.schedule_params.add_room):
             return f"{num}. {'/'.join([lesson['name'] for lesson in lessons])}\n"
 
         ans = f"{num}. "
         for it in range(len(lessons)):
             lesson = lessons[it]
             name = lesson['name']
+
+            _room = self.schedule_params.add_room and lesson['room'] is not None
+            _teacher = self.schedule_params.add_teacher and lesson['teacher'] is not None
+            _homework = _homework and lesson['homework'] is not None
+            _any = _homework or _teacher or _room
 
             ans += f"{it + 1}) {name}\n"
 
