@@ -127,6 +127,10 @@ class User:
             function = self.fast_functions[self.text]
             return function()
 
+        ans_buttons = None
+        if self.is_new:
+            ans_buttons = menu_buttons
+
         try:
             for key, value in ad.quest.items():
                 if key in self.text:
@@ -135,11 +139,11 @@ class User:
 
                     return generate_return(answer_from_function)
             logger.log("user_req", f"Запрос не найден. Запрос: {self.text}")
-            return {"text": "Запроса не найдено :( ", "buttons": None}
+            return {"text": "Запроса не найдено :( ", "buttons": ans_buttons}
 
         except Exception as err:
             logger.log("user_req", f"Processing error: {err}\n Запрос: {self.text}")
-            return {"text": "Видно не судьба :( ", "buttons": None}
+            return {"text": "Видно не судьба :( ", "buttons": ans_buttons}
 
     def parse_subs(self):
         print(1543)
