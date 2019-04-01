@@ -3,7 +3,6 @@ import datetime
 import os
 import config
 import logger
-import time
 
 
 def new_db_copy():
@@ -22,13 +21,10 @@ def delete_db():
 
 
 if __name__ == '__main__':
-    while True:
-        time.sleep(600)
-        try:
-            cur_time = str(datetime.datetime.now())[11:13]
-            if cur_time == "01":
-                new_db_copy()
-                delete_db()
-                time.sleep(3600)
-        except Exception as ex:
-            logger.log("db_copier", f"error {ex}")
+    try:
+        cur_time = str(datetime.datetime.now())[11:13]
+        if cur_time == "01":
+            new_db_copy()
+            delete_db()
+    except Exception as ex:
+        logger.log("db_copier", f"error {ex}")
