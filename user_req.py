@@ -370,16 +370,16 @@ class User:
     def gen_sub_opt_but(self):
         buttons = [
             [["Вернуться в меню", 1]],
-            [["Учителя", 2 + (1 != self.schedule_params.add_teacher)]],
-            [["Кабинеты", 2 + (1 != self.schedule_params.add_room)]]
+            [["Учителя", color(self.schedule_params.add_teacher)]],
+            [["Кабинеты", color(self.schedule_params.add_room)]]
         ]
         row = []
         it = 1
         for word, add in SUB_OPT.items():
             if add in self.schedule_params.list_of_adds:
-                row.append([word, 2])
+                row.append([word, color(True)])
             else:
-                row.append([word, 3])
+                row.append([word, color(False)])
 
             it += 1
             if it % 2:
@@ -484,12 +484,20 @@ class User:
 
             else:
                 self.schedule_params.list_of_adds.append(add)
+                self.schedule_params.list_of_adds.sort()
                 return {
                     "text": f"Теперь тебе видно расписание на {self.text}.",
                     "buttons": self.gen_sub_opt_but()
                 }
 
         return None
+
+
+def color(bl=True):
+    if bl:
+        return 2
+    else:
+        return 0
 
 
 def update_schedule():
