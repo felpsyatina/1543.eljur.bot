@@ -16,9 +16,21 @@ COLORS = ["default", "primary", "positive", "negative"]
 ROMANS = ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX"]
 
 
+SUB_OPT = {
+    "Позавчера": -2,
+    "Вчера": -1,
+    "Сегодня": 0,
+    "Завтра": 1,
+    "Послезавтра": 2,
+    "Через два дня": 3,
+    "Через три дня": 4
+}
+
+
 preset = {"devkey": config.secret['eljurapi']['devkey'], "vendor": "1543",
           "password": config.secret['eljurapi']['password'],
           "login": config.secret['eljurapi']['login']}
+
 student = eljur_api.Student(**preset)
 
 

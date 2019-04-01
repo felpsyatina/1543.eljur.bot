@@ -3,7 +3,7 @@ from lessons_db_manip import LessonDbReq
 from users_db_parser import UserDbReq
 import answers_dict as ad
 from datetime import datetime
-from functions import SUBS, classes, cur_date, student, del_arr_elem, get_word_by_date, make_lined, ROMANS
+from functions import SUBS, classes, cur_date, student, del_arr_elem, get_word_by_date, make_lined, ROMANS, SUB_OPT
 import config
 from json import loads as jl, dumps as jd
 
@@ -87,16 +87,19 @@ class User:
         self.parse_functions = {
             "menu": self.parse_menu,
             "subs": self.parse_subs,
-            "opt": self.parse_opt
+            "opt": self.parse_opt,
+            "sub_opt": self.parse_sub_opt
         }
 
         self.fast_functions = {
             "расписание": self.schedule,
             "дз": self.homework,
             "подписки": self.to_subs,
-            "настройка подписок": self.to_opt
+            "настройка подписок": self.to_opt,
+            "настройка расписания": self.to_sub_opt
         }
-        logger.log("user_req", f"user {self.first} {self.last} created")
+        logger.log("user_req", f"User: user {self.first} {self.last} created")
+        print(self.status)
 
     def update_db(self):
         changes = {
@@ -105,6 +108,7 @@ class User:
             'schedule_params': self.schedule_params.convert(),
             'homework_params': self.homework_params.convert()
         }
+        print(changes)
         user_db.update_user(changes, self.id, self.src)
 
     def parse_message(self):
@@ -138,6 +142,7 @@ class User:
             return {"text": "Видно не судьба :( ", "buttons": None}
 
     def parse_subs(self):
+        print(1543)
         if self.text == "вернуться в меню":
             return self.to_menu()
 
@@ -154,6 +159,12 @@ class User:
             return self.change_grp()
 
         return None
+
+    def parse_sub_opt(self):
+        if self.text == "вернуться в меню":
+            return self.to_menu()
+
+        return self.change_sch_opt()
 
     def change_grp(self):
         user_class, user_lesson, user_group = self.text.split()
@@ -356,6 +367,30 @@ class User:
 
         return buttons
 
+    def gen_sub_opt_but(self):
+        buttons = [
+            [["Вернуться в меню", 1]],
+            [["Учителя", 2 + (1 != self.schedule_params.add_teacher)]],
+            [["Кабинеты", 2 + (1 != self.schedule_params.add_room)]]
+        ]
+        row = []
+        it = 1
+        for word, add in SUB_OPT.items():
+            if add in self.schedule_params.list_of_adds:
+                row.append([word, 2])
+            else:
+                row.append([word, 3])
+
+            it += 1
+            if it % 2:
+                buttons.append(row)
+                row = []
+
+        if row:
+            buttons.append(row)
+
+        return buttons
+
     def to_subs(self):
         self.status = "subs"
 
@@ -384,6 +419,12 @@ class User:
         return {"text": f"Ты в главном меню.",
                 "buttons": menu_buttons}
 
+    def to_sub_opt(self):
+        self.status = "sub_opt"
+
+        return {"text": f"Здесь ты можешь поменять отображение расписания.",
+                "buttons": self.gen_sub_opt_but()}
+
     def change_sub(self):
         c = self.text.upper()
 
@@ -402,6 +443,53 @@ class User:
 
             return {"text": f"Ты подписался на обновления \"{c}\".",
                     "buttons": self.gen_subs_but()}
+
+    def change_sch_opt(self):
+        if self.text == "учителя":
+            if self.schedule_params.add_teacher == 0:
+                self.schedule_params.add_teacher = 1
+                return {
+                    "text": f"Теперь тебе видны учителя.",
+                    "buttons": self.gen_sub_opt_but()
+                }
+            else:
+                self.schedule_params.add_teacher = 0
+                return {
+                    "text": f"Теперь тебе не видны учителя.",
+                    "buttons": self.gen_sub_opt_but()
+                }
+
+        if self.text == "кабинеты":
+            if self.schedule_params.add_room == 0:
+                self.schedule_params.add_room = 1
+                return {
+                    "text": f"Теперь тебе видны учителя.",
+                    "buttons": self.gen_sub_opt_but()
+                }
+            else:
+                self.schedule_params.add_room = 0
+                return {
+                    "text": f"Теперь тебе не видны учителя.",
+                    "buttons": self.gen_sub_opt_but()
+                }
+
+        if self.text.capitalize() in SUB_OPT:
+            add = SUB_OPT[self.text.capitalize()]
+            if add in self.schedule_params.list_of_adds:
+                self.schedule_params.list_of_adds = del_arr_elem(self.schedule_params.list_of_adds, add)
+                return {
+                    "text": f"Теперь тебе не видно расписание на {self.text}.",
+                    "buttons": self.gen_sub_opt_but()
+                }
+
+            else:
+                self.schedule_params.list_of_adds.append(add)
+                return {
+                    "text": f"Теперь тебе видно расписание на {self.text}.",
+                    "buttons": self.gen_sub_opt_but()
+                }
+
+        return None
 
 
 def update_schedule():
@@ -909,7 +997,7 @@ fast_query = {
     "настройка подписок": to_opt
 }
 
-menu_buttons = [[["Расписание", 1]], [["ДЗ", 1]], [["Подписки"]], [["Настройка подписок"]]]
+menu_buttons = [[["Расписание", 1]], [["ДЗ", 1]], [["Подписки"]], [["Настройка подписок"]], [["Настройка расписания"]]]
 
 
 if __name__ == '__main__':
