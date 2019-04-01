@@ -7,6 +7,7 @@ cur_path = os.path.dirname(os.path.abspath(__file__))
 secrets_config_file = cur_path + "/configs/config_secrets.json"
 global_config_file = cur_path + "/configs/config.json"
 messages_config_file = cur_path + "/configs/config_messages.json"
+db_copies_path = cur_path + "/db_copies"
 
 
 def load_config(filename):
