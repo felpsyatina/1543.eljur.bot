@@ -147,7 +147,40 @@ class User:
         return None
 
     def parse_opt(self):
-        return parse_opt(self.src, self.id, self.text)
+        if self.text == "вернуться в меню":
+            return self.to_menu()
+
+        if is_change_grp(self.text):
+            return self.change_grp()
+
+        return None
+
+    def change_grp(self):
+        user_class, user_lesson, user_group = self.text.split()
+        user_class = user_class.upper()
+        user_lesson = user_lesson.capitalize()
+        user_group = user_group.capitalize()
+
+        if user_class not in self.subs:
+            return {"text": f"Ты не подписан на этот класс.",
+                    "buttons": self.gen_opt_but()}
+
+        class_subs = self.subs[user_class]
+        lesson_subs = class_subs.get(user_lesson, [])
+
+        if user_group in lesson_subs:
+            new_lesson_subs = del_arr_elem(lesson_subs, user_group)
+            self.subs[user_class][user_lesson] = new_lesson_subs
+
+            return {"text": f"Ты отписался от \"{user_class} {user_lesson} {user_group}\".",
+                    "buttons": self.gen_opt_but()}
+
+        else:
+            new_lesson_subs = lesson_subs + [user_group]
+            self.subs[user_class][user_lesson] = new_lesson_subs
+
+            return {"text": f"Ты подписался на \"{user_class} {user_lesson} {user_group}\".",
+                    "buttons": self.gen_opt_but()}
 
     def lessons_parse(self, lessons, _homework):
         if len(lessons) == 0:
@@ -222,12 +255,10 @@ class User:
     def day_schedule(self, c, d, _homework):
         schedule = lesson_db.get_schedule(c, d)
         answer_arr = []
-        print(schedule)
 
         for num, lessons in schedule.items():
             user_lessons = self.lessons_good(lessons, c)
             str_lessons = self.lessons_parse(user_lessons, _homework)
-            print(str_lessons)
 
             answer_arr.append(str_lessons)
 

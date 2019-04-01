@@ -299,9 +299,11 @@ class LessonDbReq:
         for lesson_num, lesson in sch.items():
             for it in range(len(lesson)):
                 if not lesson[it]['unsent_change']:
-                    ans.append({"name": lesson[it]['name'],
-                                "num": lesson[it]['number'],
-                                "comment": lesson[it]['comment']})
+                    ans.append({
+                        "name": lesson[it]['name'],
+                        "num": lesson[it]['number'],
+                        "comment": lesson[it]['comment']
+                    })
         return ans
 
     def erase_unsent_homework(self, date, class_name):
