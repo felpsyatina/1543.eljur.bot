@@ -1,11 +1,12 @@
 from lessons_db_manip import LessonDbReq as Ldb
 from users_db_parser import UserDbReq as Udb
+import eljur_api
 import logger
 import Alerts
 import config
 
-from functions import classes, cur_date, get_word_by_date, student, tm, del_op
-
+from functions import classes, cur_date, get_word_by_date, preset, tm, del_op
+student = eljur_api.Student(**preset)
 
 DATES_ADD = [0, 1, 2, 3]
 flag_on_PC = config.params['flag_on_PC']

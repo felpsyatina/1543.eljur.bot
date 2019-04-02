@@ -497,13 +497,13 @@ class User:
             if self.schedule_params.add_room == 0:
                 self.schedule_params.add_room = 1
                 return {
-                    "text": f"Теперь тебе видны учителя.",
+                    "text": f"Теперь тебе видны кабинеты.",
                     "buttons": self.gen_sch_opt_but()
                 }
             else:
                 self.schedule_params.add_room = 0
                 return {
-                    "text": f"Теперь тебе не видны учителя.",
+                    "text": f"Теперь тебе не видны кабинеты.",
                     "buttons": self.gen_sch_opt_but()
                 }
 
