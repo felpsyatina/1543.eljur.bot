@@ -253,26 +253,26 @@ class User:
 
         return ans
 
-    def lessons_good(self, lessons, c):
+    def lessons_good(self, lessons, class_):
         ans = []
         for lesson in lessons:
             if lesson['grp'] is None:
                 ans.append(lesson)
                 continue
 
-            if lesson['grp'] in self.subs.get(c, {}):
+            if lesson['grp'] in self.subs.get(class_, {}):
                 ans.append(lesson)
 
         if ans:
             return ans
         return lessons
 
-    def day_schedule(self, c, d, _homework):
-        schedule = lesson_db.get_schedule(c, d)
+    def day_schedule(self, class_, date, _homework):
+        schedule = lesson_db.get_schedule(class_, date)
         answer_arr = []
 
         for num, lessons in schedule.items():
-            user_lessons = self.lessons_good(lessons, c)
+            user_lessons = self.lessons_good(lessons, class_)
             str_lessons = self.lessons_parse(user_lessons, _homework)
 
             answer_arr.append(str_lessons)
@@ -534,16 +534,16 @@ class User:
         return None
 
 
+def update_schedule():
+    lesson_db.add_schedules()
+    return
+
+
 def color(bl=True):
     if bl:
         return 2
     else:
         return 0
-
-
-def update_schedule():
-    lesson_db.add_schedules()
-    return
 
 
 def get_schedule_from_class(class_name, list_of_dates=None, add_room=False, add_teacher=False):
@@ -1003,7 +1003,11 @@ def parse_opt(src, user_id, text):
 
 def process_message_from_user(user_dict):
     logger.log("user_req", "process request")
+
     user = User(user_dict)
+
+    if user.text[0] == '@':
+        answer = user.valica()
 
     answer = user.parse_message()
     user.update_db()
@@ -1047,7 +1051,6 @@ fast_query = {
 }
 
 menu_buttons = [[["Расписание", 1]], [["ДЗ", 1]], [["Подписки"]], [["Настройка подписок"]], [["Настройка расписания"]]]
-
 
 if __name__ == '__main__':
     pass
