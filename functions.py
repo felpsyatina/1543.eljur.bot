@@ -15,6 +15,8 @@ COLORS = ["default", "primary", "positive", "negative"]
 
 ROMANS = ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX"]
 
+ROMANS2 = ["", "Ⅰ", "Ⅱ", "Ⅲ", "Ⅳ", "Ⅴ", "Ⅵ", "Ⅶ", "Ⅷ", "Ⅸ"]
+
 
 SUB_OPT = {
     "Позавчера": -2,

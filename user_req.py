@@ -3,7 +3,7 @@ from lessons_db_manip import LessonDbReq
 from users_db_parser import UserDbReq
 import answers_dict as ad
 from datetime import datetime
-from functions import SUBS, classes, cur_date, student, del_arr_elem, get_word_by_date, make_lined, ROMANS, SUB_OPT
+from functions import SUBS, classes, cur_date, student, del_arr_elem, get_word_by_date, make_lined, ROMANS2, SUB_OPT
 import config
 from json import loads as jl, dumps as jd
 
@@ -99,7 +99,6 @@ class User:
             "настройка расписания": self.to_sub_opt
         }
         logger.log("user_req", f"User: user {self.first} {self.last} created")
-        print(self.status)
 
     def update_db(self):
         changes = {
@@ -108,7 +107,6 @@ class User:
             'schedule_params': self.schedule_params.convert(),
             'homework_params': self.homework_params.convert()
         }
-        print(changes)
         user_db.update_user(changes, self.id, self.src)
 
     def parse_message(self):
@@ -146,7 +144,6 @@ class User:
             return {"text": "Видно не судьба :( ", "buttons": ans_buttons}
 
     def parse_subs(self):
-        print(1543)
         if self.text == "вернуться в меню":
             return self.to_menu()
 
@@ -255,7 +252,9 @@ class User:
                 ans += f"• Домашнее задание: \n{lesson['homework']}\n"
 
             if lesson['comment'] is not None:
-                ans += f"Комментарий: ({lesson['comment']})\n"
+                ans += f"• Комментарий: ({lesson['comment']})\n"
+
+        ans += "\n"
 
         return ans
 
@@ -300,7 +299,7 @@ class User:
             answer_arr.append(f"Класс {c}:\n")
             it = 1
             for d in list_of_dates:
-                answer_arr.append(f"{ROMANS[it]}. {get_word_by_date(d)}:")
+                answer_arr.append(f"{ROMANS2[it]}. {get_word_by_date(d)}:")
                 day_schedule = self.day_schedule(c, d, 0)
                 if day_schedule:
                     answer_arr.append(day_schedule)
@@ -325,7 +324,7 @@ class User:
             answer_arr.append(f"Класс {c}:\n")
             it = 1
             for d in list_of_dates:
-                answer_arr.append(f"{ROMANS[it]}. {get_word_by_date(d)}:")
+                answer_arr.append(f"{ROMANS2[it]}. {get_word_by_date(d)}:")
                 day_schedule = self.day_schedule(c, d, 1)
                 if day_schedule:
                     answer_arr.append(day_schedule)
