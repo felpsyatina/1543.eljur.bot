@@ -7,10 +7,17 @@ from functions import SUBS, classes, cur_date, student, del_arr_elem, get_word_b
 import config
 from json import loads as jl, dumps as jd
 
-lesson_db = LessonDbReq()
-user_db = UserDbReq()
-
 max_subs = config.params['max_subs']
+
+flag_on_PC = config.params['flag_on_PC']
+
+
+if flag_on_PC:
+    lesson_db = LessonDbReq()
+    user_db = UserDbReq()
+else:
+    lesson_db = LessonDbReq("1543.eljur.bot/1543.eljur.bot.db")
+    user_db = UserDbReq("1543.eljur.bot/1543.eljur.bot.db")
 
 
 class ScheduleInfo:

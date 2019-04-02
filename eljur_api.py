@@ -1,4 +1,4 @@
-## -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 import logger
 import json
 import requests
@@ -43,7 +43,8 @@ class LoggerTemplates(object):
     def false_type_of_var(self, func_name, param_name, given_type, right_types):
         self.make_log(
             f"Given to"
-            f" function '{func_name}' parameter '{param_name}' has wrong type '{given_type}', must be one of them '{right_types}'")
+            f" function '{func_name}' parameter '{param_name}' has wrong type '{given_type}', must be one of them "
+            f"'{right_types}'")
 
     def failed_request(self, func_name, request, error, content):
         self.make_log(
