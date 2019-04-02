@@ -65,8 +65,10 @@ class User:
     def __init__(self, user):
         self.id = user['id']
         self.src = user.get('src', 'vk')
+        self.normal_text = user['text'].rstrip()
         self.text = user['text'].rstrip().lower()
         self.is_new = False
+        self.opt_class = None
 
         self.first = user.get('first_name', 'Иван')
         self.last = user.get('last_name', 'Иванов')
@@ -84,11 +86,16 @@ class User:
         self.schedule_params = ScheduleInfo(info.get('schedule_params', None))
         self.homework_params = HomeworkInfo(info.get('homework_params', None))
 
+        if len(self.status.split()) > 1 and self.status.split()[1] in self.subs:
+            self.opt_class = self.status.split()[1]
+            self.status = "cls_opt"
+
         self.parse_functions = {
             "menu": self.parse_menu,
             "subs": self.parse_subs,
             "opt": self.parse_opt,
-            "sub_opt": self.parse_sub_opt
+            "sub_opt": self.parse_sub_opt,
+            "cls_opt": self.parse_class_opt
         }
 
         self.fast_functions = {
@@ -156,6 +163,14 @@ class User:
         if self.text == "вернуться в меню":
             return self.to_menu()
 
+        return self.to_class_opt()
+
+    def parse_class_opt(self):
+        self.status = f"opt {self.opt_class}"
+
+        if self.text == "вернуться в меню":
+            return self.to_menu()
+
         if is_change_grp(self.text):
             return self.change_grp()
 
@@ -166,33 +181,6 @@ class User:
             return self.to_menu()
 
         return self.change_sch_opt()
-
-    def change_grp(self):
-        user_class, user_lesson, user_group = self.text.split()
-        user_class = user_class.upper()
-        user_lesson = user_lesson.capitalize()
-        user_group = user_group.capitalize()
-
-        if user_class not in self.subs:
-            return {"text": f"Ты не подписан на этот класс.",
-                    "buttons": self.gen_opt_but()}
-
-        class_subs = self.subs[user_class]
-        lesson_subs = class_subs.get(user_lesson, [])
-
-        if user_group in lesson_subs:
-            new_lesson_subs = del_arr_elem(lesson_subs, user_group)
-            self.subs[user_class][user_lesson] = new_lesson_subs
-
-            return {"text": f"Ты отписался от \"{user_class} {user_lesson} {user_group}\".",
-                    "buttons": self.gen_opt_but()}
-
-        else:
-            new_lesson_subs = lesson_subs + [user_group]
-            self.subs[user_class][user_lesson] = new_lesson_subs
-
-            return {"text": f"Ты подписался на \"{user_class} {user_lesson} {user_group}\".",
-                    "buttons": self.gen_opt_but()}
 
     def lessons_parse(self, lessons, _homework):
         if len(lessons) == 0:
@@ -353,24 +341,25 @@ class User:
 
         return buttons
 
-    def gen_opt_but(self):
+    def gen_cls_opt_but(self):
         buttons = [[["Вернуться в меню", 1]]]
-        for c, lessons in self.subs.items():
-            class_id = lesson_db.get_class_id(c)
-            class_groups = lesson_db.get_class_groups(class_id)
+        c = self.opt_class
+        lessons = self.subs[c]
+        class_id = lesson_db.get_class_id(c)
+        class_groups = lesson_db.get_class_groups(class_id)
 
-            for lesson, groups in class_groups.items():
-                line = []
-                for g in groups:
-                    if g in lessons.get(lesson, []):
-                        line.append([f"{c} {lesson} {g}", 2])
-                    else:
-                        line.append([f"{c} {lesson} {g}", 0])
-                buttons.append(line)
+        for lesson, groups in class_groups.items():
+            line = []
+            for g in groups:
+                if g in lessons.get(lesson, []):
+                    line.append([f"{c} {lesson} {g}", color(True)])
+                else:
+                    line.append([f"{c} {lesson} {g}", color(False)])
+            buttons.append(line)
 
         return buttons
 
-    def gen_sub_opt_but(self):
+    def gen_sch_opt_but(self):
         buttons = [
             [["Вернуться в меню", 1]],
             [["Учителя", color(self.schedule_params.add_teacher)]],
@@ -394,6 +383,14 @@ class User:
 
         return buttons
 
+    def gen_opt_but(self):
+        buttons = [[["Вернуться в меню", 1]]]
+
+        for c in self.subs.keys():
+            buttons.append([[c, 1]])
+
+        return buttons
+
     def to_subs(self):
         self.status = "subs"
 
@@ -408,12 +405,9 @@ class User:
     def to_opt(self):
         user_subs = list(self.subs.keys())
 
-        if len(user_subs) >= 2:
-            return {"text": f"Пока не поддерживается управление подписками сразу двух классов.",
-                    "buttons": menu_buttons}
         self.status = "opt"
 
-        return {"text": f"Ты подписан на {user_subs[0]}.",
+        return {"text": f"Ты подписан на {' '.join(user_subs)}.",
                 "buttons": self.gen_opt_but()}
 
     def to_menu(self):
@@ -426,7 +420,44 @@ class User:
         self.status = "sub_opt"
 
         return {"text": f"Здесь ты можешь поменять отображение расписания.",
-                "buttons": self.gen_sub_opt_but()}
+                "buttons": self.gen_sch_opt_but()}
+
+    def to_class_opt(self):
+        c = self.text.upper()
+
+        if c not in classes:
+            return None
+
+        self.status = f"opt {c}"
+        self.opt_class = c
+
+        return {"text": f"Здесь ты можешь поменять группы {c}.",
+                "buttons": self.gen_cls_opt_but()}
+
+    def change_grp(self):
+        user_class, user_lesson, user_group = self.normal_text.split()
+        print(user_group)
+
+        if user_class not in self.subs:
+            return {"text": f"Ты не подписан на этот класс.",
+                    "buttons": self.gen_cls_opt_but()}
+
+        class_subs = self.subs[user_class]
+        lesson_subs = class_subs.get(user_lesson, [])
+
+        if user_group in lesson_subs:
+            new_lesson_subs = del_arr_elem(lesson_subs, user_group)
+            self.subs[user_class][user_lesson] = new_lesson_subs
+
+            return {"text": f"Ты отписался от \"{user_class} {user_lesson} {user_group}\".",
+                    "buttons": self.gen_cls_opt_but()}
+
+        else:
+            new_lesson_subs = lesson_subs + [user_group]
+            self.subs[user_class][user_lesson] = new_lesson_subs
+
+            return {"text": f"Ты подписался на \"{user_class} {user_lesson} {user_group}\".",
+                    "buttons": self.gen_cls_opt_but()}
 
     def change_sub(self):
         c = self.text.upper()
@@ -453,13 +484,13 @@ class User:
                 self.schedule_params.add_teacher = 1
                 return {
                     "text": f"Теперь тебе видны учителя.",
-                    "buttons": self.gen_sub_opt_but()
+                    "buttons": self.gen_sch_opt_but()
                 }
             else:
                 self.schedule_params.add_teacher = 0
                 return {
                     "text": f"Теперь тебе не видны учителя.",
-                    "buttons": self.gen_sub_opt_but()
+                    "buttons": self.gen_sch_opt_but()
                 }
 
         if self.text == "кабинеты":
@@ -467,13 +498,13 @@ class User:
                 self.schedule_params.add_room = 1
                 return {
                     "text": f"Теперь тебе видны учителя.",
-                    "buttons": self.gen_sub_opt_but()
+                    "buttons": self.gen_sch_opt_but()
                 }
             else:
                 self.schedule_params.add_room = 0
                 return {
                     "text": f"Теперь тебе не видны учителя.",
-                    "buttons": self.gen_sub_opt_but()
+                    "buttons": self.gen_sch_opt_but()
                 }
 
         if self.text.capitalize() in SUB_OPT:
@@ -482,7 +513,7 @@ class User:
                 self.schedule_params.list_of_adds = del_arr_elem(self.schedule_params.list_of_adds, add)
                 return {
                     "text": f"Теперь тебе не видно расписание на {self.text}.",
-                    "buttons": self.gen_sub_opt_but()
+                    "buttons": self.gen_sch_opt_but()
                 }
 
             else:
@@ -490,7 +521,7 @@ class User:
                 self.schedule_params.list_of_adds.sort()
                 return {
                     "text": f"Теперь тебе видно расписание на {self.text}.",
-                    "buttons": self.gen_sub_opt_but()
+                    "buttons": self.gen_sch_opt_but()
                 }
 
         return None
