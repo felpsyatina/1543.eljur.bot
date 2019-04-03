@@ -2,6 +2,7 @@
 import logger
 import json
 import requests
+import functions
 
 file_name = "eljur_api.py"
 
@@ -229,3 +230,9 @@ class Student(_UserBase):
 
 
 Logger = LoggerTemplates()
+
+if __name__ == '__main__':
+    preset = functions.preset
+    student1 = Student(**preset)
+    print(student1.get_assessments())
+    
