@@ -42,52 +42,80 @@ def dates_add():
     return [0, 1, 2, 3]
 
 
-def update_homework():
+def parse_schedule(new_schedule):
+    new_schedule = new_schedule['days']
+    new_schedule_dict = {}
+    for date, dict_of_this_date in new_schedule.items():
+        for lesson in dict_of_this_date.get("items", []):
+            lesson_name = lesson["name"]
+            lesson_num = lesson["num"]
+            new_schedule_dict[lesson_num] = lesson_name
+    return new_schedule_dict
+
+
+def parse_homework(r, date):
+    new_homework_dict = {}
+    if not r:
+        return {}
+
+    homework = r['days'][date]['items']
+    for lesson in homework:
+        old_homework = ""
+        lesson_name = lesson['name']
+
+        if 'homework' in lesson.keys():
+            task = lesson['homework']
+            old_homework += f"{task['1']['value']}\n"
+
+        if 'files' in lesson.keys():
+            old_homework += "Файлы:\n"
+            for file in lesson['files']['file']:
+                old_homework += f"{file['filename']}: {file['link']}\n"
+
+        if old_homework:
+            new_homework_dict[lesson_name] = old_homework
+
+    return new_homework_dict
+
+
+def update_schedule_for_class(class_name, date, last):
+
+    new_homework = student.get_hometask(class_name, date)
+    new_homework_dict = parse_homework(new_homework, date)
+    new_schedule = student.get_schedule(class_name, date)
+    old_schedule = lesson_db.get_schedule(class_name, date)
+    new_schedule_dict = parse_schedule(new_schedule)
+
+    if not old_schedule:
+        lesson_db.add_schedule(class_name, date)
+    for num, lessons in old_schedule.items():
+        for lesson in lessons:
+            if num not in new_schedule_dict.keys() or new_schedule_dict[num] != lesson['name']:
+                lesson_db.edit_lesson(class_name, date, num, lesson['name'],
+                                      {'name': new_schedule_dict[num],
+                                       'unsent_change': 1})
+            if lesson['name'] in new_homework_dict.keys() and new_homework_dict[lesson['name']]:
+                if '\'' in new_homework_dict[lesson['name']]:
+                    new_homework_dict[lesson['name']] = del_op(new_homework_dict[lesson['name']])
+                if new_homework_dict[lesson['name']] != lesson['homework']:
+                    if date != last:
+                        lesson_db.edit_lesson(class_name, date, num, lesson['name'],
+                                              {'homework': new_homework_dict[lesson['name']],
+                                               'unsent_homework': 1})
+                    else:
+                        lesson_db.edit_lesson(class_name, date, num, lesson['name'],
+                                              {'homework': new_homework_dict[lesson['name']]})
+                new_homework_dict[lesson['name']] = None
+
+
+def update_information():
     dates = [cur_date(d) for d in dates_add()]
     last = max(dates)
 
     for class_name in classes:
         for date in dates:
-            r = student.get_hometask(class_name, date)
-            add_dict = {}
-            if r:
-                homework = r['days'][date]['items']
-                for lesson in homework:
-                    temp = ""
-                    lesson_name = lesson['name']
+            update_schedule_for_class(class_name, date, last)
 
-                    if 'homework' in lesson.keys():
-                        task = lesson['homework']
-                        temp += f"{task['1']['value']}\n"
-
-                    if 'files' in lesson.keys():
-                        temp += "Файлы:\n"
-                        for file in lesson['files']['file']:
-                            temp += f"{file['filename']}: {file['link']}\n"
-
-                    if temp:
-                        add_dict[lesson_name] = temp
-
-            temp = lesson_db.get_schedule(class_name, date)
-            if not temp:
-                lesson_db.add_schedule(class_name, date)
-
-            schedule = lesson_db.get_schedule(class_name, date)
-            for num, lessons in schedule.items():
-                for lesson in lessons:
-                    if lesson['name'] in add_dict.keys() and add_dict[lesson['name']]:
-                        if '\'' in add_dict[lesson['name']]:
-                            add_dict[lesson['name']] = del_op(add_dict[lesson['name']])
-                        if add_dict[lesson['name']] != lesson['homework']:
-                            if date != last:
-                                lesson_db.edit_lesson(class_name, date, num, lesson['name'],
-                                                      {'homework': add_dict[lesson['name']],
-                                                       'unsent_homework': 1})
-                            else:
-                                lesson_db.edit_lesson(class_name, date, num, lesson['name'],
-                                                      {'homework': add_dict[lesson['name']]})
-
-                        add_dict[lesson['name']] = None
             logger.log("alerts", f"{class_name} on {date} added")
 
 
@@ -96,7 +124,7 @@ def erase_flags():
 
     for class_name in classes:
         for date in dates:
-            lesson_db.erase_unsent_homework(date, class_name)
+            lesson_db.erase_unsent(date, class_name)
 
     logger.log("alerts", "flags deleted")
 
@@ -168,7 +196,7 @@ def get_and_send_for_all():
 
 
 if __name__ == '__main__':
-    update_homework()
+    update_information()
     if is_time_to_work():
         get_and_send_for_all()
         erase_flags()

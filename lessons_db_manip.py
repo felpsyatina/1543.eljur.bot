@@ -276,19 +276,23 @@ class LessonDbReq:
                 lessons[lesson_num] = ans_arr
         return lessons
 
-    def edit_lesson(self, class_name, date, lesson_num, name, dict_of_changes=None):
+    def edit_lesson(self, class_name, date, lesson_num, name, dict_of_changes=None, grp=None):
         with self.run_cursor() as cursor:
             class_id = self.get_class_id(class_name)
 
             edit = [f"{key} = '{item}'" for key, item in dict_of_changes.items()]
             edit_string = ", ".join(edit)
 
+            grp_add = ""
+            if grp is not None:
+                grp_add = f"AND grp = '{grp}'"
             query = f"""
                 UPDATE lessons SET {edit_string} WHERE 
                 class_id = '{class_id}'
                 AND date = '{date}' 
                 AND number = '{lesson_num}'
                 AND name = '{name}'
+                {grp_add}
             """
             cursor.execute(query)
             logger.log("lesson_db_manip",
@@ -308,16 +312,22 @@ class LessonDbReq:
                     })
         return ans
 
-    def erase_unsent_homework(self, date, class_name):
+    def erase_unsent(self, date, class_name):
         sch = self.get_schedule(class_name, date=date)
 
         for lesson_num, lesson in sch.items():
             for it in range(len(lesson)):
-                if not lesson[it]['unsent_change']:
+                if not lesson[it]['unsent_homework']:
                     print(class_name, date, lesson[it]['number'], lesson[it]['name'])
 
                     self.edit_lesson(class_name, date, lesson[it]['number'],
                                      name=lesson[it]['name'], dict_of_changes={'unsent_homework': 0})
+
+                if not lesson[it]['unsent_change']:
+                    print(class_name, date, lesson[it]['number'], lesson[it]['name'])
+
+                    self.edit_lesson(class_name, date, lesson[it]['number'],
+                                     name=lesson[it]['name'], dict_of_changes={'unsent_change': 0})
 
     def find_unsent_homework(self, date, class_name):
         ans = []
