@@ -33,8 +33,6 @@ preset = {"devkey": config.secret['eljurapi']['devkey'], "vendor": "1543",
           "password": config.secret['eljurapi']['password'],
           "login": config.secret['eljurapi']['login']}
 
-student = eljur_api.Student(**preset)
-
 
 class MyCursor(sqlite3.Cursor):
     def __init__(self, connection):

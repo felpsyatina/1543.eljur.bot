@@ -2,10 +2,12 @@
 import sqlite3
 import logger
 import config
+import eljur_api
 from json import dumps as jd, loads as jl
-from functions import MyCursor, convert_arrays_to_dict, cur_date, classes, student
+from functions import MyCursor, convert_arrays_to_dict, cur_date, classes, preset
 
 current_min_par = config.params['min_par']
+student = eljur_api.Student(**preset)
 
 
 def is_token_exists():

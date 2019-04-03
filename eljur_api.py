@@ -192,8 +192,8 @@ class Student(_UserBase):
         answer = self._make_request("getmessagereceivers")
         return answer
 
-    def get_messageinfo(self, id=None):
-        if id is None:
+    def get_messageinfo(self, id_=None):
+        if id_ is None:
             Logger.empty_param("get_messageinfo", "id")
             return None
         params = _strip(locals())

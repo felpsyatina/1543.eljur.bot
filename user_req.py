@@ -1,11 +1,13 @@
 import logger
-from lessons_db_manip import LessonDbReq
+from lessons_db_manip import LessonDbReq, student
 from users_db_parser import UserDbReq
 import answers_dict as ad
 from datetime import datetime
-from functions import SUBS, classes, cur_date, student, del_arr_elem, get_word_by_date, make_lined, ROMANS2, SUB_OPT
+from functions import SUBS, classes, cur_date, del_arr_elem, get_word_by_date, make_lined, ROMANS2, SUB_OPT, preset
 import config
 from json import loads as jl, dumps as jd
+from valisa import Valica
+
 
 max_subs = config.params['max_subs']
 
@@ -143,6 +145,13 @@ class User:
         if self.is_new:
             ans_buttons = menu_buttons
 
+        valica_parse = Valica(self.normal_text)
+        if valica_parse.type == "schedule":
+            return self.schedule(list_of_dates=valica_parse.list_of_dates, subs=valica_parse.subs)
+
+        if valica_parse.type == "homework":
+            return self.homework(list_of_dates=valica_parse.list_of_dates, subs=valica_parse.subs)
+
         try:
             for key, value in ad.quest.items():
                 if key in self.text:
@@ -279,18 +288,23 @@ class User:
 
         return "".join(answer_arr)
 
-    def schedule(self):
+    def schedule(self, list_of_dates=None, subs=None):
         logger.log("user_req", f"getting schedule for {self.first} {self.last}")
 
-        if not self.subs:
+        if subs is None:
+            subs = self.subs
+
+        if not subs:
             return {
                 "text": "Ты не подписан ни на один из классов. Чтобы подписаться, нажми на \"подписки\"."
             }
 
-        list_of_dates = self.schedule_params.list_of_dates()
+        if list_of_dates is None:
+            list_of_dates = self.schedule_params.list_of_dates()
+
         answer_arr = []
 
-        for c in self.subs.keys():
+        for c in subs.keys():
             answer_arr.append(f"Класс {c}:\n")
             it = 1
             for d in list_of_dates:
@@ -304,15 +318,20 @@ class User:
 
         return generate_return("\n".join(answer_arr))
 
-    def homework(self):
+    def homework(self, list_of_dates=None, subs=None):
         logger.log("user_req", f"getting schedule for {self.first} {self.last}")
 
-        if not self.subs:
+        if subs is None:
+            subs = self.subs
+
+        if not subs:
             return {
                 "text": "Ты не подписан ни на один из классов. Чтобы подписаться, нажми на \"подписки\"."
             }
 
-        list_of_dates = self.schedule_params.list_of_dates()
+        if list_of_dates is None:
+            list_of_dates = self.schedule_params.list_of_dates()
+
         answer_arr = []
 
         for c in self.subs.keys():
