@@ -19,14 +19,15 @@ class Valica:
 
         self.type = None
         self.subs = None
-        self.list_of_dates = []
+        self.list_of_dates = None
 
-        self.params_extractors = {"subs": self.extract_class_, "list_of_dates": self.extract_dates}
+        self.params_extractors = {"subs": self.extract_classes_, "list_of_dates": self.extract_dates}
 
         for cur_definer in self.definers:
             if cur_definer["definer_func"](string):
-                self.params = self.get_params(string, cur_definer["params"])
                 cur_definer["run_func"]()
+                for param_name in cur_definer["params"]:
+                    self.params_extractors[param_name](string)
 
         logger.log("valisa", f"parse message status: {self.type}, {self.subs}, {self.list_of_dates}")
 
@@ -58,14 +59,19 @@ class Valica:
                 return True
         return False
 
-    def extract_class_(self, string):
-        regex = r"(^|\s)([5-9]{1}|(1[0-1]))([а-гА-Г]|\s[а-гА-Г])"
-        result = re.search(regex, string)
+    def extract_classes_(self, string):
+        regex = r"((^|\s)([5-9]{1}|(1[0-1]))([а-гА-Г]|\s[а-гА-Г]))"
+        print(re.search(regex, string))
+        result = [elem[0] for elem in re.findall(regex, string)]
 
         if result is None:
             return None
 
-        self.subs = {result.group().strip().upper(): {}}
+        all_subs = {}
+
+        for class_name in result:
+            all_subs[class_name.upper()] = {}
+        self.subs = all_subs
 
     def extract_dates(self, string):
         # full date is YYYMMDD
@@ -77,8 +83,10 @@ class Valica:
                           r"|(00000000)|(88888888)|(99999999))"
         result = [elem[0] for elem in re.findall(regex_full_date, string)]
 
+        spotted_dates = []
+
         if result is not None:
-            self.list_of_dates += result
+            spotted_dates += result
 
         special_dates = [(r"сегодня", 0),
                          (r"вчера", -1),
@@ -89,7 +97,7 @@ class Valica:
         for regex, delta in special_dates:
             result = re.search(regex, string)
             if result is not None:
-                self.list_of_dates.append(self.get_cur_date(delta))
+                spotted_dates.append(self.get_cur_date(delta))
 
         regex_custom_delta = [
             (r"(через|спустя) (-)?[0-9][1-9]* (дня|дней|суток|сутка|сутки)", r"(-)?[0-9][1-9]*", False),
@@ -101,9 +109,9 @@ class Valica:
                 delta = int(re.search(delta_extract, result.group(0)).group(0))
                 if is_reversed:
                     delta *= -1
-                self.list_of_dates.append(self.get_cur_date(delta))
+                spotted_dates.append(self.get_cur_date(delta))
 
-        self.list_of_dates = list(set(self.list_of_dates))  # убираю одинаковые даты
+        self.list_of_dates = list(set(spotted_dates))  # убираю одинаковые даты
 
     def get_params(self, string, needed_params):
         params = {}
