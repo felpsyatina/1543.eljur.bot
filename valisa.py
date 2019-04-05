@@ -1,6 +1,7 @@
 import logger
 import re
 import datetime
+import functions
 
 
 # Тестовая версия валисы
@@ -60,8 +61,7 @@ class Valica:
         return False
 
     def extract_classes_(self, string):
-        regex = r"((^|\s)([5-9]{1}|(1[0-1]))([а-гА-Г]|\s[а-гА-Г]))"
-        print(re.search(regex, string))
+        regex = r"((^|\s)([5-9]{1}|(1[0-1]))([а-гА-Г]|\s[а-гА-Г])($|\s))"
         result = [elem[0] for elem in re.findall(regex, string)]
 
         if result is None:
@@ -77,9 +77,7 @@ class Valica:
         # full date is YYYMMDD
         regex_full_date = r"(((\d{4})(0[13578]|10|12)(0[1-9]|[12][0-9]|3[01]))|((\d{4})(0[469]|11)([0][1-9]|[12][0-9]|30))|((\d{4})(02)(0[1-9]|1[0-9]|2[0-8]))|(([02468][048]00)(02)(29))|(([13579][26]00) (02)(29))|(([0-9][0-9][0][48])(02)(29))|(([0-9][0-9][2468][048])(02)(29))|(([0-9][0-9][13579][26])(02)(29))|(00000000)|(88888888)|(99999999))"
         result = [elem[0] for elem in re.findall(regex_full_date, string)]
-
         spotted_dates = []
-
         if result is not None:
             spotted_dates += result
 
@@ -88,16 +86,26 @@ class Valica:
                          (r"завтра", 1),
                          (r"позавчера", -2),
                          (r"послезавтра", 2)]
-
         for regex, delta in special_dates:
             result = re.search(regex, string)
             if result is not None:
                 spotted_dates.append(self.get_cur_date(delta))
 
+        regexes_num_and_month = [r"(([1-9]|[1-2][0-9]|3[0-1])\s(январь|января|март|марта|май|мая|июль|июля|август|августа|октябрь|октября|декабрь|декабря))",
+                          r"(([1-9]|[1-2][0-9]|3[0])\s(апрель|апреля|июнь|июня|сентябрь|сентября|ноябрь|ноября))",
+                          r"(([1-9]|[1-2][0-9])\s(февраль|февраля))"]
+        for regex in regexes_num_and_month:
+            result = [elem[0] for elem in re.findall(regex, string)]
+            if len(result) != 0:
+                for unparesed_date in result:
+                    day = re.search(r"([1-9]|[1-2][0-9]|3[0-1])", unparesed_date).group(0).zfill(2)
+                    month = str(functions.MONTH_TO_NUM[re.search(r"([а-я]+)", unparesed_date).group(0)] + 1).zfill(2)
+                    year = datetime.datetime.today().year
+                    spotted_dates.append(f"{year}{month}{day}")
+
         regex_custom_delta = [
             (r"(через|спустя) (-)?[0-9][1-9]* (дня|дней|суток|сутка|сутки)", r"(-)?[0-9][1-9]*", False),
             (r"(-)?[0-9][1-9]* (дня|дней|суток|сутка|сутки) (до|назад)", r"(-)?[0-9][1-9]*", True)]
-
         for regex, delta_extract, is_reversed in regex_custom_delta:
             result = re.search(regex, string)
             if result is not None:
