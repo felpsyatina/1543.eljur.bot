@@ -10,14 +10,6 @@ current_min_par = config.params['min_par']
 student = Student(**preset)
 
 
-def is_token_exists():
-    elj_token = config.secret["eljurapi"]["token"]
-    if elj_token == "":
-        return False
-    else:
-        return True
-
-
 class LessonDbReq:
     def __init__(self, database_name="1543.eljur.bot.db"):
         self.database_name = database_name
@@ -483,8 +475,6 @@ class LessonDbReq:
         return ans
 
     def setup_db(self, adding_schedule=None):
-        if adding_schedule is None:
-            adding_schedule = is_token_exists()
 
         self.create_classes_db()
         self.create_lessons_db()
@@ -495,8 +485,4 @@ class LessonDbReq:
 
 if __name__ == '__main__':
     req = LessonDbReq()
-    # req.setup_db()
-    req.add_schedules()
-    for les_num, les_list in req.get_schedule("10В", 20190404).items():
-        for les in les_list:
-            print(les_num, les["name"])
+    req.setup_db()
