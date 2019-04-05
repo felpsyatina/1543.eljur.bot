@@ -205,6 +205,17 @@ class LessonDbReq:
 
         return new_homework_dict
 
+    @staticmethod
+    def parse_string_in_query(string):
+        if type(string) == str:
+            string = del_op(string)
+            return f"'{string}'"
+
+        if string is None:
+            return "NULL"
+
+        return string
+
     def add_lesson(self, lesson, homework, class_id, day_name, date):
         lesson_name = lesson["name"]
         lesson_num = lesson["num"]
@@ -215,12 +226,12 @@ class LessonDbReq:
         lesson_room = "NULL"
         lesson_teacher = "NULL"
         lesson_grp = "NULL"
-        lesson_homework = "NULL"
+        lesson_homework = None
 
         if homework:
             temp_homework = self.parse_homework(homework[date]).get(lesson_name, None)
             if temp_homework is not None:
-                lesson_homework = f"'{del_op(temp_homework).rstrip()}'"
+                lesson_homework = f"{del_op(temp_homework).rstrip()}"
 
         if lesson["room"]:
             lesson_room = f"'{lesson['room']}'"
@@ -246,17 +257,28 @@ class LessonDbReq:
             else:
                 old_lessons = []
 
-        if old_lessons and lesson_homework != old_lessons[0]['homework'] and old_lessons[0]["is_updated"]:
+        if old_lessons and old_lessons[0]['homework']:
+            old_lessons[0]['homework'] = old_lessons[0]['homework'].strip()
+
+        homework_changed = old_lessons and lesson_homework and lesson_homework != old_lessons[0]['homework']
+        if homework_changed and old_lessons[0]["is_updated"]:
             with self.run_cursor() as cursor:
                 query = f"""
-                    UPDATE lessons SET homework = {lesson_homework}, unsent_homework = 1 WHERE 
+                    UPDATE lessons SET homework = {self.parse_string_in_query(lesson_homework)},
+                    unsent_homework = 1 WHERE 
                     class_id = '{class_id}'
                     AND date = '{date}' 
                     AND number = '{lesson_num}'
-                    AND name = '{old_lessons[0]['name']}'
+                    AND name = '{old_lessons[0]['name']}'   
                     {grp_add}
                 """
                 cursor.execute(query)
+
+                logger.log(
+                    "lessons_db_manip",
+                    f"changed homework {class_id}, {date}, {lesson_num} "
+                    f"from {old_lessons[0]['homework']} to {lesson_homework}"
+                )
 
         if old_lessons and lesson_name != old_lessons[0]['name'] and old_lessons[0]["is_updated"]:
             new_lesson_name = f"{make_lined(old_lessons[0]['name'])} {lesson_name}"
@@ -276,6 +298,7 @@ class LessonDbReq:
         if old_lessons and old_lessons[0]["is_updated"]:
             return
 
+        lesson_homework = self.parse_string_in_query(lesson_homework)
         with self.run_cursor() as cursor:
             query = f"""
                 INSERT INTO lessons 
@@ -319,9 +342,15 @@ class LessonDbReq:
 
         logger.log("lessons_db_manip", f"schedule of class '{class_name}' on {date} added.")
 
-    def add_schedules(self):
+    def add_schedules(self, list_of_dates=None):
         for c in classes:
-            self.add_schedule(c)
+            if list_of_dates is None:
+                self.add_schedule(c)
+                continue
+
+            for date in list_of_dates:
+                self.add_schedule(c, date)
+
         logger.log("lessons_db_manip", f"all classes schedules added.")
 
     def get_schedule(self, class_name, date):
@@ -424,36 +453,35 @@ class LessonDbReq:
             logger.log("lesson_db_manip",
                        f"'{lesson_num}' lesson of {class_name} class in {date} edited: {edit_string}")
 
-    def find_unsent_changes(self, date, class_name):
-        ans = []
-        sch = self.get_schedule(class_name, date=date)
-
-        for lesson_num, lesson in sch.items():
-            for it in range(len(lesson)):
-                if not lesson[it]['unsent_change']:
-                    ans.append({
-                        "name": lesson[it]['name'],
-                        "num": lesson[it]['number'],
-                        "comment": lesson[it]['comment']
-                    })
-        return ans
-
     def erase_unsent(self, date, class_name):
         sch = self.get_schedule(class_name, date=date)
 
         for lesson_num, lesson in sch.items():
             for it in range(len(lesson)):
-                if not lesson[it]['unsent_homework']:
-                    print(class_name, date, lesson[it]['number'], lesson[it]['name'])
-
+                if lesson[it]['unsent_homework']:
                     self.edit_lesson(class_name, date, lesson[it]['number'],
                                      name=lesson[it]['name'], dict_of_changes={'unsent_homework': 0})
 
-                if not lesson[it]['unsent_change']:
-                    print(class_name, date, lesson[it]['number'], lesson[it]['name'])
-
+                if lesson[it]['unsent_change']:
                     self.edit_lesson(class_name, date, lesson[it]['number'],
                                      name=lesson[it]['name'], dict_of_changes={'unsent_change': 0})
+
+    def erase_unsent_list(self, date_list, classes_list=None):
+        if classes_list is not None:
+            for class_ in classes_list:
+                for date_ in date_list:
+                    self.erase_unsent(date_, class_)
+            return
+
+        for date in date_list:
+            with self.run_cursor() as cursor:
+                query = f"""
+                    UPDATE lessons SET unsent_change = 0, unsent_homework = 0 
+                    WHERE date = '{date}'
+                """
+                cursor.execute(query)
+
+        logger.log("lessons_db_manip", f"deleted all 'unsent' in {date_list}")
 
     def find_unsent_homework(self, date, class_name):
         ans = []
@@ -462,6 +490,25 @@ class LessonDbReq:
         for lesson_num, lesson in sch.items():
             for it in range(len(lesson)):
                 if lesson[it]['unsent_homework']:
+                    if 'grp' in lesson[it]:
+                        ans.append({"name": lesson[it]['name'],
+                                    "num": lesson[it]['number'],
+                                    "homework": lesson[it]['homework'],
+                                    "grp": lesson[it]['grp']})
+                    else:
+                        ans.append({"name": lesson[it]['name'],
+                                    "num": lesson[it]['number'],
+                                    "homework": lesson[it]['homework']})
+
+        return ans
+
+    def find_unsent_changes(self, date, class_name):
+        ans = []
+        sch = self.get_schedule(class_name, date=date)
+
+        for lesson_num, lesson in sch.items():
+            for it in range(len(lesson)):
+                if lesson[it]['unsent_changes']:
                     if 'grp' in lesson[it]:
                         ans.append({"name": lesson[it]['name'],
                                     "num": lesson[it]['number'],

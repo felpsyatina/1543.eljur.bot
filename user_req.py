@@ -146,6 +146,7 @@ class User:
             ans_buttons = menu_buttons
 
         valica_parse = Valica(self.text)
+
         if valica_parse.type == "schedule":
             return self.schedule(list_of_dates=valica_parse.list_of_dates, subs=valica_parse.subs)
 
