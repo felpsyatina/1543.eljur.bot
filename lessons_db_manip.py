@@ -354,8 +354,6 @@ class LessonDbReq:
         logger.log("lessons_db_manip", f"all classes schedules added.")
 
     def get_schedule(self, class_name, date):
-        logger.log("lessons_db_manip", f"getting schedule class: {class_name}, date: {date}")
-
         if date is None:
             date = cur_date()
 
@@ -384,6 +382,7 @@ class LessonDbReq:
 
                 lessons[lesson_num] = lesson_arr
 
+        logger.log("lessons_db_manip", f"returning schedule for class {class_name}, date {date}: len - {len(lessons)}")
         return lessons
 
     def get_schedule_by_subs(self, class_name, date, user_subs):

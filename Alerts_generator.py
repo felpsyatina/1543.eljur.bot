@@ -45,51 +45,41 @@ def update_information():
     lesson_db.add_schedules(list_of_dates=list_of_adding_dates())
 
 
-def get_changes(to_date, for_class):
-    alerts = lesson_db.find_unsent_changes(to_date, for_class)
-    message = ""
-    for alert in alerts:
-        comment = alert['comment']
-        lesson = alert['lesson']
-        number = alert['number']
-        date = get_word_by_date(to_date)
-        message += f"{date} изменения {number} урока {lesson}: {comment}"
-    return message
+def parse_one_lesson(lesson):
+    return f"{lesson['name']} ({lesson['number']} урок):\n{lesson['homework']}\n"
 
 
-def get_homework_and_send(to_date, for_class):
-    alerts = lesson_db.find_unsent_homework(to_date, for_class)
-    message = ""
-    for alert in alerts:
-        homework = alert['homework']
-        name = alert['name']
-        date = get_word_by_date(to_date)
-        message += f"Выложено дз по {name} на {date}:\n {homework}\n"
-
-
-def send_changes(for_date, to_class):
-    class_participants = user_db.get_users_by_subs(to_class)
-    message = get_changes(for_date, to_class)
-    Alerts.send_alerts(class_participants, message)
-
-
-def create_message(schedule, user_class, user_subs):
-    if user_class not in user_subs:
-        return
-
+def create_homework_message(schedule, user_subs):
     ans = ""
 
-    for lesson in schedule:
-        if lesson['grp'] is None:
-            ans += f"{lesson['name']}:\n{lesson['homework']}\n"
+    for lesson_number, lessons in schedule.items():
+        for lesson in lessons:
+            if lesson['homework'] is None or not lesson['unsent_homework']:
+                continue
 
-        elif not user_subs[user_class].get(lesson['name'], []):
-            ans += f"{lesson['name']}:\n{lesson['homework']}\n"
+            if lesson['grp'] is None:
+                ans += parse_message_for_user(lesson)
 
-        elif lesson['grp'] in user_subs[user_class][lesson['name']]:
-            ans += f"{lesson['name']}:\n{lesson['homework']}\n"
+            elif not user_subs.get(lesson['name'], []):
+                ans += parse_message_for_user(lesson)
 
-    return ans
+            elif lesson['grp'] in user_subs[lesson['name']]:
+                ans += parse_message_for_user(lesson)
+
+        if ans:
+            return ans
+
+
+def create_changes_message(schedule):
+    ans = ""
+
+    for lesson_number, lessons in schedule.items():
+        for lesson in lessons:
+            if lesson['unsent_change']:
+                ans += f"{lesson['name']} ({lesson['number']} урок):\n"
+
+        if ans:
+            return ans
 
 
 def parse_message_for_user(user):
@@ -101,12 +91,17 @@ def parse_message_for_user(user):
         for date in dates:
             date_word = get_word_by_date(date)
             schedule = lesson_db.get_schedule(user_class, date)
-            created_message = create_message(schedule, user_class, user_subs)
+            created_homework_message = create_homework_message(schedule, user_subs)
+            created_changes_message = create_changes_message(schedule)
 
-            if created_message is not None:
-                this_class_answer_string += f"• Выложено домашнее задание на {date_word.lower()}:\n\n"
+            if created_homework_message is not None:
+                this_class_answer_string += f"• Выложено домашнее задание на {date_word.lower()}:\n"
+                this_class_answer_string += created_homework_message
+                this_class_answer_string += "\n"
 
-                this_class_answer_string += created_message
+            if created_changes_message is not None:
+                this_class_answer_string += f"• Изменения уроков на {date_word.lower()}:\n"
+                this_class_answer_string += created_changes_message
                 this_class_answer_string += "\n"
 
         if this_class_answer_string:
@@ -118,15 +113,18 @@ def parse_message_for_user(user):
 
 
 def get_and_send_for_all():
+    sent_alerts_counter = 0
     users = user_db.get_all_users()
 
     for user in users:
+        title = "ОБНОВЛЕНИЕ ДЗ И РАСПИСАНИЯ.\n\n"
         answer = parse_message_for_user(user)
 
         if answer:
-            Alerts.send_alerts([user['id']], answer)
+            Alerts.send_alerts([user['id']], title + answer)
+            sent_alerts_counter += 1
 
-    logger.log("alerts", "alerts are sent")
+    logger.log("alerts", f"Bot has sent {sent_alerts_counter} alerts!")
 
 
 if __name__ == '__main__':
