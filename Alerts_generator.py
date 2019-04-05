@@ -1,16 +1,16 @@
 from lessons_db_manip import LessonDbReq as Ldb
 from users_db_parser import UserDbReq as Udb
-import eljur_api
+from eljur_api import Student
 import logger
 import Alerts
 import config
 
-from functions import classes, cur_date, get_word_by_date, preset, tm, del_op
-student = eljur_api.Student(**preset)
+from functions import cur_date, get_word_by_date, preset, tm
+
+student = Student(**preset)
 
 DATES_ADD = [0, 1, 2, 3]
 flag_on_PC = config.params['flag_on_PC']
-
 
 if flag_on_PC:
     lesson_db = Ldb()
@@ -32,143 +32,103 @@ def is_time_to_work():
         return False
 
 
-def dates_add():
+def list_of_adding_dates():
     hour = tm().hour + 3
-    minutes = tm().minute
 
-    if 15 <= hour and 30 <= minutes:
-        return [1, 2, 3]
+    if 15 <= hour:
+        return [cur_date(d) for d in [1, 2, 3]]
 
-    return [0, 1, 2, 3]
-
-
-def update_homework():
-    dates = [cur_date(d) for d in dates_add()]
-    last = max(dates)
-
-    for class_name in classes:
-        for date in dates:
-            r = student.get_hometask(class_name, date)
-            add_dict = {}
-            if r:
-                homework = r['days'][date]['items']
-                for lesson in homework:
-                    temp = ""
-                    lesson_name = lesson['name']
-
-                    if 'homework' in lesson.keys():
-                        task = lesson['homework']
-                        temp += f"{task['1']['value']}\n"
-
-                    if 'files' in lesson.keys():
-                        temp += "Файлы:\n"
-                        for file in lesson['files']['file']:
-                            temp += f"{file['filename']}: {file['link']}\n"
-
-                    if temp:
-                        add_dict[lesson_name] = temp
-
-            temp = lesson_db.get_schedule(class_name, date)
-            if not temp:
-                lesson_db.add_schedule(class_name, date)
-
-            schedule = lesson_db.get_schedule(class_name, date)
-            for num, lessons in schedule.items():
-                for lesson in lessons:
-                    if lesson['name'] in add_dict.keys() and add_dict[lesson['name']]:
-                        if '\'' in add_dict[lesson['name']]:
-                            add_dict[lesson['name']] = del_op(add_dict[lesson['name']])
-                        if add_dict[lesson['name']] != lesson['homework']:
-                            if date != last:
-                                lesson_db.edit_lesson(class_name, date, num, lesson['name'],
-                                                      {'homework': add_dict[lesson['name']],
-                                                       'unsent_homework': 1})
-                            else:
-                                lesson_db.edit_lesson(class_name, date, num, lesson['name'],
-                                                      {'homework': add_dict[lesson['name']]})
-
-                        add_dict[lesson['name']] = None
-            logger.log("alerts", f"{class_name} on {date} added")
+    return [cur_date(d) for d in [0, 1, 2, 3]]
 
 
-def erase_flags():
-    dates = [cur_date(d) for d in dates_add()]
-
-    for class_name in classes:
-        for date in dates:
-            lesson_db.erase_unsent_homework(date, class_name)
-
-    logger.log("alerts", "flags deleted")
+def update_information():
+    lesson_db.add_schedules(list_of_dates=list_of_adding_dates())
 
 
-def get_changes(to_date, for_class):
-    alerts = lesson_db.find_unsent_changes(to_date, for_class)
-    message = ""
-    for alert in alerts:
-        comment = alert['comment']
-        lesson = alert['lesson']
-        number = alert['number']
-        date = get_word_by_date(to_date)
-        message += f"{date} изменения {number} урока {lesson}: {comment}"
-    return message
+def parse_one_lesson(lesson):
+    return f"{lesson['name']} ({lesson['number']} урок):\n{lesson['homework']}\n"
 
 
-def get_homework_and_send(to_date, for_class):
-    alerts = lesson_db.find_unsent_homework(to_date, for_class)
-    message = ""
-    for alert in alerts:
-        homework = alert['homework']
-        name = alert['name']
-        date = get_word_by_date(to_date)
-        message += f"Выложено дз по {name} на {date}:\n {homework}\n"
-
-
-def send_changes(for_date, to_class):
-    class_participants = user_db.get_users_by_subs(to_class)
-    message = get_changes(for_date, to_class)
-    Alerts.send_alerts(class_participants, message)
-
-
-def send_to_user(user, date, c, schedule):
-    subs = user['subs']
-
-    if c not in subs:
-        return
-
-    date_word = get_word_by_date(date)
-
-    title = f"Выложено домашнее задание на {date_word.lower()}:\n"
+def create_homework_message(schedule, user_subs):
     ans = ""
 
-    for lesson in schedule:
-        if 'grp' not in lesson:
-            ans += f"{lesson['name']}:\n{lesson['homework']}\n"
-        else:
-            if lesson['grp'] in subs[c].get(lesson['name'], []) or lesson['grp'] is None:
-                ans += f"{lesson['name']}:\n{lesson['homework']}\n"
+    for lesson_number, lessons in schedule.items():
+        for lesson in lessons:
+            if lesson['homework'] is None or not lesson['unsent_homework']:
+                continue
 
-    if ans:
-        Alerts.send_alerts([user['id']], title + ans)
+            if lesson['grp'] is None:
+                ans += parse_message_for_user(lesson)
+
+            elif not user_subs.get(lesson['name'], []):
+                ans += parse_message_for_user(lesson)
+
+            elif lesson['grp'] in user_subs[lesson['name']]:
+                ans += parse_message_for_user(lesson)
+
+        if ans:
+            return ans
+
+
+def create_changes_message(schedule):
+    ans = ""
+
+    for lesson_number, lessons in schedule.items():
+        for lesson in lessons:
+            if lesson['unsent_change']:
+                ans += f"{lesson['name']} ({lesson['number']} урок):\n"
+
+        if ans:
+            return ans
+
+
+def parse_message_for_user(user):
+    answer_string = ""
+    dates = list_of_adding_dates()
+
+    for user_class, user_subs in user['subs'].items():
+        this_class_answer_string = ""
+        for date in dates:
+            date_word = get_word_by_date(date)
+            schedule = lesson_db.get_schedule(user_class, date)
+            created_homework_message = create_homework_message(schedule, user_subs)
+            created_changes_message = create_changes_message(schedule)
+
+            if created_homework_message is not None:
+                this_class_answer_string += f"• Выложено домашнее задание на {date_word.lower()}:\n"
+                this_class_answer_string += created_homework_message
+                this_class_answer_string += "\n"
+
+            if created_changes_message is not None:
+                this_class_answer_string += f"• Изменения уроков на {date_word.lower()}:\n"
+                this_class_answer_string += created_changes_message
+                this_class_answer_string += "\n"
+
+        if this_class_answer_string:
+            answer_string += f"Класс {user_class}:\n\n"
+            answer_string += this_class_answer_string
+
+    logger.log("alerts", f"parsed message for user {user['first_name']} {user['last_name']}, ans: {answer_string}")
+    return answer_string
 
 
 def get_and_send_for_all():
-    dates = [cur_date(d) for d in dates_add()]
+    sent_alerts_counter = 0
     users = user_db.get_all_users()
 
-    for date in dates:
-        for c in classes:
-            schedule = lesson_db.find_unsent_homework(date, c)
-            if not schedule:
-                continue
+    for user in users:
+        title = "ОБНОВЛЕНИЕ ДЗ И РАСПИСАНИЯ.\n\n"
+        answer = parse_message_for_user(user)
 
-            for user in users:
-                send_to_user(user, date, c, schedule)
+        if answer:
+            Alerts.send_alerts([user['id']], title + answer)
+            sent_alerts_counter += 1
 
-    logger.log("alerts", "alerts are sent")
+    logger.log("alerts", f"Bot has sent {sent_alerts_counter} alerts!")
 
 
 if __name__ == '__main__':
-    update_homework()
+    update_information()
     if is_time_to_work():
         get_and_send_for_all()
-        erase_flags()
+        lesson_db.erase_unsent_list(date_list=list_of_adding_dates())
