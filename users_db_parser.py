@@ -37,7 +37,7 @@ class UserDbReq:
                     confirmed int not null, 
                     status text not null,
                     request text,
-                    vk_id int unique,
+                    vk_id text unique,
                     tg_id int unique, 
                     subs text,
                     schedule_params text,
