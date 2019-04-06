@@ -12,7 +12,10 @@ sessionStorage = {}
 
 @app.route("/", methods=['POST'])
 def main():
-    logger.log('flask_app.py', 'new request')
+    f = open('debbug.txt', 'a')
+    print('DOROU', file=f)
+    f.close()
+    logger.log('eljur_flask_app.py', 'new request')
 
     response = {
         "version": request.json['version'],
@@ -24,7 +27,7 @@ def main():
 
     handle_dialog(request.json, response)
 
-    logger.log('flask_app.py', f"response '{response}'")
+    logger.log('eljur_flask_app.py', f"response '{response}'")
 
     return json.dumps(
         response,
@@ -34,6 +37,9 @@ def main():
 
 
 def handle_dialog(req, res):
+    f = open('debbug.txt', 'a')
+    print('DOROggg', file=f)
+    f.close()
     if req['session']['new']:
         # Это новый пользователь.
         res['response']['text'] = 'Привет! Что ты хочешь узнать?'
@@ -43,9 +49,21 @@ def handle_dialog(req, res):
         "first_name": '',
         "last_name": '',
         "sex": '',
-        "src": "alice",
+        "src": "vk",
         "id": req['session']['user_id'],
         "text": req['request']['command'],
     }
-    res['response']['text'] = user_req.parse_message_from_user(user_dict)
-    return
+    f = open('debbug.txt', 'a')
+    print(req, file=f)
+    print(res, file=f)
+    f.close()
+    try:
+        res['response']['text'] = user_req.parse_message_from_user(user_dict)
+        f = open('debbug.txt', 'a')
+        print(res, file=f)
+        f.close()
+        return
+    except Exception as err:
+        f = open('debbug.txt', 'a')
+        print(err, file=f)
+        f.close()
