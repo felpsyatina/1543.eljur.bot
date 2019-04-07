@@ -182,7 +182,10 @@ class UserDbReq:
         if src == "tg":
             upd_key = f"tg_id={user_id}"
 
-        if upd_key is None:
+        if src == "alice":
+            upd_key = f"alice_id='{user_id}'"
+
+        if upd_key == "":
             logger.log("user_db_manip", f"update_user: tg_id and vk_id are None!")
             return None
 
