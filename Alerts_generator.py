@@ -58,13 +58,13 @@ def create_homework_message(schedule, user_subs):
                 continue
 
             if lesson['grp'] is None:
-                ans += parse_message_for_user(lesson)
+                ans += parse_one_lesson(lesson)
 
             elif not user_subs.get(lesson['name'], []):
-                ans += parse_message_for_user(lesson)
+                ans += parse_one_lesson(lesson)
 
             elif lesson['grp'] in user_subs[lesson['name']]:
-                ans += parse_message_for_user(lesson)
+                ans += parse_one_lesson(lesson)
 
         if ans:
             return ans
@@ -86,6 +86,7 @@ def parse_message_for_user(user):
     answer_string = ""
     dates = list_of_adding_dates()
 
+    print(user)
     for user_class, user_subs in user['subs'].items():
         this_class_answer_string = ""
         for date in dates:
