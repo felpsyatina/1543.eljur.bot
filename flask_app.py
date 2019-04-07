@@ -12,9 +12,6 @@ sessionStorage = {}
 
 @app.route("/", methods=['POST'])
 def main():
-    f = open('debbug.txt', 'a')
-    print('DOROU', file=f)
-    f.close()
     logger.log('eljur_flask_app.py', 'new request')
 
     response = {
@@ -37,33 +34,22 @@ def main():
 
 
 def handle_dialog(req, res):
-    f = open('debbug.txt', 'a')
-    print('DOROggg', file=f)
-    f.close()
     if req['session']['new']:
         # Это новый пользователь.
         res['response']['text'] = 'Привет! Что ты хочешь узнать?'
         return
 
     user_dict = {
-        "first_name": '',
-        "last_name": '',
+        "first_name": 'Lol',
+        "last_name": 'Kekevich',
         "sex": '',
-        "src": "vk",
+        "src": "alice",
         "id": req['session']['user_id'],
         "text": req['request']['command'],
     }
-    f = open('debbug.txt', 'a')
-    print(req, file=f)
-    print(res, file=f)
-    f.close()
     try:
-        res['response']['text'] = user_req.parse_message_from_user(user_dict)
-        f = open('debbug.txt', 'a')
-        print(res, file=f)
-        f.close()
+        res['response']['text'] = user_req.parse_message_from_user(user_dict)['text']
         return
     except Exception as err:
-        f = open('debbug.txt', 'a')
-        print(err, file=f)
-        f.close()
+        logger.log('eljur_flask_app.py', 'error:', str(err))
+
