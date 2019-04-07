@@ -76,6 +76,7 @@ class User:
         self.src = user.get('src', 'vk')
         self.normal_text = user['text'].rstrip()
         self.text = user['text'].rstrip().lower()
+        self.attachment = user.get('attachment', {})
         self.is_new = False
         self.opt_class = None
 
@@ -152,6 +153,13 @@ class User:
 
         if valica_parse.type == "homework":
             return self.homework(list_of_dates=valica_parse.list_of_dates, subs=valica_parse.subs)
+
+        if self.attachment.get('attach1_type', None) == "sticker":
+            return {
+                "text": "Ага, стикер!",
+                "buttons": ans_buttons,
+                "attach": "doc-165897409_472977896",
+            }
 
         try:
             for key, value in ad.quest.items():
@@ -1025,9 +1033,6 @@ def process_message_from_user(user_dict):
     logger.log("user_req", "process request")
 
     user = User(user_dict)
-
-    if user.text[0] == '@':
-        answer = user.valica()
 
     answer = user.parse_message()
     user.update_db()
