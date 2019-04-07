@@ -37,8 +37,9 @@ class UserDbReq:
                     confirmed int not null, 
                     status text not null,
                     request text,
-                    vk_id text unique,
+                    vk_id int unique,
                     tg_id int unique, 
+                    alice_id text unique, 
                     subs text,
                     schedule_params text,
                     homework_params text
@@ -48,20 +49,24 @@ class UserDbReq:
             cursor.execute(query)
             logger.log("user_db_manip", f"table: '{table_name}' created.")
 
-    def add_user(self, first_name, last_name, user_id, scr):
+    def add_user(self, first_name, last_name, user_id, src):
         vk_id = "NULL"
         tg_id = "NULL"
+        alice_id = "NULL"
 
-        if scr == "vk":
+        if src == "vk":
             vk_id = user_id
 
-        if scr == "tg":
+        if src == "tg":
             tg_id = user_id
+
+        if src == "alice":
+            alice_id = user_id
 
         with self.run_cursor() as cursor:
             query = f"""
-                INSERT INTO users (first_name, last_name, confirmed, status, vk_id, tg_id, subs) 
-                VALUES('{first_name}', '{last_name}', 0, '{first_status}', {vk_id}, {tg_id}, '{jd({})}')
+                INSERT INTO users (first_name, last_name, confirmed, status, vk_id, tg_id, alice_id, subs) 
+                VALUES('{first_name}', '{last_name}', 0, '{first_status}', {vk_id}, {tg_id}, '{alice_id}', '{jd({})}')
             """
             cursor.execute(query)
             logger.log("user_db_manip", f"user '{first_name} {last_name}' created!")
