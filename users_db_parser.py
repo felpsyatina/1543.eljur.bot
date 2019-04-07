@@ -120,7 +120,7 @@ class UserDbReq:
             elif alice_id is not None:
                 query = f"""
                     SELECT * FROM users WHERE
-                    alice_id = {alice_id};
+                    alice_id = '{alice_id}';
                 """
 
             cursor.execute(query)
