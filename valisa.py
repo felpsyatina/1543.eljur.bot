@@ -70,7 +70,7 @@ class Valica:
         all_subs = {}
 
         for class_name in result:
-            all_subs[class_name.upper()] = {}
+            all_subs[class_name.upper().strip()] = {}
         self.subs = all_subs
 
     def extract_dates(self, string):
