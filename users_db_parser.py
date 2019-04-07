@@ -92,12 +92,16 @@ class UserDbReq:
     def get_user_info(self, user_id, src):
         vk_id = None
         tg_id = None
+        alice_id = None
 
         if src == "vk":
             vk_id = user_id
 
         if src == "tg":
             tg_id = user_id
+
+        if src == "alice":
+            alice_id = user_id
 
         with self.run_cursor() as cursor:
             query = None
@@ -111,6 +115,12 @@ class UserDbReq:
                 query = f"""
                     SELECT * FROM users WHERE
                     tg_id = {tg_id};
+                """
+
+            elif alice_id is not None:
+                query = f"""
+                    SELECT * FROM users WHERE
+                    alice_id = {alice_id};
                 """
 
             cursor.execute(query)
