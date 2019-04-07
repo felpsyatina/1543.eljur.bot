@@ -21,6 +21,12 @@ queue = deque()
 
 def write(u_id, mess, keyboard=None, attach=None, sticker=None):
     try:
+        if keyboard is None and type(mess) == list:
+            for text in mess:
+                write(u_id, text)
+                sleep(0.3)
+            return
+
         params = {
             'user_id': u_id,
             'message': mess,
@@ -234,6 +240,6 @@ if __name__ == '__main__':
 
             write(r['user_id'], ans['text'], mes_buttons, mes_attach, mes_sticker)
 
-            logger.log("vkbot", "answer sent: " + ans['text'])
+            logger.log("vkbot", f"answer sent: {ans['text']}")
         else:
             sleep(0.2)

@@ -344,18 +344,24 @@ class User:
         answer_arr = []
 
         for c in self.subs.keys():
-            answer_arr.append(f"Класс {c}:\n")
+            this_class_homework = ""
+            this_class_homework += f"Класс {c}:\n"
             it = 1
             for d in list_of_dates:
-                answer_arr.append(f"{ROMANS2[it]}. {get_word_by_date(d)}:")
+                this_class_homework += f"{ROMANS2[it]}. {get_word_by_date(d)}:"
                 day_schedule = self.day_schedule(c, d, 1)
                 if day_schedule:
-                    answer_arr.append(day_schedule)
+                    this_class_homework += day_schedule
                 else:
-                    answer_arr.append("Уроков (в моей базе) нет.\n")
+                    this_class_homework += "Уроков (в моей базе) нет.\n"
                 it += 1
 
-        return generate_return("\n".join(answer_arr))
+            answer_arr.append(this_class_homework)
+
+        return {
+            "text": answer_arr,
+            "buttons": None
+        }
 
     def gen_subs_but(self):
         buttons = []
