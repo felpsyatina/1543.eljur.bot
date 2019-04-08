@@ -36,9 +36,9 @@ def list_of_adding_dates():
     hour = tm().hour + 3
 
     if 15 <= hour:
-        return [cur_date(d) for d in [1, 2, 3]]
+        return [cur_date(d) for d in [1, 2, 3, 4]]
 
-    return [cur_date(d) for d in [0, 1, 2, 3]]
+    return [cur_date(d) for d in [0, 1, 2, 3, 4]]
 
 
 def update_information():
@@ -86,7 +86,6 @@ def parse_message_for_user(user):
     answer_string = ""
     dates = list_of_adding_dates()
 
-    print(user)
     for user_class, user_subs in user['subs'].items():
         this_class_answer_string = ""
         for date in dates:

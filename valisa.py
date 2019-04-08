@@ -6,9 +6,67 @@ import functions
 
 # Тестовая версия валисы
 
+def _test():
+    import doctest
+    doctest.testmod()
+
 
 class Valica:
     def __init__(self, string):
+        """
+            >>> req = Valica("расписание 10в 20190404")
+            >>> req.type, req.subs, req.list_of_dates
+            ('schedule', {'10В': {}}, ['20190404'])
+
+            >>> req = Valica("домашка 6г 2019.04.04")
+            >>> req.type, req.subs, req.list_of_dates
+            ('homework', {'6Г': {}}, ['20190404'])
+
+            >>> req = Valica("домашка 11г 2019.04.12")
+            >>> req.type, req.subs, req.list_of_dates
+            ('homework', {'11Г': {}}, ['20190412'])
+
+            >>> req = Valica("домашка 10а 1 апреля")
+            >>> req.type, req.subs, req.list_of_dates
+            ('homework', {'10А': {}}, ['20190401'])
+
+            >>> req = Valica("домашка 5 марта 9в")
+            >>> req.type, req.subs, req.list_of_dates
+            ('homework', {'9В': {}}, ['20190305'])
+
+            >>> req = Valica("расп на 3 мая 7а")
+            >>> req.type, req.subs, req.list_of_dates
+            ('schedule', {'7А': {}}, ['20190503'])
+
+            >>> req = Valica("расписание 5а 201904")
+            >>> req.type, req.subs, req.list_of_dates
+            ('schedule', {'5А': {}}, None)
+
+            >>> req = Valica("дз 10в 5 апреля 20190304")
+            >>> req.type, req.subs, req.list_of_dates
+            ('homework', {'10В': {}}, ['20190304', '20190405'])
+
+            >>> req = Valica("домашнее задание 8а, 8г 20190402, 20190501")
+            >>> req.type, req.subs, req.list_of_dates
+            ('homework', {'8А': {}, '8Г': {}}, ['20190402', '20190501'])
+
+            >>> req = Valica("домашнее задание 10а 5г 5 апреля 20190405")
+            >>> req.type, req.subs, req.list_of_dates
+            ('homework', {'10А': {}, '5Г': {}}, ['20190501'])
+
+            >>> req = Valica("домашнее задание 8г 5 апреля 20190405")
+            >>> req.type, req.subs, req.list_of_dates
+            ('homework', {'8Г': {}}, ['20190405'])
+
+            >>> req = Valica("дз 20190410")
+            >>> req.type, req.subs, req.list_of_dates
+            ('homework', None, ['20190410'])
+
+            >>> req = Valica("без всего запроса 5а 201904")
+            >>> req.type, req.subs, req.list_of_dates
+            (None, None, None)
+        """
+
         self.definers = [
             {"definer_func": self.is_get_home_task,
              "params": ["subs", "list_of_dates"],
@@ -41,7 +99,7 @@ class Valica:
     def is_get_home_task(self, string):
         string = self.delete_message_from_request(string)
 
-        regexes = [r"домашняя работа", r"дз"]
+        regexes = [r"домашняя работа", r"дз", r"домашка", r"домашнее задание"]
 
         for regex in regexes:
             result = re.search(regex, string)
@@ -71,7 +129,9 @@ class Valica:
 
         for class_name in result:
             all_subs[class_name.upper().strip()] = {}
-        self.subs = all_subs
+
+        if all_subs:
+            self.subs = all_subs
 
     def extract_dates(self, string):
         # full date is YYYMMDD
@@ -117,7 +177,8 @@ class Valica:
 
         regex_custom_delta = [
             (r"(через|спустя) (-)?[0-9][1-9]* (дня|дней|суток|сутка|сутки)", r"(-)?[0-9][1-9]*", False),
-            (r"(-)?[0-9][1-9]* (дня|дней|суток|сутка|сутки) (до|назад)", r"(-)?[0-9][1-9]*", True)]
+            (r"(-)?[0-9][1-9]* (дня|дней|суток|сутка|сутки) (до|назад)", r"(-)?[0-9][1-9]*", True)
+        ]
         for regex, delta_extract, is_reversed in regex_custom_delta:
             result = re.search(regex, string)
             if result is not None:
@@ -126,7 +187,11 @@ class Valica:
                     delta *= -1
                 spotted_dates.append(self.get_cur_date(delta))
 
-        self.list_of_dates = list(set(spotted_dates))  # убираю одинаковые даты
+        temp_list_of_dates = list(set(spotted_dates))  # убираю одинаковые даты
+
+        if temp_list_of_dates:
+            temp_list_of_dates.sort()
+            self.list_of_dates = temp_list_of_dates
 
     def get_params(self, string, needed_params):
         params = {}
@@ -146,6 +211,8 @@ class Valica:
 
 
 if __name__ == '__main__':
+    _test()  # эта функция вызывеат доктесты в Валисе.
+
     while 1:
         req = Valica(input())
         print(req.type, req.subs, req.list_of_dates)
