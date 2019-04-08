@@ -125,6 +125,12 @@ class User:
         }
         user_db.update_user(changes, self.id, self.src)
 
+    @staticmethod
+    def generate_return(text):
+        if type(text) == str:
+            return {"text": text, "buttons": None}
+        return text
+
     def parse_message(self):
         if self.status not in self.parse_functions:
             self.status = "menu"
@@ -159,7 +165,7 @@ class User:
                     needed_function = key_words_to_function[value]
                     answer_from_function = needed_function(self.src, self.id, self.text)
 
-                    return generate_return(answer_from_function)
+                    return self.generate_return(answer_from_function)
             logger.log("user_req", f"Запрос не найден. Запрос: {self.text}")
             return {"text": "Запроса не найдено :( ", "buttons": ans_buttons}
 
@@ -317,7 +323,7 @@ class User:
                     answer_arr.append("Уроков (в моей базе) нет.\n")
                 it += 1
 
-        return generate_return("\n".join(answer_arr))
+        return self.generate_return("\n".join(answer_arr))
 
     def homework(self, list_of_dates=None, subs=None):
         logger.log("user_req", f"getting schedule for {self.first} {self.last}")
@@ -347,7 +353,7 @@ class User:
                     answer_arr.append("Уроков (в моей базе) нет.\n")
                 it += 1
 
-        return generate_return("\n".join(answer_arr))
+        return self.generate_return("\n".join(answer_arr))
 
     def gen_subs_but(self):
         buttons = []
@@ -719,12 +725,6 @@ def get_day_and_class_name_from_text(text):
     return [day, class_name]
 
 
-def generate_return(text):
-    if type(text) == str:
-        return {"text": text, "buttons": None}
-    return text
-
-
 def send_acc_information(src, user_id, text):
     logger.log("user_req", "request for acc data")
     ans_mes = user_db.get_user_info(user_id, src)
@@ -992,7 +992,10 @@ def parse_menu(src, user_id, text):
                 needed_function = key_words_to_function[value]
                 answer_from_function = needed_function(src, user_id, text)
 
-                return generate_return(answer_from_function)
+                return {
+                    "text": answer_from_function,
+                    "buttons": None
+                }
         logger.log("user_req", f"Запрос не найден. Запрос: {text}")
         return {"text": "Запроса не найдено :( ", "buttons": None}
 

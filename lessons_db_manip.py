@@ -262,10 +262,15 @@ class LessonDbReq:
 
         homework_changed = old_lessons and lesson_homework and lesson_homework != old_lessons[0]['homework']
         if homework_changed and old_lessons[0]["is_updated"]:
+            if date == cur_date(1):
+                is_unsent = 1
+            else:
+                is_unsent = 0
+
             with self.run_cursor() as cursor:
                 query = f"""
                     UPDATE lessons SET homework = {self.parse_string_in_query(lesson_homework)},
-                    unsent_homework = 1 WHERE 
+                    unsent_homework = {is_unsent} WHERE 
                     class_id = '{class_id}'
                     AND date = '{date}' 
                     AND number = '{lesson_num}'
