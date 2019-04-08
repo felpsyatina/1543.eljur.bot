@@ -12,7 +12,7 @@ sessionStorage = {}
 
 @app.route("/", methods=['POST'])
 def main():
-    logger.log('flask_app.py', 'new request')
+    logger.log('eljur_flask_app.py', 'new request')
 
     response = {
         "version": request.json['version'],
@@ -24,7 +24,7 @@ def main():
 
     handle_dialog(request.json, response)
 
-    logger.log('flask_app.py', f"response '{response}'")
+    logger.log('eljur_flask_app.py', f"response '{response}'")
 
     return json.dumps(
         response,
@@ -40,12 +40,16 @@ def handle_dialog(req, res):
         return
 
     user_dict = {
-        "first_name": '',
-        "last_name": '',
+        "first_name": 'Lol',
+        "last_name": 'Kekevich',
         "sex": '',
         "src": "alice",
         "id": req['session']['user_id'],
         "text": req['request']['command'],
     }
-    res['response']['text'] = user_req.parse_message_from_user(user_dict)
-    return
+    try:
+        res['response']['text'] = user_req.parse_message_from_user(user_dict)['text']
+        return
+    except Exception as err:
+        logger.log('eljur_flask_app.py', 'error:', str(err))
+

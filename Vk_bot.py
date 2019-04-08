@@ -19,8 +19,14 @@ fail = "Простите, в нашем коде кто-то набагал. М�
 queue = deque()
 
 
-def write(u_id, mess, keyboard=None, attach=None):
+def write(u_id, mess, keyboard=None, attach=None, sticker=None):
     try:
+        if keyboard is None and type(mess) == list:
+            for text in mess:
+                write(u_id, text)
+                sleep(0.3)
+            return
+
         params = {
             'user_id': u_id,
             'message': mess,
@@ -34,6 +40,11 @@ def write(u_id, mess, keyboard=None, attach=None):
             params['attachment'] = attach
 
         vk.method('messages.send', params)
+
+        if sticker:
+            params = {'user_id': u_id, 'v': "5.53", 'sticker_id': sticker}
+            print(params)
+            vk.method('messages.sendSticker', params)
 
     except Exception as ex:
         params = {'user_id': u_id, 'message': fail, 'v': "5.53"}
@@ -76,7 +87,8 @@ def make_key(a):
             "one_time": None,
             "buttons": buttons
         }
-    except Exception:
+    except Exception as ex:
+        logger.log("vk", f"make_key error: {ex}")
         return None
 
 
@@ -94,7 +106,8 @@ def make_key_fast(s1, s2="", s3="", s4="", s5="", s6=""):
                 curr.append({"text": j})
             b.append(curr)
         return make_key(b)
-    except Exception:
+    except Exception as ex:
+        logger.log("vk", f"error: {ex}")
         return {}
 
 
@@ -107,7 +120,8 @@ def make_key_arr(a):
                 row.append({"text": j})
             b.append(row)
         return make_key(b)
-    except Exception:
+    except Exception as ex:
+        logger.log("vk", f"make_key_arr error: {ex}")
         return {}
 
 
@@ -162,7 +176,8 @@ def go():
                         'user_id': event.user_id,
                         'message': event.text,
                         'message_id': event.message_id,
-                        'from_user': event.from_user
+                        'from_user': event.from_user,
+                        'attachment': event.attachments
                     })
                 sleep(0.05)
         except Exception as ex:
@@ -201,7 +216,6 @@ if __name__ == '__main__':
             r = get_next()
             logger.log("vkbot", "new message from " + str(r["user_id"]) + " message: " + str(r["message"]))
             name = _get_users_info_from_vk_ids([r['user_id']])[0]
-
             u_dict = {
                 "first_name": name['first_name'],
                 "last_name": name['last_name'],
@@ -209,6 +223,7 @@ if __name__ == '__main__':
                 "src": "vk",
                 "id": r['user_id'],
                 "text": r['message'],
+                "attachment": r['attachment']
             }
 
             try:
@@ -220,10 +235,11 @@ if __name__ == '__main__':
             logger.log("vkbot", "Received answer " + str(ans))
 
             mes_buttons = keyboard_with_colors(ans.get('buttons', None))
-
             mes_attach = ans.get('attach', None)
-            write(r['user_id'], ans['text'], mes_buttons, mes_attach)
+            mes_sticker = ans.get('sticker', None)
 
-            logger.log("vkbot", "answer sent: " + ans['text'])
+            write(r['user_id'], ans['text'], mes_buttons, mes_attach, mes_sticker)
+
+            logger.log("vkbot", f"answer sent: {ans['text']}")
         else:
             sleep(0.2)

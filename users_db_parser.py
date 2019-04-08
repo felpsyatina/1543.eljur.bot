@@ -39,6 +39,7 @@ class UserDbReq:
                     request text,
                     vk_id int unique,
                     tg_id int unique, 
+                    alice_id text unique, 
                     subs text,
                     schedule_params text,
                     homework_params text
@@ -48,23 +49,37 @@ class UserDbReq:
             cursor.execute(query)
             logger.log("user_db_manip", f"table: '{table_name}' created.")
 
-    def add_user(self, first_name, last_name, user_id, scr):
+    def add_user(self, first_name, last_name, user_id, src):
         vk_id = "NULL"
         tg_id = "NULL"
+        alice_id = "NULL"
 
-        if scr == "vk":
+        if src == "vk":
             vk_id = user_id
 
-        if scr == "tg":
+        if src == "tg":
             tg_id = user_id
+
+        if src == "alice":
+            alice_id = self.parse_string_in_query(user_id)
 
         with self.run_cursor() as cursor:
             query = f"""
-                INSERT INTO users (first_name, last_name, confirmed, status, vk_id, tg_id, subs) 
-                VALUES('{first_name}', '{last_name}', 0, '{first_status}', {vk_id}, {tg_id}, '{jd({})}')
+                INSERT INTO users (first_name, last_name, confirmed, status, vk_id, tg_id, alice_id, subs) 
+                VALUES('{first_name}', '{last_name}', 0, '{first_status}', {vk_id}, {tg_id}, {alice_id}, '{jd({})}')
             """
             cursor.execute(query)
             logger.log("user_db_manip", f"user '{first_name} {last_name}' created!")
+
+    @staticmethod
+    def parse_string_in_query(string):
+        if type(string) == str:
+            return f"'{string}'"
+
+        if string is None:
+            return "NULL"
+
+        return string
 
     def get_columns_info(self, table="users"):
         with self.run_cursor() as cursor:
@@ -87,12 +102,16 @@ class UserDbReq:
     def get_user_info(self, user_id, src):
         vk_id = None
         tg_id = None
+        alice_id = None
 
         if src == "vk":
             vk_id = user_id
 
         if src == "tg":
             tg_id = user_id
+
+        if src == "alice":
+            alice_id = user_id
 
         with self.run_cursor() as cursor:
             query = None
@@ -106,6 +125,12 @@ class UserDbReq:
                 query = f"""
                     SELECT * FROM users WHERE
                     tg_id = {tg_id};
+                """
+
+            elif alice_id is not None:
+                query = f"""
+                    SELECT * FROM users WHERE
+                    alice_id = '{alice_id}';
                 """
 
             cursor.execute(query)
@@ -167,7 +192,10 @@ class UserDbReq:
         if src == "tg":
             upd_key = f"tg_id={user_id}"
 
-        if upd_key is None:
+        if src == "alice":
+            upd_key = f"alice_id='{user_id}'"
+
+        if upd_key == "":
             logger.log("user_db_manip", f"update_user: tg_id and vk_id are None!")
             return None
 
