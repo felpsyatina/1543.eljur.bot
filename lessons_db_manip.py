@@ -263,7 +263,6 @@ class LessonDbReq:
             old_lessons[0]['homework'] = old_lessons[0]['homework'].strip()
 
         homework_changed = old_lessons and lesson_homework and lesson_homework != old_lessons[0]['homework']
-        homework_string = self.parse_string_in_query(lesson_homework)
 
         if homework_changed and old_lessons[0]["is_updated"]:
             if date == cur_date(1):
@@ -290,7 +289,8 @@ class LessonDbReq:
                     f"from {old_lessons[0]['homework']} to {lesson_homework}"
                 )
 
-        if old_lessons and lesson_name != old_lessons[0]['name'] and old_lessons[0]["is_updated"]:
+        if old_lessons and lesson_name != old_lessons[0]['name'] and "Урок отменен!" not in old_lessons[0]['name'] \
+                and old_lessons[0]["is_updated"]:
             new_lesson_name = f"{make_lined(old_lessons[0]['name'])} {lesson_name}"
 
             with self.run_cursor() as cursor:
