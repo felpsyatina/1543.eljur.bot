@@ -108,7 +108,12 @@ def parse_message_for_user(user):
             answer_string += f"Класс {user_class}:\n\n"
             answer_string += this_class_answer_string
 
-    logger.log("alerts", f"parsed message for user {user['first_name']} {user['last_name']}, ans: {answer_string}")
+        if user['tg_id']:
+            type_of_social_web = 'tg'
+        else:
+            type_of_social_web = 'vk'
+
+    logger.log("alerts_save", f"parsed message for user {user['first_name']} {user['last_name']} with id {user['id']} in {type_of_social_web}, ans: {answer_string}")
     return answer_string
 
 
