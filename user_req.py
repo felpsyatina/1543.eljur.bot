@@ -150,9 +150,15 @@ class User:
 
         ans_buttons = None
         if self.is_new:
-            ans_buttons = menu_buttons
+            return {
+                "text": f"Привет {self.first}, я Элжур Бот! Я могу выдавать расписание "
+                f"(например \"расписание 10в на завтра\") и домашнее задание "
+                f"(например \"дз 10в 20190404\"). Если возникнут проблемы, напиши Леше (ссылка на стене группы).",
+                "buttons": menu_buttons
+            }
 
         valica_parse = Valica(self.text)
+        valica_parse.list_of_dates = [int(d) for d in valica_parse.list_of_dates]  # даты инты пока что
 
         if valica_parse.type == "schedule":
             return self.schedule(list_of_dates=valica_parse.list_of_dates, subs=valica_parse.subs)
@@ -174,6 +180,13 @@ class User:
                     answer_from_function = needed_function(self.src, self.id, self.text)
 
                     return self.generate_return(answer_from_function)
+                
+            if len(self.text.split()) > 7:  # если челик написал целых 7 слов
+                return {
+                    "text": "Держи в курсе!)",
+                    "buttons": None
+                }
+
             logger.log("user_req", f"Запрос не найден. Запрос: {self.text}")
             return {"text": "Запроса не найдено :( ", "buttons": ans_buttons}
 
