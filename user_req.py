@@ -158,7 +158,8 @@ class User:
             }
 
         valica_parse = Valica(self.text)
-        valica_parse.list_of_dates = [int(d) for d in valica_parse.list_of_dates]  # даты инты пока что
+        if valica_parse.list_of_dates is not None:
+            valica_parse.list_of_dates = [int(d) for d in valica_parse.list_of_dates]  # даты инты пока что
 
         if valica_parse.type == "schedule":
             return self.schedule(list_of_dates=valica_parse.list_of_dates, subs=valica_parse.subs)
