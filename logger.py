@@ -33,12 +33,15 @@ def save_log_file(module, log_line):
 
 
 
-def log(module, log_line, add_time=True):
+def log(module, log_line, add_time=True, newlines=False):
 	if add_time:
 		curtime = " at " + str(datetime.now())
 	else:
 		curtime = ""
-	full_log_line = "**" + module + curtime + ": " + log_line.replace("\n", "\\") + "\n"
+	if not newlines:
+		log_line = log_line.replace("\n", "\\")
+
+	full_log_line = "**" + module + curtime + ": " + log_line + "\n"
 
 	sys.stderr.write(full_log_line)
 	sys.stderr.flush()
