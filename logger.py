@@ -38,7 +38,7 @@ def log(module, log_line, add_time=True):
 		curtime = " at " + str(datetime.now())
 	else:
 		curtime = ""
-	full_log_line = "**" + module + curtime + ": " + log_line + "\n"
+	full_log_line = "**" + module + curtime + ": " + log_line.replace("\n", "\\") + "\n"
 
 	sys.stderr.write(full_log_line)
 	sys.stderr.flush()
