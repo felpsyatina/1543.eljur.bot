@@ -152,7 +152,7 @@ class LessonDbReq:
             grp = None
 
         if grp is not None:
-            add_str += f"AND grp = {grp}"
+            add_str += f"AND grp = {self.parse_string_in_query(grp)}"
 
         with self.run_cursor() as cursor:
             columns = self.get_columns_names()
@@ -181,29 +181,29 @@ class LessonDbReq:
             return lesson_arr
 
     @staticmethod
-    def parse_homework(homework):
-        new_homework_dict = {}
+    def parse_homework(homework, lesson_name, lesson_grp=None):
         if not homework:
             return {}
 
         homework = homework['items']
         for lesson in homework:
-            old_homework = ""
-            lesson_name = lesson['name']
+            this_lesson_name = lesson['name']
+            this_lesson_grp = lesson.get('grp', None)
 
-            if 'homework' in lesson.keys():
-                task = lesson['homework']
-                old_homework += f"{task['1']['value']}\n"
+            if this_lesson_name == lesson_name and this_lesson_grp == lesson_grp:
 
-            if 'files' in lesson.keys():
-                old_homework += "Файлы:\n"
-                for file in lesson['files']['file']:
-                    old_homework += f"{file['filename']}: {file['link']}\n"
+                old_homework = ""
+                if 'homework' in lesson.keys():
+                    task = lesson['homework']
+                    old_homework += f"{task['1']['value']}\n"
 
-            if old_homework:
-                new_homework_dict[lesson_name] = old_homework
+                if 'files' in lesson.keys():
+                    old_homework += "Файлы:\n"
+                    for file in lesson['files']['file']:
+                        old_homework += f"{file['filename']}: {file['link']}\n"
+                return old_homework
 
-        return new_homework_dict
+        return None
 
     @staticmethod
     def parse_string_in_query(string):
@@ -225,13 +225,8 @@ class LessonDbReq:
 
         lesson_room = "NULL"
         lesson_teacher = "NULL"
-        lesson_grp = "NULL"
+        lesson_grp = None
         lesson_homework = None
-
-        if homework:
-            temp_homework = self.parse_homework(homework[date]).get(lesson_name, None)
-            if temp_homework is not None:
-                lesson_homework = f"{del_op(temp_homework).rstrip()}"
 
         if lesson["room"]:
             lesson_room = f"'{lesson['room']}'"
@@ -240,12 +235,19 @@ class LessonDbReq:
             lesson_teacher = f"'{lesson['teacher']}'"
 
         if "grp" in lesson:
-            lesson_grp = f"'{lesson['grp']}'"
+            lesson_grp = f"{lesson['grp']}"
             self.add_class_groups(class_id, lesson_name, lesson["grp"])
 
+        if homework:
+            temp_homework = self.parse_homework(homework[date], lesson_name, lesson_grp)
+            if temp_homework is not None:
+                lesson_homework = f"{del_op(temp_homework).rstrip()}"
+
+        grp_string = self.parse_string_in_query(lesson_grp)
+
         grp_add = ""
-        if lesson_grp != "NULL":
-            grp_add = f"AND grp = {lesson_grp}"
+        if grp_string != "NULL":
+            grp_add = f"AND grp = {grp_string}"
 
         old_lessons = self.get_lesson(class_id, date, lesson_num, grp=lesson_grp)
 
@@ -261,11 +263,18 @@ class LessonDbReq:
             old_lessons[0]['homework'] = old_lessons[0]['homework'].strip()
 
         homework_changed = old_lessons and lesson_homework and lesson_homework != old_lessons[0]['homework']
+
         if homework_changed and old_lessons[0]["is_updated"]:
+            if date == cur_date(1):
+                is_unsent = 1
+            else:
+                is_unsent = 0
+
             with self.run_cursor() as cursor:
                 query = f"""
-                    UPDATE lessons SET homework = {self.parse_string_in_query(lesson_homework)},
-                    unsent_homework = 1 WHERE 
+                    UPDATE lessons SET
+                    homework = {self.parse_string_in_query(lesson_homework)},
+                    unsent_homework = {is_unsent} WHERE 
                     class_id = '{class_id}'
                     AND date = '{date}' 
                     AND number = '{lesson_num}'
@@ -280,7 +289,8 @@ class LessonDbReq:
                     f"from {old_lessons[0]['homework']} to {lesson_homework}"
                 )
 
-        if old_lessons and lesson_name != old_lessons[0]['name'] and old_lessons[0]["is_updated"]:
+        if old_lessons and lesson_name != old_lessons[0]['name'] and "Урок отменен!" not in old_lessons[0]['name'] \
+                and old_lessons[0]["is_updated"]:
             new_lesson_name = f"{make_lined(old_lessons[0]['name'])} {lesson_name}"
 
             with self.run_cursor() as cursor:
@@ -306,9 +316,8 @@ class LessonDbReq:
                  date, grp, comment, unsent_change, unsent_homework, is_updated, homework)
                 VALUES (
                 '{lesson_name}', {lesson_num}, {class_id}, '{day_name}', {lesson_room},
-                {lesson_teacher}, {date}, {lesson_grp}, NULL, 0, 0, 0, {lesson_homework})
+                {lesson_teacher}, {date}, {grp_string}, NULL, 0, 0, 0, {lesson_homework})
             """
-
             cursor.execute(query)
 
     def add_schedule(self, class_name=None, date=None):

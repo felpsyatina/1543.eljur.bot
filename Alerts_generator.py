@@ -36,9 +36,9 @@ def list_of_adding_dates():
     hour = tm().hour + 3
 
     if 15 <= hour:
-        return [cur_date(d) for d in [1, 2, 3]]
+        return [cur_date(d) for d in [1, 2, 3, 4]]
 
-    return [cur_date(d) for d in [0, 1, 2, 3]]
+    return [cur_date(d) for d in [0, 1, 2, 3, 4]]
 
 
 def update_information():
@@ -58,13 +58,13 @@ def create_homework_message(schedule, user_subs):
                 continue
 
             if lesson['grp'] is None:
-                ans += parse_message_for_user(lesson)
+                ans += parse_one_lesson(lesson)
 
             elif not user_subs.get(lesson['name'], []):
-                ans += parse_message_for_user(lesson)
+                ans += parse_one_lesson(lesson)
 
             elif lesson['grp'] in user_subs[lesson['name']]:
-                ans += parse_message_for_user(lesson)
+                ans += parse_one_lesson(lesson)
 
         if ans:
             return ans
@@ -108,7 +108,12 @@ def parse_message_for_user(user):
             answer_string += f"Класс {user_class}:\n\n"
             answer_string += this_class_answer_string
 
-    logger.log("alerts", f"parsed message for user {user['first_name']} {user['last_name']}, ans: {answer_string}")
+    if user['tg_id']:
+        type_of_social_web = 'tg'
+    else:
+        type_of_social_web = 'vk'
+
+    logger.log("alerts_save", f"parsed message for user {user['first_name']} {user['last_name']} with id {user['id']} in {type_of_social_web}, ans: {answer_string}")
     return answer_string
 
 

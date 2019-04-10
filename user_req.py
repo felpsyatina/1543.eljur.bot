@@ -76,6 +76,7 @@ class User:
         self.src = user.get('src', 'vk')
         self.normal_text = user['text'].rstrip()
         self.text = user['text'].rstrip().lower()
+        self.attachment = user.get('attachment', {})
         self.is_new = False
         self.opt_class = None
 
@@ -125,6 +126,12 @@ class User:
         }
         user_db.update_user(changes, self.id, self.src)
 
+    @staticmethod
+    def generate_return(text):
+        if type(text) == str:
+            return {"text": text, "buttons": None}
+        return text
+
     def parse_message(self):
         if self.status not in self.parse_functions:
             self.status = "menu"
@@ -143,9 +150,16 @@ class User:
 
         ans_buttons = None
         if self.is_new:
-            ans_buttons = menu_buttons
+            return {
+                "text": f"Привет {self.first}, я Элжур Бот! Я могу выдавать расписание "
+                f"(например \"расписание 10в на завтра\") и домашнее задание "
+                f"(например \"дз 10в 20190404\"). Если возникнут проблемы, напиши Леше (ссылка на стене группы).",
+                "buttons": menu_buttons
+            }
 
         valica_parse = Valica(self.text)
+        if valica_parse.list_of_dates is not None:
+            valica_parse.list_of_dates = [int(d) for d in valica_parse.list_of_dates]  # даты инты пока что
 
         if valica_parse.type == "schedule":
             return self.schedule(list_of_dates=valica_parse.list_of_dates, subs=valica_parse.subs)
@@ -153,13 +167,27 @@ class User:
         if valica_parse.type == "homework":
             return self.homework(list_of_dates=valica_parse.list_of_dates, subs=valica_parse.subs)
 
+        if self.attachment.get('attach1_type', None) == "sticker":
+            return {
+                "text": "Ага, стикер!",
+                "buttons": ans_buttons,
+                "attach": "doc-165897409_472977896",
+            }
+
         try:
             for key, value in ad.quest.items():
                 if key in self.text:
                     needed_function = key_words_to_function[value]
                     answer_from_function = needed_function(self.src, self.id, self.text)
 
-                    return generate_return(answer_from_function)
+                    return self.generate_return(answer_from_function)
+                
+            if len(self.text.split()) > 7:  # если челик написал целых 7 слов
+                return {
+                    "text": "Держи в курсе!)",
+                    "buttons": None
+                }
+
             logger.log("user_req", f"Запрос не найден. Запрос: {self.text}")
             return {"text": "Запроса не найдено :( ", "buttons": ans_buttons}
 
@@ -317,7 +345,7 @@ class User:
                     answer_arr.append("Уроков (в моей базе) нет.\n")
                 it += 1
 
-        return generate_return("\n".join(answer_arr))
+        return self.generate_return("\n".join(answer_arr))
 
     def homework(self, list_of_dates=None, subs=None):
         logger.log("user_req", f"getting schedule for {self.first} {self.last}")
@@ -336,18 +364,24 @@ class User:
         answer_arr = []
 
         for c in self.subs.keys():
-            answer_arr.append(f"Класс {c}:\n")
+            this_class_homework = ""
+            this_class_homework += f"Класс {c}:\n"
             it = 1
             for d in list_of_dates:
-                answer_arr.append(f"{ROMANS2[it]}. {get_word_by_date(d)}:")
+                this_class_homework += f"{ROMANS2[it]}. {get_word_by_date(d)}:"
                 day_schedule = self.day_schedule(c, d, 1)
                 if day_schedule:
-                    answer_arr.append(day_schedule)
+                    this_class_homework += day_schedule
                 else:
-                    answer_arr.append("Уроков (в моей базе) нет.\n")
+                    this_class_homework += "Уроков (в моей базе) нет.\n"
                 it += 1
 
-        return generate_return("\n".join(answer_arr))
+            answer_arr.append(this_class_homework)
+
+        return {
+            "text": answer_arr,
+            "buttons": None
+        }
 
     def gen_subs_but(self):
         buttons = []
@@ -719,12 +753,6 @@ def get_day_and_class_name_from_text(text):
     return [day, class_name]
 
 
-def generate_return(text):
-    if type(text) == str:
-        return {"text": text, "buttons": None}
-    return text
-
-
 def send_acc_information(src, user_id, text):
     logger.log("user_req", "request for acc data")
     ans_mes = user_db.get_user_info(user_id, src)
@@ -992,7 +1020,10 @@ def parse_menu(src, user_id, text):
                 needed_function = key_words_to_function[value]
                 answer_from_function = needed_function(src, user_id, text)
 
-                return generate_return(answer_from_function)
+                return {
+                    "text": answer_from_function,
+                    "buttons": None
+                }
         logger.log("user_req", f"Запрос не найден. Запрос: {text}")
         return {"text": "Запроса не найдено :( ", "buttons": None}
 
@@ -1025,9 +1056,6 @@ def process_message_from_user(user_dict):
     logger.log("user_req", "process request")
 
     user = User(user_dict)
-
-    if user.text[0] == '@':
-        answer = user.valica()
 
     answer = user.parse_message()
     user.update_db()

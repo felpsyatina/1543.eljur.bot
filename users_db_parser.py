@@ -61,15 +61,25 @@ class UserDbReq:
             tg_id = user_id
 
         if src == "alice":
-            alice_id = user_id
+            alice_id = self.parse_string_in_query(user_id)
 
         with self.run_cursor() as cursor:
             query = f"""
                 INSERT INTO users (first_name, last_name, confirmed, status, vk_id, tg_id, alice_id, subs) 
-                VALUES('{first_name}', '{last_name}', 0, '{first_status}', {vk_id}, {tg_id}, '{alice_id}', '{jd({})}')
+                VALUES('{first_name}', '{last_name}', 0, '{first_status}', {vk_id}, {tg_id}, {alice_id}, '{jd({})}')
             """
             cursor.execute(query)
             logger.log("user_db_manip", f"user '{first_name} {last_name}' created!")
+
+    @staticmethod
+    def parse_string_in_query(string):
+        if type(string) == str:
+            return f"'{string}'"
+
+        if string is None:
+            return "NULL"
+
+        return string
 
     def get_columns_info(self, table="users"):
         with self.run_cursor() as cursor:
