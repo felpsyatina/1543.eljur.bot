@@ -54,8 +54,11 @@ def write(u_id, mess, keyboard=None, attach=None, sticker=None):
 
 def alerts(a, mess, wait=1):
     for u_id in a:
-        write(u_id, mess)
-        sleep(wait)
+        try:
+            write(u_id, mess)
+            sleep(wait)
+        except Exception as err:
+            logger.log("Vk_bot", "Error while sending alert " + str(err))
 
 
 def _get_users_info_from_vk_ids(user_ids):

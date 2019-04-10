@@ -135,8 +135,5 @@ def get_and_send_for_all():
 if __name__ == '__main__':
     update_information()
     if is_time_to_work():
-        try:
-            get_and_send_for_all()
-            lesson_db.erase_unsent_list(date_list=list_of_adding_dates())
-        except Exception as err:
-            logger.log("Alerts_generator", err)
+        get_and_send_for_all()
+        lesson_db.erase_unsent_list(date_list=list_of_adding_dates())
