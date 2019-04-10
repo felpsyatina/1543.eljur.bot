@@ -22,9 +22,7 @@ def delete_db():
 
 if __name__ == '__main__':
     try:
-        cur_time = str(datetime.datetime.now())[11:13]
-        if cur_time == "01":
-            new_db_copy()
-            delete_db()
+        new_db_copy()
+        delete_db()
     except Exception as ex:
         logger.log("db_copier", f"error {ex}")
