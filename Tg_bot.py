@@ -112,12 +112,16 @@ def answer_msg(user_id, msg, msg_id, user_name):
     except Exception as err:
         result = {"text": "error", "buttons": [[]]}
         logger.log("tg", f"couldn't get message from user_req: {str(err)}")
-
     msg_to_send = result['text']
     but_to_send = result['buttons']
-    send_msg_and_but(user_id, msg_to_send, but_to_send, msg_id)
-
-
+    if type(result['text']) is str:
+        send_msg_and_but(user_id, msg_to_send, but_to_send, msg_id)
+    else:
+        for i in range(len(msg_to_send)):
+            msg_to_send_now = msg_to_send[i]
+            send_msg_and_but(user_id, msg_to_send_now, but_to_send, msg_id)
+        
+    
 def tg_bot_main(last_msg_id, raw_msgs):
     logger.log("tg", "starting tg_bot")
     bot_info()
@@ -139,5 +143,3 @@ def tg_bot_main(last_msg_id, raw_msgs):
 
 if __name__ == '__main__':
     tg_bot_main(last_msg_id, raw_msgs)
-
-
