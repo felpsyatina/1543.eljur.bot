@@ -65,7 +65,11 @@ class Valica:
             >>> req = Valica("без всего запроса 5а 201904")
             >>> req.type, req.subs, req.list_of_dates
             (None, None, None)
-        """
+
+            >>> req = Valica("домашнее задание 8 г 5 апреля 20190405")
+            >>> req.type, req.subs, req.list_of_dates
+            ('homework', {'8Г': {}}, ['20190405'])
+            """
 
         self.definers = [
             {"definer_func": self.is_get_home_task,
@@ -119,9 +123,15 @@ class Valica:
         return False
 
     def extract_classes_(self, string):
-        regex = r"(([5-9]{1}|(1[0-1]))([а-гА-Г]))"
+        regex = r"(([5-9]{1}|(1[0-1]))(\s)*([а-гА-Г])(?!\w))"
         a = re.findall(regex, string)
         result = [elem[0] for elem in re.findall(regex, string)]
+        for class_name in range(len(result)):
+            result[class_name] = result[class_name].split()
+            res = ""
+            for ch in range(len(result[class_name])):
+                res += result[class_name][ch]
+            result[class_name] = res
 
         if result is None:
             return None
@@ -212,7 +222,3 @@ class Valica:
 
 if __name__ == '__main__':
     _test()  # эта функция вызывеат доктесты в Валисе.
-
-    while 1:
-        req = Valica(input())
-        print(req.type, req.subs, req.list_of_dates)
