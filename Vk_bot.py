@@ -10,6 +10,7 @@ import config
 import user_req
 import logger
 from functions import COLORS
+from random import randint
 
 
 token = config.secret["vk"]["token"]
@@ -41,10 +42,30 @@ def write(u_id, mess, keyboard=None, attach=None, sticker=None):
 
         vk.method('messages.send', params)
 
+        if sticker == "random":
+            while 1:
+                sticker_id = randint(6157, 6180)
+                try:
+                    params = {'user_id': u_id, 'v': "5.53", 'sticker_id': sticker_id}
+                    vk.method('messages.send', params)
+                except Exception as ex:
+                    print(f"Bad: {sticker_id}")
+                    params = {'user_id': u_id, 'message': "Не удалось отправить стикер(", 'v': "5.53"}
+                    vk.method('messages.send', params)
+                    logger.log("vk", f"Sticker hasn't sent. ERROR: {ex}")
+                    continue
+                print(sticker_id)
+                break
+            return
+
         if sticker:
-            params = {'user_id': u_id, 'v': "5.53", 'sticker_id': sticker}
-            print(params)
-            vk.method('messages.sendSticker', params)
+            try:
+                params = {'user_id': u_id, 'v': "5.53", 'sticker_id': sticker}
+                vk.method('messages.send', params)
+            except Exception as ex:
+                params = {'user_id': u_id, 'message':  "Не удалось отправить стикер(", 'v': "5.53"}
+                vk.method('messages.send', params)
+                logger.log("vk", f"Sticker hasn't sent. ERROR: {ex}")
 
     except Exception as ex:
         params = {'user_id': u_id, 'message': fail, 'v': "5.53"}
@@ -57,8 +78,8 @@ def alerts(a, mess, wait=1):
         try:
             write(u_id, mess)
             sleep(wait)
-        except Exception as err:
-            logger.log("Vk_bot", "Error while sending alert " + str(err))
+        except Exception as ex:
+            logger.log("Vk_bot", "Error while sending alert " + str(ex))
 
 
 def _get_users_info_from_vk_ids(user_ids):
@@ -154,8 +175,11 @@ def gen_but(obj):
 
 
 def keyboard_with_colors(arr):
+    if arr is None:
+        return None
+
     if type(arr) != list:
-        logger.log("vk", "get not array.")
+        logger.log("vk", "KEYBOARD GEN ERROR: get not array.")
         return None
 
     new_ans = []
@@ -228,6 +252,7 @@ if __name__ == '__main__':
                 "text": r['message'],
                 "attachment": r['attachment']
             }
+            print(u_dict)
 
             try:
                 ans = user_req.parse_message_from_user(u_dict)
