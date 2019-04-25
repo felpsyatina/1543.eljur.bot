@@ -1,4 +1,5 @@
 import logger
+import random
 from lessons_db_manip import LessonDbReq, student
 from users_db_parser import UserDbReq
 import answers_dict as ad
@@ -8,11 +9,9 @@ import config
 from json import loads as jl, dumps as jd
 from valisa import Valica
 
-
 max_subs = config.params['max_subs']
 
 flag_on_PC = config.params['flag_on_PC']
-
 
 if flag_on_PC:
     lesson_db = LessonDbReq()
@@ -167,6 +166,9 @@ class User:
         if valica_parse.type == "homework":
             return self.homework(list_of_dates=valica_parse.list_of_dates, subs=valica_parse.subs)
 
+        if valica_parse.type == "help":
+            return self.help()
+
         if self.attachment.get('attach1_type', None) == "sticker":
             return {
                 "text": "Ага, стикер!",
@@ -175,21 +177,21 @@ class User:
             }
 
         try:
-            for key, value in ad.quest.items():
-                if key in self.text:
-                    needed_function = key_words_to_function[value]
-                    answer_from_function = needed_function(self.src, self.id, self.text)
+            unparesed_case_answers = ["Sprechen sie deutsch?",
+                                      "-. . .--. --- -. .-.- .-..",
+                                      "Не зрозумів",
+                                      ]
 
-                    return self.generate_return(answer_from_function)
-                
             if len(self.text.split()) > 7:  # если челик написал целых 7 слов
+                long_message_answer = ["Ооо, да ты Толстой, но я тебя не понял",
+                                       "Держи в курсе, я тебя не понял"]
                 return {
-                    "text": "Держи в курсе!)",
+                    "text": random.choice(long_message_answer),
                     "buttons": None
                 }
 
             logger.log("user_req", f"Запрос не найден. Запрос: {self.text}")
-            return {"text": "Запроса не найдено :( ", "buttons": ans_buttons}
+            return {"text": f"{random.choice(unparesed_case_answers)} Я тебя не понял, короче", "buttons": ans_buttons}
 
         except Exception as err:
             logger.log("user_req", f"Processing error: {err}\n Запрос: {self.text}")
@@ -381,6 +383,19 @@ class User:
         return {
             "text": answer_arr,
             "buttons": None
+        }
+
+    def help(self):
+        text = "Ты можешь общаться со мной кнопками, а можешь просто писать запрос в свободной форме." \
+               "Кнопками ты можешь настраивать свой акканунт и делать запросы.\n" \
+               "Свободным же запросом ты можешь запросить расписание или домашнее. Примеры таких запросов:\n" \
+               "расписание 8Б 9В на завтра и три дня вперед\n" \
+               "дз послезавтра 8Б\n" \
+               "8Б дз через 3 дня\n" \
+               "Пиши так, как хочешь. Прошу прощения, если вас не пойму, я только учусь."
+        return {
+            "text": text,
+            "buttons": None,
         }
 
     def gen_subs_but(self):
@@ -1009,29 +1024,6 @@ def send_sausage(src, user_id, text):
             "attach": "photo-177204484_456239027"}
 
 
-def parse_menu(src, user_id, text):
-    if text in fast_query.keys():
-        function = fast_query[text]
-        return function(src, user_id, text)
-
-    try:
-        for key, value in ad.quest.items():
-            if key in text:
-                needed_function = key_words_to_function[value]
-                answer_from_function = needed_function(src, user_id, text)
-
-                return {
-                    "text": answer_from_function,
-                    "buttons": None
-                }
-        logger.log("user_req", f"Запрос не найден. Запрос: {text}")
-        return {"text": "Запроса не найдено :( ", "buttons": None}
-
-    except Exception as err:
-        logger.log("user_req", f"Processing error: {err}\n Запрос: {text}")
-        return {"text": "Видно не судьба :( ", "buttons": None}
-
-
 def parse_subs(src, user_id, text):
     if text == "вернуться в меню":
         return to_menu(src, user_id, text)
@@ -1073,23 +1065,6 @@ def parse_message_from_user(ud):
     logger.log("request_save", f"Answer for {ud['src']} {ud['id']}\n {res.get('text', '')}")
     return res
 
-
-key_words_to_function = {
-    "schedule": get_schedule,
-    "account": send_acc_information,
-    "replacement": replace_lesson,
-    "comment": comment_lesson,
-    # "support": support_message,
-    "commands": send_commands,
-    "hometask": get_hometask,
-    "sausage": send_sausage
-}
-
-parse_functions = {
-    "menu": parse_menu,
-    "subs": parse_subs,
-    "opt": parse_opt
-}
 
 fast_query = {
     "расписание": fast_schedule,

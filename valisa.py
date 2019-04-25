@@ -77,7 +77,10 @@ class Valica:
              "run_func": self.get_home_task},
             {"definer_func": self.is_get_schedule,
              "params": ["subs", "list_of_dates"],
-             "run_func": self.get_schedule}
+             "run_func": self.get_schedule},
+            {"definer_func": self.is_help_request,
+             "params": [],
+             "run_func": self.get_help},
         ]
 
         self.type = None
@@ -99,6 +102,9 @@ class Valica:
 
     def get_schedule(self):
         self.type = "schedule"
+
+    def get_help(self):
+        self.type = "help"
 
     def is_get_home_task(self, string):
         string = self.delete_message_from_request(string)
@@ -122,9 +128,26 @@ class Valica:
                 return True
         return False
 
+    def is_help_request(self, string):
+        string = self.delete_message_from_request(string)
+
+        regexes = [r"что делать",
+                   r"помо((щь)|(ги))",
+                   r"(как)|(что)",
+                   r"памагите",
+                   r"что писать",
+                   r"что (ты )?можешь",
+                   r"не пон(имаю|ял)",
+                   r"как ((за)|(с))просить"]
+
+        for regex in regexes:
+            result = re.search(regex, string)
+            if result is not None:
+                return True
+        return False
+
     def extract_classes_(self, string):
         regex = r"(([5-9]{1}|(1[0-1]))(\s)*([а-гА-Г])(?!\w))"
-        a = re.findall(regex, string)
         result = [elem[0] for elem in re.findall(regex, string)]
         for class_name in range(len(result)):
             result[class_name] = result[class_name].split()
