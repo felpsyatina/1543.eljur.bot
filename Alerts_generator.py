@@ -113,7 +113,9 @@ def parse_message_for_user(user):
     else:
         type_of_social_web = 'vk'
 
-    logger.log("alerts_save", f"parsed message for user {user['first_name']} {user['last_name']} with id {user['id']} in {type_of_social_web}, ans: {answer_string}")
+    if answer_string:
+        logger.log("alerts_save", f"parsed message for user {user['first_name']} {user['last_name']} with id {user['id']} in {type_of_social_web}, ans: {answer_string}")
+
     return answer_string
 
 
