@@ -169,6 +169,15 @@ class User:
         if valica_parse.type == "help":
             return self.help()
 
+        if valica_parse.type == "add_debt":
+            return self.add_debt(text=valica_parse.text, subject=None, deadline=None)
+
+        if valica_parse.type == "disable_debt":
+            return self.disable_debt(debt_id=valica_parse.number)
+
+        if valica_parse.type == "get_debt":
+            return self.get_debt()
+
         if self.attachment.get('attach1_type', None) == "sticker":
             return {
                 "text": "Ага, стикер!",
@@ -601,6 +610,32 @@ class User:
                 }
 
         return None
+
+    def add_debt(self, text, subject=None, deadline=None):
+        logger.log("user_req", f"debt adding for {self.id}")
+
+        user_db.add_debt(user_id=self.id, src=self.src, text=text)
+
+        return {"text": "Долг добавлен", "buttons": None}
+
+    def disable_debt(self, debt_id):
+        logger.log("user_req", f"debt {debt_id} is disabling for {self.id}")
+
+        user_db.disable_debt(user_id=self.id, src=self.src, debt_id=debt_id)
+
+        return {"text": "Долг удален", "buttons": None}
+
+    def get_debt(self):
+        logger.log("user_req", f"debts for {self.id}")
+
+        debts = user_db.get_debts(user_id=self.id, src=self.src)
+
+        answer = ""
+
+        for debt in debts:
+            answer += f"№{debt['id']} {debt['subject']}: {debt['text']} к {debt['deadline']}\n"
+
+        return {"text": answer, "buttons": None}
 
 
 def update_schedule():

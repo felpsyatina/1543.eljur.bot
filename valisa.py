@@ -69,6 +69,18 @@ class Valica:
             >>> req = Valica("домашнее задание 8 г 5 апреля 20190405")
             >>> req.type, req.subs, req.list_of_dates
             ('homework', {'8Г': {}}, ['20190405'])
+
+            >>> req = Valica("покажи долги")
+            >>> req.type
+            'get_debt'
+
+            >>> req = Valica("убери долг 567")
+            >>> req.type, req.number
+            ('disable_debt', '567')
+
+            >>> req = Valica("добавь долг 'купить картошки'")
+            >>> req.type, req.text
+            ('add_debt', 'купить картошки')
             """
 
         self.definers = [
@@ -81,13 +93,25 @@ class Valica:
             {"definer_func": self.is_help_request,
              "params": [],
              "run_func": self.get_help},
+            {"definer_func": self.is_add_debt,
+             "params": ["text"],  # надо добавить "subject" и "date"
+             "run_func": self.add_debt},
+            {"definer_func": self.is_get_debt,
+             "params": [],  # надо добавить "subject" и "date"
+             "run_func": self.get_debt},
+            {"definer_func": self.is_disable_debt,
+             "params": ["number"],  # надо добавить "subject" и "date"
+             "run_func": self.disable_debt},
         ]
 
         self.type = None
         self.subs = None
         self.list_of_dates = None
+        self.text = None
+        self.number = None
 
-        self.params_extractors = {"subs": self.extract_classes_, "list_of_dates": self.extract_dates}
+        self.params_extractors = {"subs": self.extract_classes_, "list_of_dates": self.extract_dates,
+                                  "text": self.extract_text, "number": self.extract_number}
 
         for cur_definer in self.definers:
             if cur_definer["definer_func"](string):
@@ -105,6 +129,15 @@ class Valica:
 
     def get_help(self):
         self.type = "help"
+
+    def add_debt(self):
+        self.type = "add_debt"
+
+    def disable_debt(self):
+        self.type = "disable_debt"
+
+    def get_debt(self):
+        self.type = "get_debt"
 
     def is_get_home_task(self, string):
         string = self.delete_message_from_request(string)
@@ -145,6 +178,65 @@ class Valica:
             if result is not None:
                 return True
         return False
+
+    def is_add_debt(self, string):
+        string = self.delete_message_from_request(string)
+
+        regexes = [r"добавь долг",
+                   r"запиши долг",
+                   r"запиши"]
+
+        for regex in regexes:
+            result = re.search(regex, string)
+            if result is not None:
+                return True
+        return False
+
+    def is_disable_debt(self, string):
+        string = self.delete_message_from_request(string)
+
+        regexes = [r"убери долг",
+                   r"удали долг",
+                   r"закрой долг"]
+
+        for regex in regexes:
+            result = re.search(regex, string)
+            if result is not None:
+                return True
+        return False
+
+    def is_get_debt(self, string):
+        string = self.delete_message_from_request(string)
+
+        regexes = [r"покажи долг(и|)",
+                   r"какой(( у меня)|) долг(и|)",
+                   r"закрой долг(и|)"]
+
+        for regex in regexes:
+            result = re.search(regex, string)
+            if result is not None:
+                return True
+        return False
+
+    def extract_text(self, string):
+        regex = r"('(.*?)')|(\"(.*?)\")"
+
+        result = re.search(regex, string)
+
+        if result is not None:
+            self.text = result.group(0)[1:-1]
+        else:
+            return None
+
+    def extract_number(self, string):
+        regex = r"\d+"
+
+        result = re.search(regex, string)
+
+        if result is not None:
+            self.number = result.group(0)
+        else:
+            return None
 
     def extract_classes_(self, string):
         regex = r"(([5-9]{1}|(1[0-1]))(\s)*([а-гА-Г])(?!\w))"

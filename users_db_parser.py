@@ -49,6 +49,25 @@ class UserDbReq:
             cursor.execute(query)
             logger.log("user_db_manip", f"table: '{table_name}' created.")
 
+    def create_debts_db(self, table_name="debts"):
+        self.del_table(table_name)
+        with self.run_cursor() as cursor:
+            query = f"""
+                create table {table_name}
+                (
+                    id integer not null
+                       primary key autoincrement,
+                    user_id int,
+                    text text,
+                    subject text,
+                    deadline int,
+                    is_active int
+                );
+            """
+
+            cursor.execute(query)
+            logger.log("user_db_manip", f"table: '{table_name}' created.")
+
     def add_user(self, first_name, last_name, user_id, src):
         vk_id = "NULL"
         tg_id = "NULL"
@@ -70,6 +89,18 @@ class UserDbReq:
             """
             cursor.execute(query)
             logger.log("user_db_manip", f"user '{first_name} {last_name}' created!")
+
+    def add_debt(self, user_id, src, text, subject=None, deadline=None):
+
+        global_id = self.get_global_id_by_user_id(user_id, src)
+
+        with self.run_cursor() as cursor:
+            query = f"""
+                INSERT INTO debts (id, user_id, text, subject, deadline, is_active) 
+                VALUES(null, {global_id}, '{text}', '{subject}', '{deadline}', 1)
+            """
+            cursor.execute(query)
+            logger.log("user_db_manip", f"user {user_id}, new debt created!")
 
     @staticmethod
     def parse_string_in_query(string):
@@ -154,6 +185,49 @@ class UserDbReq:
 
             logger.log("users_db_parser", f"returning info: {ans_dict}")
             return ans_dict
+
+    def get_global_id_by_user_id(self, user_id, src):
+        vk_id = None
+        tg_id = None
+        alice_id = None
+
+        if src == "vk":
+            vk_id = user_id
+
+        if src == "tg":
+            tg_id = user_id
+
+        if src == "alice":
+            alice_id = user_id
+
+        with self.run_cursor() as cursor:
+            query = None
+            if vk_id is not None:
+                query = f"""
+                    SELECT id FROM users WHERE
+                    vk_id = {vk_id};
+                """
+
+            elif tg_id is not None:
+                query = f"""
+                    SELECT id FROM users WHERE
+                    tg_id = {tg_id};
+                """
+
+            elif alice_id is not None:
+                query = f"""
+                    SELECT id FROM users WHERE
+                    alice_id = '{alice_id}';
+                """
+
+            cursor.execute(query)
+            users_fetch = cursor.fetchone()
+
+            if users_fetch is None:
+                return None
+            users_fetch = users_fetch[0]
+            logger.log("users_db_parser", f"returning global_id: {users_fetch}")
+            return users_fetch
 
     def get_user_info_by_global_id(self, global_id=None):
         with self.run_cursor() as cursor:
@@ -249,10 +323,42 @@ class UserDbReq:
 
             return ans
 
-    def setup_db(self):
-        self.create_users_db()
+    def get_debts(self, user_id, src):
+        global_id = self.get_global_id_by_user_id(user_id, src)
+
+        with self.run_cursor() as cursor:
+            query = f"""
+                SELECT * FROM debts WHERE user_id = {global_id} and is_active = 1;
+            """
+
+            cursor.execute(query)
+            debts_fetch = cursor.fetchall()
+
+            ans = []
+
+            for elem in debts_fetch:
+                debt = {}
+                for field_name, field_val in zip(self.get_columns_names("debts"), elem):
+                    debt[field_name] = field_val
+                ans.append(debt)
+
+            return ans
+
+    def disable_debt(self, user_id, src, debt_id):
+        global_id = self.get_global_id_by_user_id(user_id, src)
+
+        with self.run_cursor() as cursor:
+            query = f"""UPDATE debts SET is_active=0 WHERE user_id = {global_id} and id = {debt_id}"""
+            cursor.execute(query)
+        logger.log("user_db_manip", f"{debt_id} disabled")
+
+    def setup_db(self, activate=True):
+        if activate:
+            self.create_users_db()
+            self.create_debts_db()
 
 
 if __name__ == '__main__':
     req = UserDbReq()
-    req.setup_db()
+    req.setup_db(False)
+    # req.add_debt(400, "vk", "Бля, долги по литре", "Литра", "20190808")
