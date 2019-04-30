@@ -1,9 +1,10 @@
 import sqlite3
 import logger
+import config
 from json import dumps as jd, loads as jl
 from functions import MyCursor, convert_arrays_to_dict
 
-first_status = "subs"
+first_status = config.params['fir_stat']
 
 
 class UserDbReq:
