@@ -142,7 +142,7 @@ class Valica:
     def is_get_home_task(self, string):
         string = self.delete_message_from_request(string)
 
-        regexes = [r"домашняя работа", r"дз", r"домашка", r"домашнее задание"]
+        regexes = [r"(^| )домашняя работа", r"(^| )дз", r"(^| )домашка", r"(^| )домашнее задание"]
 
         for regex in regexes:
             result = re.search(regex, string)
@@ -153,7 +153,7 @@ class Valica:
     def is_get_schedule(self, string):
         string = self.delete_message_from_request(string)
 
-        regexes = [r"расписание", r"расп"]
+        regexes = [r"(^| )расписание", r"(^| )расп"]
 
         for regex in regexes:
             result = re.search(regex, string)
@@ -164,14 +164,14 @@ class Valica:
     def is_help_request(self, string):
         string = self.delete_message_from_request(string)
 
-        regexes = [r"что делать",
-                   r"помо((щь)|(ги))",
-                   r"(как)|(что)",
-                   r"памагите",
-                   r"что писать",
-                   r"что (ты )?можешь",
-                   r"не пон(имаю|ял)",
-                   r"как ((за)|(с))просить"]
+        regexes = [r"(^| )что делать",
+                   r"(^| )помо((щь)|(ги))",
+                   r"(^| )(как)|(что)",
+                   r"(^| )памагите",
+                   r"(^| )что писать",
+                   r"(^| )что (ты )?можешь",
+                   r"(^| )не пон(имаю|ял)",
+                   r"(^| )как ((за)|(с))просить"]
 
         for regex in regexes:
             result = re.search(regex, string)
@@ -182,9 +182,9 @@ class Valica:
     def is_add_debt(self, string):
         string = self.delete_message_from_request(string)
 
-        regexes = [r"добавь долг",
-                   r"запиши долг",
-                   r"запиши"]
+        regexes = [r"(^| )добавь долг",
+                   r"(^| )запиши долг",
+                   r"(^| )запиши"]
 
         for regex in regexes:
             result = re.search(regex, string)
@@ -195,9 +195,9 @@ class Valica:
     def is_disable_debt(self, string):
         string = self.delete_message_from_request(string)
 
-        regexes = [r"убери долг",
-                   r"удали долг",
-                   r"закрой долг"]
+        regexes = [r"(^| )убери долг",
+                   r"(^| )удали долг",
+                   r"(^| )закрой долг"]
 
         for regex in regexes:
             result = re.search(regex, string)
@@ -208,9 +208,9 @@ class Valica:
     def is_get_debt(self, string):
         string = self.delete_message_from_request(string)
 
-        regexes = [r"покажи долг(и|)",
-                   r"какой(( у меня)|) долг(и|)",
-                   r"закрой долг(и|)"]
+        regexes = [r"(^| )покажи долг(и|)",
+                   r"(^| )какой(( у меня)|) долг(и|)",
+                   r"(^| )закрой долг(и|)"]
 
         for regex in regexes:
             result = re.search(regex, string)
@@ -273,11 +273,11 @@ class Valica:
             spotted_dates += result
 
         special_dates = [
-            (r"сегодня", 0),
-            (r"вчера", -1),
-            (r"завтра", 1),
-            (r"позавчера", -2),
-            (r"послезавтра", 2)
+            (r"(^| )сегодня", 0),
+            (r"(^| )вчера", -1),
+            (r"(^| )завтра", 1),
+            (r"(^| )позавчера", -2),
+            (r"(^| )послезавтра", 2)
         ]
 
         for regex, delta in special_dates:
