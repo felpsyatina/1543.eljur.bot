@@ -11,90 +11,90 @@ def _test():
     doctest.testmod()
 
 
-class Valica:
+class Valisa:
     def __init__(self, string):
         """
-            >>> req = Valica("расписание 10в 2019;04;04")
+            >>> req = Valisa("расписание 10в 2019;04;04")
             >>> req.type, req.subs, req.list_of_dates
             ('schedule', {'10В': {}}, ['20190404'])
 
-            >>> req = Valica("домашка 6г 2019:04:04")
+            >>> req = Valisa("домашка 6г 2019:04:04")
             >>> req.type, req.subs, req.list_of_dates
             ('homework', {'6Г': {}}, ['20190404'])
 
-            >>> req = Valica("домашка 11г 2019.04.12")
+            >>> req = Valisa("домашка 11г 2019.04.12")
             >>> req.type, req.subs, req.list_of_dates
             ('homework', {'11Г': {}}, ['20190412'])
 
-            >>> req = Valica("домашка 10а 1 апреля")
+            >>> req = Valisa("домашка 10а 1 апреля")
             >>> req.type, req.subs, req.list_of_dates
             ('homework', {'10А': {}}, ['20190401'])
 
-            >>> req = Valica("домашка 5 марта 9в")
+            >>> req = Valisa("домашка 5 марта 9в")
             >>> req.type, req.subs, req.list_of_dates
             ('homework', {'9В': {}}, ['20190305'])
 
-            >>> req = Valica("расп на 3 мая 7а")
+            >>> req = Valisa("расп на 3 мая 7а")
             >>> req.type, req.subs, req.list_of_dates
             ('schedule', {'7А': {}}, ['20190503'])
 
-            >>> req = Valica("расписание 5а 201904")
+            >>> req = Valisa("расписание 5а 201904")
             >>> req.type, req.subs, req.list_of_dates
             ('schedule', {'5А': {}}, None)
 
-            >>> req = Valica("дз 10в 5 апреля 20190304")
+            >>> req = Valisa("дз 10в 5 апреля 20190304")
             >>> req.type, req.subs, req.list_of_dates
             ('homework', {'10В': {}}, ['20190304', '20190405'])
 
-            >>> req = Valica("домашнее задание 8а, 8г 20190402, 20190501")
+            >>> req = Valisa("домашнее задание 8а, 8г 20190402, 20190501")
             >>> req.type, req.subs, req.list_of_dates
             ('homework', {'8А': {}, '8Г': {}}, ['20190402', '20190501'])
 
-            >>> req = Valica("домашнее задание 10а 5г 5 апреля 2019/04/05")
+            >>> req = Valisa("домашнее задание 10а 5г 5 апреля 2019/04/05")
             >>> req.type, req.subs, req.list_of_dates
             ('homework', {'10А': {}, '5Г': {}}, ['20190405'])
 
-            >>> req = Valica("домашнее задание 8г 5 апреля 20190405")
+            >>> req = Valisa("домашнее задание 8г 5 апреля 20190405")
             >>> req.type, req.subs, req.list_of_dates
             ('homework', {'8Г': {}}, ['20190405'])
 
-            >>> req = Valica("дз 20190410")
+            >>> req = Valisa("дз 20190410")
             >>> req.type, req.subs, req.list_of_dates
             ('homework', None, ['20190410'])
 
-            >>> req = Valica("без всего запроса 5а 201904")
+            >>> req = Valisa("без всего запроса 5а 201904")
             >>> req.type, req.subs, req.list_of_dates
             (None, None, None)
 
-            >>> req = Valica("домашнее задание 8 г 5 апреля 20190405")
+            >>> req = Valisa("домашнее задание 8 г 5 апреля 20190405")
             >>> req.type, req.subs, req.list_of_dates
             ('homework', {'8Г': {}}, ['20190405'])
 
-            >>> req = Valica("покажи долги")
+            >>> req = Valisa("покажи долги")
             >>> req.type
             'get_debt'
 
-            >>> req = Valica("убери долг 567")
+            >>> req = Valisa("убери долг 567")
             >>> req.type, req.number
             ('disable_debt', '567')
 
-            >>> req = Valica("добавь долг 'купить картошки'")
+            >>> req = Valisa("добавь долг 'купить картошки'")
             >>> req.type, req.text
             ('add_debt', 'купить картошки')
 
-            >>> req = Valica("что делать?")
+            >>> req = Valisa("что делать?")
             >>> req.type
             'help'
 
-            >>> req = Valica("памагите")
+            >>> req = Valisa("памагите")
             >>> req.type
             'help'
 
-            >>> req = Valica("не понимаю")
+            >>> req = Valisa("не понимаю")
             >>> req.type
             'help'
 
-            >>> req = Valica("помощь")
+            >>> req = Valisa("помощь")
             >>> req.type
             'help'
             """

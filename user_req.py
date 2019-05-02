@@ -7,7 +7,7 @@ from datetime import datetime
 from functions import SUBS, classes, cur_date, del_arr_elem, get_word_by_date, make_lined, ROMANS2, SUB_OPT, preset
 import config
 from json import loads as jl, dumps as jd
-from valisa import Valica
+from valisa import Valisa
 
 max_subs = config.params['max_subs']
 
@@ -156,26 +156,26 @@ class User:
                 "buttons": menu_buttons
             }
 
-        valica_parse = Valica(self.text)
-        if valica_parse.list_of_dates is not None:
-            valica_parse.list_of_dates = [int(d) for d in valica_parse.list_of_dates]  # даты инты пока что
+        valisa_parse = Valisa(self.text)
+        if valisa_parse.list_of_dates is not None:
+            valisa_parse.list_of_dates = [int(d) for d in valisa_parse.list_of_dates]  # даты инты пока что
 
-        if valica_parse.type == "schedule":
-            return self.schedule(list_of_dates=valica_parse.list_of_dates, subs=valica_parse.subs)
+        if valisa_parse.type == "schedule":
+            return self.schedule(list_of_dates=valisa_parse.list_of_dates, subs=valisa_parse.subs)
 
-        if valica_parse.type == "homework":
-            return self.homework(list_of_dates=valica_parse.list_of_dates, subs=valica_parse.subs)
+        if valisa_parse.type == "homework":
+            return self.homework(list_of_dates=valisa_parse.list_of_dates, subs=valisa_parse.subs)
 
-        if valica_parse.type == "help":
+        if valisa_parse.type == "help":
             return self.help()
 
-        if valica_parse.type == "add_debt":
-            return self.add_debt(text=valica_parse.text, subject=None, deadline=None)
+        if valisa_parse.type == "add_debt":
+            return self.add_debt(text=valisa_parse.text, subject=None, deadline=None)
 
-        if valica_parse.type == "disable_debt":
-            return self.disable_debt(debt_id=valica_parse.number)
+        if valisa_parse.type == "disable_debt":
+            return self.disable_debt(debt_id=valisa_parse.number)
 
-        if valica_parse.type == "get_debt":
+        if valisa_parse.type == "get_debt":
             return self.get_debt()
 
         if self.attachment.get('attach1_type', None) == "sticker":
