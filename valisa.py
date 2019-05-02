@@ -81,6 +81,22 @@ class Valica:
             >>> req = Valica("добавь долг 'купить картошки'")
             >>> req.type, req.text
             ('add_debt', 'купить картошки')
+
+            >>> req = Valica("что делать?")
+            >>> req.type
+            'help'
+
+            >>> req = Valica("памагите")
+            >>> req.type
+            'help'
+
+            >>> req = Valica("не понимаю")
+            >>> req.type
+            'help'
+
+            >>> req = Valica("помощь")
+            >>> req.type
+            'help'
             """
 
         self.definers = [
@@ -166,7 +182,6 @@ class Valica:
 
         regexes = [r"(^| )что делать",
                    r"(^| )помо((щь)|(ги))",
-                   r"(^| )(как)|(что)",
                    r"(^| )памагите",
                    r"(^| )что писать",
                    r"(^| )что (ты )?можешь",
