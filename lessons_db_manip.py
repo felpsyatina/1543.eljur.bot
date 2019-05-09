@@ -66,6 +66,16 @@ class LessonDbReq:
             fetch = cursor.fetchone()
         return jl(fetch[0])
 
+    def get_class_name(self, class_id):
+        with self.run_cursor() as cursor:
+            query = f"""
+                SELECT parallel, letter FROM classes WHERE id = {class_id}
+            """
+            cursor.execute(query)
+            fetch = cursor.fetchone()
+
+        return str(int(fetch[0]) - current_min_par + 5) + fetch[1]
+
     def add_class_groups(self, class_id, lesson, group):
         with self.run_cursor() as cursor:
             groups = self.get_class_groups(class_id)
@@ -536,6 +546,35 @@ class LessonDbReq:
 
         if adding_schedule:
             self.add_schedules()
+
+    def get_lessons_by_date_and_lesson_number(self, date, lesson_number):
+
+        columns = self.get_columns_names()
+        lessons = []
+
+        with self.run_cursor() as cursor:
+            query = f"""
+                    SELECT * FROM lessons WHERE date = '{date}' AND number = {lesson_number}
+                """
+            cursor.execute(query)
+            lesson_arr = cursor.fetchall()
+
+            for lesson in lesson_arr:
+                tmp = convert_arrays_to_dict(columns, lesson)
+                lessons.append(tmp)
+
+        return lessons
+
+    def add_field_class_name_to_list_of_lessons(self, lessons):
+
+        for lesson in lessons:
+            lesson['class_name'] = self.get_class_name(lesson['class_id'])
+
+        return lessons
+
+    def get_beautified_lessons_for_desk(self, number, date):
+        return self.add_field_class_name_to_list_of_lessons(
+            self.get_lessons_by_date_and_lesson_number(date, number))
 
 
 if __name__ == '__main__':

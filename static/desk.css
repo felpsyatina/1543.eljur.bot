@@ -1,0 +1,275 @@
+* {
+    padding: 0;
+    margin: 0;
+    overflow: hidden;
+}
+
+html, body, .container {
+    width: 100%;
+    height: 100%;
+    background: #37474f;
+    font-family: "Ubuntu", sans-serif;
+}
+
+/*-------- Fonts --------*/
+
+.opensans {
+    font-family: 'OpenSans', sans-serif;
+}
+
+.ubuntu {
+    font-family: 'Ubuntu', sans-serif;
+}
+
+.gilroy {
+    font-family: 'Gilroy', sans-serif;
+}
+
+
+/* ------ TABLE -------*/
+
+.cell_div {
+    width: 100%;
+    height: 100%;
+    align-items: center;
+    /*display: inline-flex;*/
+    background: #FFFFFF;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.cell_div .class_name {
+    float: left;
+    height: 100%;
+    width: 24%;
+    text-align: center;
+    vertical-align: middle;
+    font-size: 32px;
+    background-color: #ffeb3b;
+    /* #ffdd2d */
+}
+
+.cell_div .class_name span {
+    height: inherit;
+    align-items: center;
+    display: inline-flex;
+    margin: 0 5px;
+    /*font-family: 'Gilroy', sans-serif;*/
+    font-weight: bold;
+}
+
+.cell_div .lessons_info {
+    float: left;
+    font-size: 20px;
+    padding: 5px;
+    /*font-family: 'OpenSans', sans-serif;*/
+}
+
+.lessons_info .grp {
+    font-weight: bold;
+}
+
+.lessons_info .teacher {
+    font-size: 15px;
+    padding-left: 10px;
+}
+
+table {
+    width: 70%;
+    height: 99.5%;
+    border-collapse: collapse;
+    position: absolute;
+}
+
+table tr td {
+    border: 5px solid #37474f;
+    width: 25%;
+}
+
+/*------- RIGHT ROW ----------*/
+
+.right-side {
+    float: right;
+    width: 30%;
+    height: 100%;
+}
+
+.status {
+    padding-top: 60px;
+    text-align: center;
+    color: #FFFFFF;
+}
+
+
+#clock {
+    font-size: 110px;
+    color: #FFFFFF;
+    /*font-family: 'Gilroy', sans-serif;*/
+}
+
+.status_info {
+}
+
+#status1 {
+    /*font-family: 'OpenSans', sans-serif;*/
+    font-size: 35px;
+}
+
+#status2 {
+    /*font-family: 'OpenSans', sans-serif;*/
+    font-size: 30px;
+}
+
+#timer {
+    padding-top: 100px;
+    font-size: 45px;
+    vertical-align: -5px;
+    /*font-family: 'Gilroy', sans-serif;*/
+}
+
+/*------- NEWS ----------*/
+
+.news-container {
+    position: relative;
+    float: right;
+    width: 100%;
+    height: 74%;
+}
+
+.news {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
+
+.news_block {
+    background: #ffffff;
+    margin: 20px auto;
+    width: 90%;
+    border-radius: 8px;
+}
+
+.news_block .header {
+    background-color: #ffeb3b;
+    padding: 20px;
+    font-size: 35px;
+        /*font-family: 'Gilroy', sans-serif;*/
+
+}
+
+.news_block .content {
+    padding: 20px;
+    font-size: 23px;
+    text-indent: 20px;
+    text-align: justify;
+    /*font-family: 'OpenSans', sans-serif;*/
+}
+
+.news_block .text-center {
+    text-align: center;
+}
+
+.news_block .text-center {
+    margin-top: 10px;
+    font-size: 30px;
+}
+
+.news-container img {
+    width: 92%;
+    margin: 20px auto;
+    display: block;
+    border: 5px solid #ffeb3b;
+}
+
+/*--------ANIMATIONS----------*/
+@keyframes shake {
+    10%, 90% {
+        transform: rotate(2.5deg);
+    }
+
+    20%, 80% {
+        transform: rotate(-5deg);
+    }
+
+    30%, 50%, 70% {
+        transform: rotate(7.5deg);
+    }
+
+    40%, 60% {
+        transform: rotate(-7.5deg);
+    }
+}
+
+.apply-shake {
+    animation: shake 1s cubic-bezier(.36, .07, .19, .97) both;
+    animation-iteration-count: 8;
+}
+
+@keyframes right {
+    0% {
+        left: 0;
+        z-index: 4;
+    }
+    100% {
+        left: 100%;
+        z-index: 3;
+    }
+}
+
+@keyframes up {
+    0% {
+        top: 100%;
+    }
+    100% {
+        top: 0;
+    }
+}
+
+.news.active {
+    animation: up 1s cubic-bezier(.36, .07, .19, .97);
+    z-index: 5;
+}
+
+.news.not_active {
+    animation: right 1s cubic-bezier(.47, .77, 0, 1.75);
+    z-index: -1;
+}
+
+* {
+
+}
+
+/*--------- Fonts ---------*/
+
+@font-face {
+    font-family: Gilroy;
+    font-weight: bold;
+    src: url("./fonts/Gilroy-Bold.ttf");
+}
+
+@font-face {
+    font-family: Gilroy;
+    font-weight: normal;
+    src: url("./fonts/Gilroy-Medium.ttf");
+}
+
+@font-face {
+    font-family: OpenSans;
+    font-weight: bold;
+    src: url("./fonts/OpenSans-Semibold.ttf");
+}
+
+@font-face {
+    font-family: OpenSans;
+    font-weight: bold;
+    font-style: italic;
+    src: url("./fonts/OpenSans-Semibold.ttf");
+}
+
+@font-face {
+    font-family: OpenSans;
+    font-weight: normal;
+    src: url("./fonts/OpenSans-Regular.ttf");
+}
+

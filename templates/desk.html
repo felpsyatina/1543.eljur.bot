@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Desk</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='desk.css') }}">
+    <link href="https://fonts.googleapis.com/css?family=Ubuntu" rel="stylesheet">
+</head>
+<body>
+<div class="container">
+    <table>
+        {% set count = namespace(a=0) %}
+        {% for _ in range(7) %}
+            <tr>
+                {% for _ in range(4) %}
+                    {% set class_name, class_lessons = lessons[count.a] %}
+                    {% set count.a = count.a + 1 %}
+                    <td class="table_block">
+                        <div class="cell_div">
+                            <div class="class_name">
+                                <span>{{ class_name + ":" }}</span>
+                            </div>
+                            <div class="lessons_info">
+                                {% if class_lessons|length > 0 %}
+                                    {% for grp_lesson in class_lessons %}
+                                        {% if grp_lesson['grp'] %}
+                                            <span>
+                                        <span class="grp">{{ grp_lesson['grp'] }}:</span>
+                                        <span class="lesson">{{ grp_lesson['name'] }}</span>
+                                            {% if grp_lesson['room'] %}
+                                        <span class="room">{{ grp_lesson['room'] }}</span>
+                                            {% endif %}
+                                            <br>
+                                        <span class="teacher">{{ grp_lesson['teacher_short'] }}</span>
+                                        </span>
+                                        {% else %}
+                                            <span>
+                                        <span class="lesson">{{ grp_lesson['name'] }}</span>
+                                                {% if grp_lesson['room'] %}
+                                        <span class="room">{{ grp_lesson['room'] }}</span>
+                                                {% endif %}
+                                            <br>
+                                        <span class="teacher">{{ grp_lesson['teacher_short'] }}</span>
+                                        </span>
+                                        {% endif %}
+                                        <br>
+                                    {% endfor %}
+                                {% else %}
+                                    <span><span>Урока нет</span></span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </td>
+                {% endfor %}
+            </tr>
+        {% endfor %}
+
+    </table>
+
+    <div class="right-side">
+        <div class="status">
+            <div class="status1">
+                <span id="status1"></span>
+            </div>
+            <div class="clock">
+                <span id="clock"></span>
+            </div>
+            <div class="status2">
+                <span id="status2"></span>
+                <span id="timer"></span>
+            </div>
+        </div>
+        <div class="news-container">
+            <div class="news" id="a">
+                <div class="news_block">
+                    <div class="header">
+                    <span>
+                        Лучшие экономисты школы
+                    </span>
+                    </div>
+                    <div class="content">
+                    <span>
+                        Поздравляем <b>Никиту Кисилёва</b> и <b>Ивана Кравченко</b> с успешным проход на заключительный этап
+                        всероссийской олимпиады школьников по экономике.
+                    </span>
+                        <div class="text-center big">
+                            <span>Пожелаем им удачи!</span>
+                        </div>
+                        <img src="../static/fotos/vseros.jpg" about="Фотография субботника">
+
+                    </div>
+                </div>
+            </div>
+            <div class="news" id="b">
+                <div class="news_block">
+                    <div class="header">
+                    <span>
+                        Субботник
+                    </span>
+                    </div>
+                    <div class="content">
+                    <span>
+                        Объявляется субботник. Он пройдет во ближайший вторник.
+                        Расписание классов учавствующих в нем будут объявлены позже, но, предположительно,
+                        он начнется в 13:00 и будет длиться 2-3 часа.
+                    </span>
+                        <img src="../static/fotos/subbotnik.jpg" about="Фотография субботника">
+                    </div>
+                </div>
+            </div>
+            <div class="news" id="c">
+                <div class="news_block">
+                    <div class="header">
+                    <span>
+                        Каникулы
+                    </span>
+                    </div>
+                    <div class="content">
+                    <span>
+                        Завтра начинаются долгожданные майские каникулы! Поэтому от лица администрации хотим
+                        пожелать вам приятного времяпрепровождения. Будте аккуратны на улице и соблюдайте правила
+                        дорожного движения!
+                    </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+
+<script src="../static/clock.js"></script>
+<script src="../static/news_feed.js"></script>
+
+</html>
