@@ -87,7 +87,7 @@ function update_timer_ans_status() {
 
 function get_delta_from_start_of_day(time) {
     let time2 = new Date(time);
-    time2.setHours(0, 0, 0, 0)
+    time2.setHours(0, 0, 0, 0);
     return time - time2;
 }
 
@@ -127,7 +127,7 @@ function updater() {
 function reload_page() {
     let new_date = get_cur_date();
     let new_lesson_num = get_new_lesson_num();
-    let new_url = window.location.href.substr(0, window.location.href.indexOf("?") + 1);
+    let new_url = window.location.href.substr(0, window.location.href.indexOf("/") + 1) + "desk?";
     new_url += "number=" + new_lesson_num + "&" + "date=" + new_date;
     window.location = new_url;
 }
@@ -244,9 +244,14 @@ var rings_data = {
 };
 
 
+if (!(window.location.toString().includes("date") && window.location.toString().includes("number"))) {
+    setTimeout(function () {
+                reload_page()
+            }, 2000);
+}
 
 var is_goint_to_reload = false;
-var custom_time = new Date(get_cur_real_time().getTime() - get_delta_from_start_of_day(new Date("2019-05-01T00:16:00.000+03:00")));
+var custom_time = new Date(get_cur_real_time().getTime() + get_delta_from_start_of_day(new Date("2019-05-14T00:00:00.000+03:00")));
 var start_real_time = get_cur_real_time();
 var clock = document.getElementById("clock");
 var status1 = document.getElementById("status1");

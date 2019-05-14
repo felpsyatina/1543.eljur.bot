@@ -572,7 +572,7 @@ class LessonDbReq:
 
         return lessons
 
-    def get_beautified_lessons_for_desk(self, number, date):
+    def get_beautified_lessons_for_desk(self, number=1, date=cur_date()):
         return self.add_field_class_name_to_list_of_lessons(
             self.get_lessons_by_date_and_lesson_number(date, number))
 

@@ -18,7 +18,8 @@ def display():
     lesson_number = request.args.to_dict()
     lessons = req.get_beautified_lessons_for_desk(**lesson_number)
     for lesson in lessons:
-        lesson['teacher_short'] = short_name(lesson['teacher'])
+        if lesson['teacher'] is not None:
+            lesson['teacher_short'] = short_name(lesson['teacher'])
     new_lessons = {}
     for class_name in functions.classes:
         new_lessons[class_name] = []
