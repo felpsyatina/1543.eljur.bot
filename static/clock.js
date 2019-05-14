@@ -247,7 +247,7 @@ var rings_data = {
 if (!(window.location.toString().includes("date") && window.location.toString().includes("number"))) {
     setTimeout(function () {
                 reload_page()
-            }, 2000);
+            }, 500);
 }
 
 var is_goint_to_reload = false;
