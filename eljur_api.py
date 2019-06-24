@@ -57,7 +57,7 @@ class LoggerTemplates(object):
     def failed_login(self, login):
         self.make_log(f"User with a login: '{login}' failed attempt to receive auth token")
 
-    def strip_failde(self, response_text):
+    def strip_failed(self, response_text):
         self.make_log(f"Failed attempt to strip request: '{response_text}'")
 
 
@@ -106,7 +106,7 @@ class _UserBase(object):
             return answer
         except Exception as exc:
             Logger.error(exc)
-            Logger.strip_failde(response.text)
+            Logger.strip_failed(response.text)
 
     def _default_params(self, params):
         params.update(
