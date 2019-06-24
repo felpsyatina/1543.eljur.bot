@@ -38,31 +38,47 @@ def send_msg(user_id, text, msg_to_answer_id=None):
     requests.get(url_send_msg, data={'chat_id': user_id, 'text': text, 'reply_to_message_id': msg_to_answer_id})
 
 
-def fix_board(board):
-    if type(board) != list:
-        return [[]]
+def is_valid_default_keyboard_markup(default_keyboard_markup):
+    """
+    Проверяет валидность дефолтной клавиатуры:
+    list/tuple( list/tuple( list/tuple() ) ) -> True
+    всё остальное                            -> False
+    """
+    return isinstance(default_keyboard_markup, (list, tuple)) \
+           and all(isinstance(row, (list, tuple)) for row in default_keyboard_markup) \
+           and all(all(isinstance(button, (list, tuple)) for button in row) for row in default_keyboard_markup)
 
-    ans = []
-    for x in board:
-        tmp = []
-        for y in x:
-            if type(y) == list:
-                if len(y) == 1:
-                    tmp.append(str(y[0]))
-                else:
-                    if y[1]:
-                        tmp.append(f"{y[0]}")
-                    else:
-                        tmp.append(f"{y[0]}")
-            else:
-                tmp.append(str(y))
 
-        ans.append(tmp)
-    return ans
+def converter_to_telegram_keyboard_markup(default_keyboard_markup):
+    """
+    Функция преобразовывает дефолтную клавиатуру (подобную vk) в telegram-подобную.
+    Различае дефолтной клавиатуры и telegram-клавитауры: клавиша в дефолтной клавиатуре обозначаются массивами
+    параметров (текст, цвет, и тд.), а telegram принимает только текст клавиши, все остальные параметры
+    он исполнить не может, поэтому требует вместо массива только строку с текстом клавиши.
+    Преобразование кнопки: ['button_text', 3, ...] -> 'button_text'
+    Для всей лавиатуры это выглядит так:
+
+    [ [['7', 1, ..], ['8', 0, ..], ['9', 3, ..]],     [ ['7', '8', '9'],
+      [['4', 1, ..], ['5', 3, ..], ['6', 1, ..]],  ->   ['4', '5', '6'],
+      [['1', 2, ..], ['2', 1, ..], ['3', 0, ..]],       ['1', '2', '3'],
+                  [['0', 3, ..]] ];                          ['0'] ];
+
+    :param default_keyboard_markup: дефолтная клавиатура
+    :return telegram_keyboard_markup: правильная telegram-клавиатура
+    """
+    if not is_valid_default_keyboard_markup(default_keyboard_markup):
+        logger.log("new_tg",
+                   f"fix_board: unexpected got {default_keyboard_markup} "
+                   f"expected list/tuple( list/tuple( list/tuple() ) )")
+        return None
+
+    telegram_keyboard_markup = list([str(button[0]) for button in row] for row in default_keyboard_markup)
+
+    return telegram_keyboard_markup
 
 
 def send_msg_and_but(user_id, text, keyb_but, msg_to_answer_id=None):
-    keyb_but=fix_board(keyb_but)
+    keyb_but = converter_to_telegram_keyboard_markup(keyb_but)
     reply_markup = json.dumps(
         {"keyboard": keyb_but,
          "one_time_keyboard": True})
@@ -106,7 +122,9 @@ def new_msgs(last_msg_id, raw_msgs):
 
 def answer_msg(user_id, msg, msg_id, user_name):
     try:
-        result = user_req.parse_message_from_user({'src': "tg", 'id': user_id, 'text': msg, 'sex': '0', 'first_name': user_name['first_name'], 'last_name': user_name['last_name']})
+        result = user_req.parse_message_from_user(
+            {'src': "tg", 'id': user_id, 'text': msg, 'sex': '0', 'first_name': user_name['first_name'],
+             'last_name': user_name['last_name']})
         logger.log("tg", f"got message from user_req: {str(result['text'])} {str(result.get('buttons'))}")
 
     except Exception as err:
