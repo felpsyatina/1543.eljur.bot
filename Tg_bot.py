@@ -51,25 +51,27 @@ def is_valid_default_keyboard_markup(default_keyboard_markup):
 
 def converter_to_telegram_keyboard_markup(default_keyboard_markup):
     """
-    Функция преобразовывает дефолтную клавиатуру (подобную vk) в telegram-подобную.
+    Функция преобразовывает дефолтную клавиатуру, проверяя ее валидность, (подобную vk) в telegram-подобную.
     Различае дефолтной клавиатуры и telegram-клавитауры: клавиша в дефолтной клавиатуре обозначаются массивами
     параметров (текст, цвет, и тд.), а telegram принимает только текст клавиши, все остальные параметры
     он исполнить не может, поэтому требует вместо массива только строку с текстом клавиши.
-    Преобразование кнопки: ['button_text', 3, ...] -> 'button_text'
-    Для всей лавиатуры это выглядит так:
 
+    Преобразование кнопки:
+    ['button_text', 3, ...] -> 'button_text'
+
+    Для всей клавиатуры это выглядит так:
     [ [['7', 1, ..], ['8', 0, ..], ['9', 3, ..]],     [ ['7', '8', '9'],
       [['4', 1, ..], ['5', 3, ..], ['6', 1, ..]],  ->   ['4', '5', '6'],
       [['1', 2, ..], ['2', 1, ..], ['3', 0, ..]],       ['1', '2', '3'],
                   [['0', 3, ..]] ];                          ['0'] ];
 
     :param default_keyboard_markup: дефолтная клавиатура
-    :return telegram_keyboard_markup: правильная telegram-клавиатура
+    :return telegram_keyboard_markup: правильная telegram-клавиатура или None в случае, если клавиатура не валидна
     """
     if not is_valid_default_keyboard_markup(default_keyboard_markup):
         logger.log("new_tg",
-                   f"fix_board: unexpected got {default_keyboard_markup} "
-                   f"expected list/tuple( list/tuple( list/tuple() ) )")
+                   f"fix_board: unexpected keyboard markup type got keyboard {default_keyboard_markup} "
+                   f"expected like list/tuple( list/tuple( list/tuple() ) )")
         return None
 
     telegram_keyboard_markup = list([str(button[0]) for button in row] for row in default_keyboard_markup)
