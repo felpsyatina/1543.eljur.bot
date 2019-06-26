@@ -14,28 +14,47 @@ url_get_me = URL + 'getme'
 url_upd = URL + 'getupdates'
 url_send_msg = URL + 'sendmessage'
 url_new_msgs = URL + 'getupdates'
+DELAYS = {
+    # все задержки задаются в секндах, могут быть дробными
+    "BETWEEN_MESSAGES_IN_MAILING": 1,  # задуржки между сообщениями в alerts рассылке
+    "BETWEEN_POLLING_REQUESTS": 2,  # задержки между запросами обновлений к телеграму
+    "BETWEEN_TEST_CONNECTION_ATTEMPTS": 5,  # задержка между тестовыми запросоми к серверу во время старта модуля
+}
 
 
-def bot_info():
-    bot_info = requests.get(url_get_me).json()
-    return bot_info
+def check_telegram_availability():
+    """
+    Функция отправляет тестовый запрос getme серверу и проверяет ответ. Если телеграм ответил, и ответ был
+    хороший функция возвращает true, иначе false.
+    """
+    try:
+        telegram_answer = requests.get(url_get_me).json()
+        if telegram_answer["ok"]:
+            return True
+        else:
+            logger.log("tg",
+                       f"check_telegram_availability: connection was established, but answer is bad: {telegram_answer}")
+            return False
+    except Exception as exc:
+        logger.log("tg", f"check_telegram_availability: failed to establish connection with telegram server err: {exc}")
+        return False
 
 
-def alerts(alerts_ids, msg):
-    for i in range(len(alerts_ids)):
-        time.sleep(1)
-        user_id = alerts_ids[i]
-        send_msg(user_id, msg)
+def alerts(user_ids_for_alert_mailing, message):
+    """
+    Функция рассылки однинакового сообщения всем пользователем переданного списка
+    :param user_ids_for_alert_mailing: list of used_ids, кому будет отправлено сообщение
+    :param message:
+    """
+    for user_id in user_ids_for_alert_mailing:
+        time.sleep(DELAYS["BETWEEN_MESSAGES_IN_MAILING"])
+        send_message(user_id, message)
         logger.log("tg", f"sending alert to {user_id}")
 
 
 def bot_upd():
     bot_upd = requests.get(url_upd).json()
     return bot_upd
-
-
-def send_msg(user_id, text, msg_to_answer_id=None):
-    requests.get(url_send_msg, data={'chat_id': user_id, 'text': text, 'reply_to_message_id': msg_to_answer_id})
 
 
 def is_valid_default_keyboard_markup(default_keyboard_markup):
@@ -51,9 +70,7 @@ def is_valid_default_keyboard_markup(default_keyboard_markup):
 
 def converter_to_telegram_keyboard_markup(default_keyboard_markup):
     """
-    Функция преобразовывает дефолтную клавиатуру, проверяя ее валидность, (подобную vk) в telegram-подобную.
-    Различае дефолтной клавиатуры и telegram-клавитауры: клавиша в дефолтной клавиатуре обозначаются массивами
-    параметров (текст, цвет, и тд.), а telegram принимает только текст клавиши, все остальные параметры
+    Функция преобразовывает дефолтную клавиатуру, пzмает только текст клавиши, все остальные параметры
     он исполнить не может, поэтому требует вместо массива только строку с текстом клавиши.
 
     Преобразование кнопки:
@@ -68,23 +85,33 @@ def converter_to_telegram_keyboard_markup(default_keyboard_markup):
     :param default_keyboard_markup: дефолтная клавиатура
     :return telegram_keyboard_markup: правильная telegram-клавиатура или None в случае, если клавиатура не валидна
     """
+    # проверка валидности
     if not is_valid_default_keyboard_markup(default_keyboard_markup):
         logger.log("new_tg",
                    f"fix_board: unexpected keyboard markup type got keyboard {default_keyboard_markup} "
                    f"expected like list/tuple( list/tuple( list/tuple() ) )")
         return None
 
+    # преобразование клавиатуры
     telegram_keyboard_markup = list([str(button[0]) for button in row] for row in default_keyboard_markup)
 
     return telegram_keyboard_markup
 
 
-def send_msg_and_but(user_id, text, keyb_but, msg_to_answer_id=None):
-    keyb_but = converter_to_telegram_keyboard_markup(keyb_but)
+def send_message(user_id, text, default_keyboard_markup=None, msg_to_answer_id=None):
+    """
+    Функция отправки сообщения пользователю
+    :param user_id: id диалога бота с получателем
+    :param text:
+    :param default_keyboard_markup:
+    :param msg_to_answer_id: id сообщения, пересылкой которого будет новое
+    """
+    telegram_keyboard_markup = converter_to_telegram_keyboard_markup(
+        default_keyboard_markup) if default_keyboard_markup is not None else None
     reply_markup = json.dumps(
-        {"keyboard": keyb_but,
+        {"keyboard": telegram_keyboard_markup,
          "one_time_keyboard": True})
-    logger.log("tg", f"send msg - {str(text)} and but - {str(keyb_but)} to {str(user_id)}")
+    logger.log("tg", f"send msg - {str(text)} and but - {str(telegram_keyboard_markup)} to {str(user_id)}")
     (requests.get(url_send_msg,
                   data={'chat_id': user_id, 'text': text, 'reply_markup': reply_markup,
                         'reply_to_message_id': msg_to_answer_id}))
@@ -135,18 +162,23 @@ def answer_msg(user_id, msg, msg_id, user_name):
     msg_to_send = result['text']
     but_to_send = result.get('buttons', [[]])
     if type(result['text']) is str:
-        send_msg_and_but(user_id, msg_to_send, but_to_send, msg_id)
+        send_message(user_id, msg_to_send, but_to_send, msg_id)
     else:
         for i in range(len(msg_to_send)):
             msg_to_send_now = msg_to_send[i]
-            send_msg_and_but(user_id, msg_to_send_now, but_to_send, msg_id)
+            send_message(user_id, msg_to_send_now, but_to_send, msg_id)
 
 
 def tg_bot_main(last_msg_id, raw_msgs):
-    logger.log("tg", "starting tg_bot")
-    bot_info()
+    logger.log("tg", "tg_bot is starting... Please, wait for OK")
+    while check_telegram_availability():
+        logger.log("tg", f"tg_bot_main: connection to telegram failed, next attempt will be in "
+                   + str(DELAYS['BETWEEN_TEST_CONNECTION_ATTEMPTS']) + " seconds")
+        time.sleep(DELAYS['BETWEEN_TEST_CONNECTION_ATTEMPTS'])
+
+    logger.log("tg", "tg_bot_main: OK. bot has been started to work")
     while True:
-        time.sleep(2)
+        time.sleep(DELAYS["BETWEEN_POLLING_REQUESTS"])
         is_new_msgs, last_msg_id, raw_msgs = new_msgs(last_msg_id, raw_msgs)
         if is_new_msgs:
             for i in range(len(raw_msgs)):
@@ -155,7 +187,7 @@ def tg_bot_main(last_msg_id, raw_msgs):
                     answer_msg(msg_to_answer['tg_user_id'], msg_to_answer['raw_msg'], msg_to_answer['msg_id'],
                                msg_to_answer['user_name'])
                 else:
-                    send_msg_and_but(msg_to_answer['tg_user_id'], 'you are super admin', msg_to_answer['msg_id'])
+                    send_message(msg_to_answer['tg_user_id'], 'you are super admin', msg_to_answer['msg_id'])
                     answer_msg(msg_to_answer['tg_user_id'], msg_to_answer['raw_msg'], msg_to_answer['msg_id'],
                                msg_to_answer['user_name'])
             raw_msgs = []
