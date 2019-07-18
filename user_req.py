@@ -17,8 +17,8 @@ if flag_on_PC:
     lesson_db = LessonDbReq()
     user_db = UserDbReq()
 else:
-    lesson_db = LessonDbReq("1543.eljur.bot/1543.eljur.bot.db")
-    user_db = UserDbReq("1543.eljur.bot/1543.eljur.bot.db")
+    lesson_db = LessonDbReq("1543.eljur.bot.test/1543.eljur.bot.test.db")
+    user_db = UserDbReq("1543.eljur.bot.test/1543.eljur.bot.test.db")
 
 
 class ScheduleInfo:

@@ -8,7 +8,7 @@ import logger
 def new_db_copy():
     file_path = config.db_copies_path
     today = str(datetime.datetime.now())[:10]
-    sh.copy2('1543.eljur.bot/1543.eljur.bot.db', file_path + '/database_' + today + '.db')
+    sh.copy2('1543.eljur.bot.test/1543.eljur.bot.test.db', file_path + '/database_' + today + '.db')
 
 
 def delete_db():

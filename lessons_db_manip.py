@@ -11,7 +11,7 @@ student = Student(**preset)
 
 
 class LessonDbReq:
-    def __init__(self, database_name="1543.eljur.bot.db"):
+    def __init__(self, database_name="1543.eljur.bot.test.db"):
         self.database_name = database_name
         self.cursor = None
         self.lesson_table_name = "lessons"

@@ -8,7 +8,7 @@ first_status = config.params['fir_stat']
 
 
 class UserDbReq:
-    def __init__(self, database_name="1543.eljur.bot.db"):
+    def __init__(self, database_name="1543.eljur.bot.test.db"):
         self.database_name = database_name
         self.cursor = None
 

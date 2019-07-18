@@ -10,7 +10,7 @@ flag_on_PC = config.params['flag_on_PC']
 if flag_on_PC:
     user_db = UserDbReq()
 else:
-    user_db = UserDbReq("1543.eljur.bot/1543.eljur.bot.db")
+    user_db = UserDbReq("1543.eljur.bot.test/1543.eljur.bot.test.db")
 
 
 def send_alerts(a, mess):

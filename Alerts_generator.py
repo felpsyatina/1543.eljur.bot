@@ -16,8 +16,8 @@ if flag_on_PC:
     lesson_db = Ldb()
     user_db = Udb()
 else:
-    lesson_db = Ldb("1543.eljur.bot/1543.eljur.bot.db")
-    user_db = Udb("1543.eljur.bot/1543.eljur.bot.db")
+    lesson_db = Ldb("1543.eljur.bot.test/1543.eljur.bot.test.db")
+    user_db = Udb("1543.eljur.bot.test/1543.eljur.bot.test.db")
 
 
 def is_time_to_work():
