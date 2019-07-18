@@ -1,10 +1,9 @@
-import logger
-import re
 import datetime
+import re
+
 import functions
+import logger
 
-
-# Тестовая версия валисы
 
 def _test():
     import doctest
@@ -70,14 +69,6 @@ class Valisa:
             >>> req.type, req.subs, req.list_of_dates
             ('homework', {'8Г': {}}, ['20190405'])
 
-            >>> req = Valisa("покажи долги")
-            >>> req.type
-            'get_debt'
-
-            >>> req = Valisa("убери долг 567")
-            >>> req.type, req.number
-            ('disable_debt', '567')
-
             >>> req = Valisa("добавь долг 'купить картошки'")
             >>> req.type, req.text
             ('add_debt', 'купить картошки')
@@ -109,15 +100,6 @@ class Valisa:
             {"definer_func": self.is_help_request,
              "params": [],
              "run_func": self.get_help},
-            {"definer_func": self.is_add_debt,
-             "params": ["text"],  # надо добавить "subject" и "date"
-             "run_func": self.add_debt},
-            {"definer_func": self.is_get_debt,
-             "params": [],  # надо добавить "subject" и "date"
-             "run_func": self.get_debt},
-            {"definer_func": self.is_disable_debt,
-             "params": ["number"],  # надо добавить "subject" и "date"
-             "run_func": self.disable_debt},
         ]
 
         self.type = None
@@ -145,15 +127,6 @@ class Valisa:
 
     def get_help(self):
         self.type = "help"
-
-    def add_debt(self):
-        self.type = "add_debt"
-
-    def disable_debt(self):
-        self.type = "disable_debt"
-
-    def get_debt(self):
-        self.type = "get_debt"
 
     def is_get_home_task(self, string):
         string = self.delete_message_from_request(string)
@@ -187,45 +160,6 @@ class Valisa:
                    r"(^| )что (ты )?можешь",
                    r"(^| )не пон(имаю|ял)",
                    r"(^| )как ((за)|(с))просить"]
-
-        for regex in regexes:
-            result = re.search(regex, string)
-            if result is not None:
-                return True
-        return False
-
-    def is_add_debt(self, string):
-        string = self.delete_message_from_request(string)
-
-        regexes = [r"(^| )добавь долг",
-                   r"(^| )запиши долг",
-                   r"(^| )запиши"]
-
-        for regex in regexes:
-            result = re.search(regex, string)
-            if result is not None:
-                return True
-        return False
-
-    def is_disable_debt(self, string):
-        string = self.delete_message_from_request(string)
-
-        regexes = [r"(^| )убери долг",
-                   r"(^| )удали долг",
-                   r"(^| )закрой долг"]
-
-        for regex in regexes:
-            result = re.search(regex, string)
-            if result is not None:
-                return True
-        return False
-
-    def is_get_debt(self, string):
-        string = self.delete_message_from_request(string)
-
-        regexes = [r"(^| )покажи долг(и|)",
-                   r"(^| )какой(( у меня)|) долг(и|)",
-                   r"(^| )закрой долг(и|)"]
 
         for regex in regexes:
             result = re.search(regex, string)

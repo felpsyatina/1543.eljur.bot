@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 import sys
-sys.path.append("..")
-
 import config
 
+sys.path.append("..")
 
 print("Token for vk bot is:", config.secret["vk"]["token"])
 

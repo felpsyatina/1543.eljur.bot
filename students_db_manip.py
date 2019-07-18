@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 import sqlite3
+from json import dumps, loads
+
 import logger
 from functions import MyCursor
-from json import dumps, loads
 
 
 class StudentsDbReq:

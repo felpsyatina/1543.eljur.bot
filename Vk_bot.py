@@ -11,7 +11,6 @@ import user_req
 import logger
 from functions import COLORS
 
-
 token = config.secret["vk"]["token"]
 vk = vk_api.VkApi(token=token)
 longpoll = VkLongPoll(vk)
@@ -57,8 +56,8 @@ def alerts(a, mess, wait=1):
         try:
             write(u_id, mess)
             sleep(wait)
-        except Exception as err:
-            logger.log("Vk_bot", "Error while sending alert " + str(err))
+        except Exception as exc:
+            logger.log("Vk_bot", "Error while sending alert " + str(exc))
 
 
 def _get_users_info_from_vk_ids(user_ids):
@@ -79,9 +78,9 @@ def make_key(a):
                     color = "default"
                 button = {
                     "action": {
-                      "type": "text",
-                      "payload": "{\"button\": \"1\"}",
-                      "label": but["text"]
+                        "type": "text",
+                        "payload": "{\"button\": \"1\"}",
+                        "label": but["text"]
                     },
                     "color": color
                 }

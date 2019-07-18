@@ -10,9 +10,9 @@ db_copies_path = cur_path + "/db_copies"
 
 
 def load_config(filename):
-	with open(filename, "r", encoding="utf-8") as configfile:
-		res = json.loads(configfile.read())
-		return res
+    with open(filename, "r", encoding="utf-8") as configfile:
+        res = json.loads(configfile.read())
+        return res
 
 
 params = load_config(global_config_file)

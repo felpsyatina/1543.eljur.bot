@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request
-from lessons_db_manip import LessonDbReq
+
 import functions
+from lessons_db_manip import LessonDbReq
 
 app = Flask(__name__)
 

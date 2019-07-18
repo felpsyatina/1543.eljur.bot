@@ -1,12 +1,14 @@
 from __future__ import unicode_literals
+
 import json
-import logger
-import user_req
-from flask import Flask, render_template, request
-from lessons_db_manip import LessonDbReq
-import functions
 
 from flask import Flask, request
+from flask import render_template
+
+import functions
+import logger
+import user_req
+from lessons_db_manip import LessonDbReq
 
 app = Flask(__name__)
 

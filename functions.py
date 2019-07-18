@@ -1,8 +1,8 @@
-import logger
 import sqlite3
 from datetime import datetime, timedelta, date as st_date
+
 import config
-import eljur_api
+import logger
 
 classes = ['5А', '5Б', '5В', '5Г', '6А', '6Б', '6В', '6Г', '7А', '7Б', '7В', '7Г', '8А', '8Б', '8В', '8Г', '9А',
            '9Б', '9В', '9Г', '10А', '10Б', '10В', '10Г', '11А', '11Б', '11В', '11Г']

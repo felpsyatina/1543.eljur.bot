@@ -1,9 +1,8 @@
-from users_db_parser import UserDbReq
-import Vk_bot
 import Tg_bot
-import logger
+import Vk_bot
 import config
-
+import logger
+from users_db_parser import UserDbReq
 
 flag_on_PC = config.params['flag_on_PC']
 

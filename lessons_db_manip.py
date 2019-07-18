@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 import sqlite3
-import logger
-import config
-from eljur_api import Student
 from json import dumps as jd, loads as jl
+
+import config
+import logger
+from eljur_api import Student
 from functions import MyCursor, convert_arrays_to_dict, cur_date, classes, preset, make_lined, del_op
 
 current_min_par = config.params['min_par']

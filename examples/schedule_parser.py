@@ -1,5 +1,4 @@
 import requests
-import logger
 from bs4 import BeautifulSoup
 
 classes = ['5А', '5Б', '5В', '5Г', '6А', '6Б', '6В', '6Г', '7А', '7Б', '7В', '7Г', '8А', '8Б', '8В', '8Г', '9А', '9Б',
@@ -9,7 +8,7 @@ CNT_LESSONS = 7
 
 
 def get_current_schedule():
-    schedule = {}
+    new_schedule = {}
 
     for i in classes:
         print(i)
@@ -28,8 +27,8 @@ def get_current_schedule():
                 lessons[k + 1] = lessons_this_day[k].find_all('span')[0].contents[0].strip()
             schedule_for_class[day] = lessons
             schedule_html.decompose()
-        schedule[i] = schedule_for_class
-    return schedule
+        new_schedule[i] = schedule_for_class
+    return new_schedule
 
 
 if __name__ == '__main__':

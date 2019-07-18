@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
-import logger
 import json
+
 import requests
+
 import functions
+import logger
 
 file_name = "eljur_api.py"
 
@@ -235,4 +237,3 @@ if __name__ == '__main__':
     preset = functions.preset
     student1 = Student(**preset)
     print(student1.get_assessments())
-    

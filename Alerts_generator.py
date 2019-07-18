@@ -1,11 +1,10 @@
-from lessons_db_manip import LessonDbReq as Ldb
-from users_db_parser import UserDbReq as Udb
-from eljur_api import Student
-import logger
 import Alerts
 import config
-
+import logger
+from eljur_api import Student
 from functions import cur_date, get_word_by_date, preset, tm
+from lessons_db_manip import LessonDbReq as Ldb
+from users_db_parser import UserDbReq as Udb
 
 student = Student(**preset)
 
@@ -114,7 +113,11 @@ def parse_message_for_user(user):
         type_of_social_web = 'vk'
 
     if answer_string:
-        logger.log("alerts_save", f"parsed message for user {user['first_name']} {user['last_name']} with id {user['id']} in {type_of_social_web}, ans: {answer_string}")
+        logger.log("alerts_save", f"""
+            parsed message for user ({type_of_social_web}, {user['id']}, {user['first_name']} {user['last_name']})
+            result:
+            {answer_string}
+        """)
 
     return answer_string
 
